@@ -13,7 +13,6 @@ SuperOAuth est une solution complète d'authentification qui combine l'authentif
 - [📖 Documentation API](#-documentation-api)
 - [🎨 Interface Utilisateur](#-interface-utilisateur)
 - [🔒 Sécurité](#-sécurité)
-- [🧪 Tests](#-tests)
 - [📝 Changelog](#-changelog)
 
 ## 🚀 Fonctionnalités
@@ -133,9 +132,17 @@ NODE_ENV=development
 1. Aller sur [Google Cloud Console](https://console.cloud.google.com/)
 2. Créer un projet et activer l'API Google+
 3. Configurer l'écran de consentement OAuth
+4. Ajouter l'URL de redirection : `http://localhost:3000/api/v1/auth/oauth/google/callback`
 
-#### GitHub & Twitch
-Suivre les mêmes étapes sur leurs portails développeur respectifs.
+#### GitHub
+1. Aller sur [GitHub Developer Settings](https://github.com/settings/developers)
+2. Créer une nouvelle OAuth App
+3. Ajouter l'URL de redirection : `http://localhost:3000/api/v1/auth/oauth/github/callback`
+
+#### Twitch
+1. Aller sur [Twitch Developer Console](https://dev.twitch.tv/console/apps)
+2. Créer une nouvelle application
+3. Ajouter l'URL de redirection : `http://localhost:3000/api/v1/auth/oauth/twitch/callback`
 
 ## 📖 Documentation API
 
@@ -258,7 +265,6 @@ Le dashboard affiche :
 
 - 📱 **Mobile First** : Optimisé pour mobile
 - 💻 **Desktop** : Interface complète sur grand écran
-- 🎨 **Dark Mode** : Support du mode sombre (optionnel)
 
 ## 🔒 Sécurité
 
@@ -333,35 +339,6 @@ npm run test:watch
 npm run test:e2e
 ```
 
-### Structure des Tests
-
-```
-tests/
-├── unit/           # Tests unitaires
-├── integration/    # Tests d'intégration
-├── e2e/           # Tests end-to-end
-└── fixtures/      # Données de test
-```
-
-### Exemple de Test
-
-```typescript
-describe('AuthService', () => {
-  it('should register a new user', async () => {
-    const userData = {
-      email: 'test@example.com',
-      password: 'SecurePass123!',
-      nickname: 'TestUser'
-    };
-
-    const result = await authService.register(userData);
-    
-    expect(result.success).toBe(true);
-    expect(result.data.user.email).toBe(userData.email);
-  });
-});
-```
-
 ## 📝 Changelog
 
 ### Version 1.0.0 (Actuelle)
@@ -413,10 +390,7 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 
 ## 🆘 Support
 
-- 📧 **Email** : support@superoauth.com
 - 🐛 **Issues** : [GitHub Issues](repository-url/issues)
-- 📖 **Documentation** : [Wiki](repository-url/wiki)
-- 💬 **Discord** : [Serveur de support](discord-invite-link)
 
 ---
 

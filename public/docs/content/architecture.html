@@ -22,7 +22,54 @@
 └─────────────────┘    └──────────────────┘    └─────────────────┘
 </div>
 
-<h3 aria-label="Structure des fichiers" tabindex="0">📁 Structure des fichiers</h3>
+<h3 aria-label="Architecture Backend" tabindex="0">🏗️ Architecture Backend (Clean Architecture)</h3>
+<p>SuperOAuth suit une <strong>architecture hexagonale</strong> (Clean Architecture) côté backend avec une séparation claire des responsabilités :</p>
+
+<div class="file-tree">
+<strong>src/</strong> - Architecture Backend TypeScript<br>
+├── <strong>main.ts</strong>                   # Point d'entrée de l'application<br>
+├── <strong>domain/</strong>                   # 🎯 Cœur Métier (indépendant)<br>
+│   ├── entities/               # Entités métier (User, Session, etc.)<br>
+│   ├── value-objects/          # Objets de valeur (Email, Password, etc.)<br>
+│   ├── repositories/           # Interfaces repositories (contrats)<br>
+│   └── errors/                 # Erreurs métier spécifiques<br>
+├── <strong>application/</strong>               # 🧠 Logique Applicative<br>
+│   ├── use-cases/              # Cas d'usage (RegisterUser, LoginUser, etc.)<br>
+│   ├── services/               # Services applicatifs<br>
+│   ├── dto/                    # Data Transfer Objects<br>
+│   ├── interfaces/             # Contrats applicatifs<br>
+│   └── index.ts                # Point d'entrée du module<br>
+├── <strong>infrastructure/</strong>            # 🔧 Couche Infrastructure<br>
+│   ├── database/               # Configuration TypeORM & entités<br>
+│   ├── oauth/                  # Services OAuth (Discord, Google, etc.)<br>
+│   ├── services/               # Implémentations concrètes<br>
+│   └── di/                     # Injection de dépendances<br>
+├── <strong>presentation/</strong>              # 🌐 Interface HTTP (API REST)<br>
+│   ├── controllers/            # Contrôleurs REST<br>
+│   ├── routes/                 # Définition des routes Express<br>
+│   ├── middleware/             # Middlewares (auth, validation, etc.)<br>
+│   ├── validators/             # Validateurs de données<br>
+│   ├── types/                  # Types TypeScript<br>
+│   └── index.ts                # Configuration routes<br>
+└── <strong>shared/</strong>                   # 🤝 Éléments Partagés<br>
+    ├── config/                 # Configuration (database, auth, etc.)<br>
+    ├── constants/              # Constantes globales<br>
+    ├── utils/                  # Utilitaires (logger, crypto, etc.)<br>
+    ├── middleware/             # Middlewares globaux<br>
+    └── types/                  # Types TypeScript partagés
+</div>
+
+<div class="component-card">
+    <h4>🎯 Avantages de l'Architecture Hexagonale</h4>
+    <ul>
+        <li><strong>Domain indépendant</strong> : Le cœur métier ne dépend d'aucune technologie</li>
+        <li><strong>Testabilité élevée</strong> : Chaque couche testable indépendamment</li>
+        <li><strong>Flexibilité</strong> : Changement de DB/framework sans impact métier</li>
+        <li><strong>Évolutivité</strong> : Ajout facile de nouvelles fonctionnalités</li>
+    </ul>
+</div>
+
+<h3 aria-label="Structure Frontend" tabindex="0">📁 Structure Frontend</h3>
 <div class="file-tree">
 public/<br>
 ├── index.html                  # Interface HTML modulaire<br>
@@ -44,6 +91,45 @@ public/<br>
 │   ├── js/                    # JavaScript modulaire docs<br>
 │   └── content/               # Contenu des onglets<br>
 └── components/                # Composants réutilisables (future)
+</div>
+
+<h3 aria-label="Flux de Données" tabindex="0">🔄 Flux de Données (Clean Architecture)</h3>
+<div class="architecture-diagram">
+<strong>Frontend</strong> → <strong>Presentation</strong> → <strong>Application</strong> → <strong>Domain</strong> ← <strong>Infrastructure</strong><br>
+<br>
+📱 <strong>Client HTTP Request</strong><br>
+    │<br>
+    ▼<br>
+🌐 <strong>Presentation Layer</strong> (Controllers, Routes, Middleware)<br>
+    │ • Validation des données<br>
+    │ • Sérialisation/Désérialisation<br>
+    │ • Gestion des erreurs HTTP<br>
+    ▼<br>
+🧠 <strong>Application Layer</strong> (Use Cases, Services)<br>
+    │ • Orchestration de la logique métier<br>
+    │ • Coordination des services<br>
+    │ • Transformation des DTO<br>
+    ▼<br>
+🎯 <strong>Domain Layer</strong> (Entities, Value Objects)<br>
+    │ • Règles métier pures<br>
+    │ • Validation métier<br>
+    │ • Logique indépendante<br>
+    ▼<br>
+🔧 <strong>Infrastructure Layer</strong> (Database, OAuth, Services)<br>
+    │ • Persistance des données<br>
+    │ • Services externes (OAuth)<br>
+    │ • Implémentations techniques
+</div>
+
+<div class="component-card">
+    <h4>🚀 Dépendances et Inversion de Contrôle</h4>
+    <p><strong>Règle d'or</strong> : Les couches internes (Domain) ne dépendent jamais des couches externes (Infrastructure).</p>
+    <ul>
+        <li><strong>Domain</strong> : Aucune dépendance externe</li>
+        <li><strong>Application</strong> : Dépend uniquement du Domain</li>
+        <li><strong>Infrastructure</strong> : Implémente les interfaces du Domain</li>
+        <li><strong>Presentation</strong> : Orchestre Application et Infrastructure</li>
+    </ul>
 </div>
 
 <h3 aria-label="Contrôleurs et Routing" tabindex="0">🧩 Contrôleurs et Routing</h3>
