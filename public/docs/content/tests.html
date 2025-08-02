@@ -1,0 +1,602 @@
+<div class="content-section">
+    <h1 aria-label="Tests et Qualité" tabindex="0">🧪 Tests et Qualité</h1>
+    <p class="intro">Documentation complète du framework de tests et de la stratégie qualité SuperOAuth.</p>
+</div>
+
+<div class="content-section">
+    <h2 aria-label="Vue d'ensemble" tabindex="0">📊 Vue d'ensemble</h2>
+    <div class="info-grid">
+        <div class="info-card">
+            <h3>📈 Frontend</h3>
+            <ul>
+                <li><strong>Framework:</strong> Vitest + jsdom</li>
+                <li><strong>Tests:</strong> 63 tests ✅</li>
+                <li><strong>Taux de Réussite:</strong> 100%</li>
+                <li><strong>Coverage:</strong> V8 provider (60%)</li>
+            </ul>
+        </div>
+        <div class="info-card">
+            <h3>🏗️ Backend</h3>
+            <ul>
+                <li><strong>Framework:</strong> Jest + ts-jest</li>
+                <li><strong>Tests:</strong> 30 tests ✅</li>
+                <li><strong>Taux de Réussite:</strong> 100%</li>
+                <li><strong>Coverage:</strong> 11.94% (focus domaine)</li>
+            </ul>
+        </div>
+        <div class="info-card">
+            <h3>📊 Total</h3>
+            <ul>
+                <li><strong>Tests Total:</strong> 93 tests</li>
+                <li><strong>Suites:</strong> 7 modules</li>
+                <li><strong>Frameworks:</strong> 2 (Vitest + Jest)</li>
+                <li><strong>Statut Global:</strong> ✅ 100%</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="content-section">
+    <h2 aria-label="Quick Start" tabindex="0">🚀 Quick Start</h2>
+    <div class="code-block">
+        <h3>Commandes Essentielles</h3>
+        <pre><code># Tests frontend complets
+npm run test:frontend
+
+# Tests backend complets
+npm run test
+
+# Tous les tests (frontend + backend)
+npm run test:all
+
+# Mode développement (watch)
+npm run test:frontend:watch
+npm run test:watch
+
+# Interface graphique (frontend)
+npm run test:frontend:ui
+
+# Rapports de couverture
+npm run test:frontend:coverage
+npm run test:coverage
+npm run test:all:coverage
+
+# Génération rapport complet
+npm run report:tests</code></pre>
+    </div>
+</div>
+
+<div class="content-section">
+    <h2 aria-label="Stratégie de Tests" tabindex="0">🎯 Stratégie de Tests</h2>
+    
+    <h3>Classification des Tests</h3>
+    <div class="info-grid">
+        <div class="info-card critical">
+            <h4>🔴 Tests Critiques (32)</h4>
+            <ul>
+                <li>Authentification et sécurité</li>
+                <li>Validation des données</li>
+                <li>Logique métier principale</li>
+                <li>Gestion des erreurs critiques</li>
+            </ul>
+            <div class="percentage">51% des tests</div>
+        </div>
+        
+        <div class="info-card performance">
+            <h4>🟡 Tests Performance (18)</h4>
+            <ul>
+            <h3 class="accordion-header" aria-label="Backend Use Cases (5 tests)" tabindex="0">🏗️ Backend Use Cases (5 tests)</h3>
+                <li>Optimisations de rendu</li>
+                <li>Gestion du cache</li>
+                <li>Expérience utilisateur</li>
+            </ul>
+            <div class="percentage">29% des tests</div>
+        </div>
+        
+        <div class="info-card robustness">
+            <h4>🟢 Tests Robustesse (13)</h4>
+            <ul>
+                <li>Cas limites et edge cases</li>
+                <li>Récupération d'erreurs</li>
+                <li>Résilience réseau</li>
+                <li>Validation entrées</li>
+            </ul>
+            <div class="percentage">20% des tests</div>
+        </div>
+    </div>
+</div>
+
+<div class="content-section">
+    <h2>🏗️ Tests Backend (Jest)</h2>
+    
+    <div class="info-grid">
+        <div class="info-card">
+            <h3>📋 Value Objects (7 tests)</h3>
+            <ul>
+                <li><strong>UserId</strong> : Génération/validation UUID</li>
+                <li><strong>Email</strong> : Validation/normalisation</li>
+                <li><strong>Password</strong> : Hachage/vérification</li>
+                <li><strong>Nickname</strong> : Validation format</li>
+            </ul>
+            <div class="percentage">Tests domaine critique</div>
+        </div>
+        
+        <div class="info-card">
+            <h3>🔧 Use Cases (5 tests)</h3>
+            <ul>
+                <li><strong>Register Classic</strong> : Inscription email/password</li>
+                <li>Validation données utilisateur</li>
+                <li>Gestion erreurs métier</li>
+                <li>Génération tokens</li>
+            </ul>
+            <div class="percentage">Logique métier</div>
+        </div>
+        
+        <div class="info-card">
+            <h3>🛠️ Services (18 tests)</h3>
+            <ul>
+                <li><strong>Token Service</strong> : JWT complet</li>
+                <li>Génération access/refresh tokens</li>
+                <li>Vérification signatures</li>
+                <li>Gestion expirations</li>
+            </ul>
+            <div class="percentage">Infrastructure</div>
+        </div>
+    </div>
+</div>
+
+<div class="content-section">
+    <h2>🧩 Détails par Composant</h2>
+    
+    <div class="accordion">
+        <div class="accordion-item">
+            <h3 class="accordion-header">🏗️ Backend Value Objects (7 tests)</h3>
+            <div class="accordion-content">
+                <h4>UserId Tests (4)</h4>
+                <ul>
+                    <li>✅ Génération UUID v4 valide</li>
+                    <li>✅ Acceptation UUID valide</li>
+                    <li>✅ Rejet UUID invalide</li>
+                    <li>✅ Égalité entre instances</li>
+                </ul>
+                
+                <h4>Email Tests (3)</h4>
+                <ul>
+                    <li>✅ Validation format email</li>
+                    <li>✅ Normalisation en minuscules</li>
+                    <li>✅ Extraction domaine</li>
+                </ul>
+                
+                <h4>Password Tests (4)</h4>
+                <ul>
+                    <li>✅ Hachage bcrypt sécurisé</li>
+                    <li>✅ Vérification mot de passe</li>
+                    <li>✅ Rejet mots de passe faibles</li>
+                </ul>
+                
+                <h4>Nickname Tests (4)</h4>
+                <ul>
+                    <li>✅ Validation format alphanumeric</li>
+                    <li>✅ Rejet caractères spéciaux</li>
+                    <li>✅ Limite longueur (32 chars)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="accordion-item">
+            <h3 class="accordion-header">� Backend Use Cases (5 tests)</h3>
+            <div class="accordion-content">
+                <h4>Register Classic Use Case</h4>
+                <ul>
+                    <li>✅ Inscription utilisateur valide</li>
+                    <li>✅ Prévention doublons email</li>
+                    <li>✅ Validation format email</li>
+                    <li>✅ Rejet mots de passe faibles</li>
+                    <li>✅ Génération tokens automatique</li>
+                </ul>
+                
+                <div class="code-block">
+                    <h5>Exemple Test</h5>
+                    <pre><code>it('should register a new user successfully', async () => {
+  const dto = {
+    email: 'test@example.com',
+    password: 'Test123!@#',
+    nickname: 'testuser'
+  };
+  
+  const result = await useCase.execute(dto);
+  
+  expect(result.accessToken).toBeDefined();
+  expect(result.user.email).toBe('test@example.com');
+});</code></pre>
+                </div>
+            </div>
+        </div>
+        
+        <div class="accordion-item">
+            <h3 class="accordion-header">🔑 Backend Token Service (18 tests)</h3>
+            <div class="accordion-content">
+                <h4>Access Token Tests (4)</h4>
+                <ul>
+                    <li>✅ Génération token valide</li>
+                    <li>✅ Format JWT correct (3 parties)</li>
+                    <li>✅ Tokens uniques par utilisateur</li>
+                    <li>✅ Vérification signature</li>
+                </ul>
+                
+                <h4>Refresh Token Tests (3)</h4>
+                <ul>
+                    <li>✅ Génération token refresh</li>
+                    <li>✅ Unicité des tokens</li>
+                    <li>✅ Durée de vie configurée</li>
+                </ul>
+                
+                <h4>Validation Tests (8)</h4>
+                <ul>
+                    <li>✅ Vérification tokens valides</li>
+                    <li>✅ Rejet tokens invalides</li>
+                    <li>✅ Gestion tokens vides</li>
+                    <li>✅ Extraction données utilisateur</li>
+                </ul>
+                
+                <h4>Configuration Tests (3)</h4>
+                <ul>
+                    <li>✅ Calcul expirations correctes</li>
+                    <li>✅ Validation secrets production</li>
+                    <li>✅ Gestion erreurs format</li>
+                </ul>
+                
+                <div class="code-block">
+                    <h5>Configuration JWT</h5>
+                    <pre><code># Variables d'environnement requises
+JWT_ACCESS_SECRET=your-secret-key
+JWT_REFRESH_SECRET=your-refresh-secret
+JWT_ACCESS_EXPIRATION=15m
+JWT_REFRESH_EXPIRATION=7d</code></pre>
+                </div>
+            </div>
+        </div>
+        
+        <div class="accordion-item">
+            <h3 class="accordion-header">�🔐 Frontend Auth Service (15 tests)</h3>
+            <div class="accordion-content">
+                <h4>Tests Critiques (9)</h4>
+                <ul>
+                    <li>✅ Login avec credentials valides</li>
+                    <li>✅ Login avec credentials invalides</li>
+                    <li>✅ Register avec données valides</li>
+                    <li>✅ Register avec email existant</li>
+                    <li>✅ Logout utilisateur</li>
+                    <li>✅ Refresh token valide/expiré</li>
+                    <li>✅ Vérification token</li>
+                    <li>✅ Validation email format</li>
+                </ul>
+                
+                <h4>Tests Performance (3)</h4>
+                <ul>
+                    <li>✅ Cache des réponses</li>
+                    <li>✅ Timeout requests</li>
+                    <li>✅ Retry automatique</li>
+                </ul>
+                
+                <h4>Tests Robustesse (3)</h4>
+                <ul>
+                    <li>✅ Gestion erreurs réseau</li>
+                    <li>✅ Réponses malformées</li>
+                    <li>✅ États concurrents</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="accordion-item">
+            <h3 class="accordion-header">📊 Dashboard Component (15 tests)</h3>
+            <div class="accordion-content">
+                <h4>Tests Critiques (8)</h4>
+                <ul>
+                    <li>✅ Chargement données utilisateur</li>
+                    <li>✅ Affichage informations</li>
+                    <li>✅ Gestion états de charge</li>
+                    <li>✅ Navigation entre sections</li>
+                    <li>✅ Actions utilisateur</li>
+                    <li>✅ Validation formulaires</li>
+                    <li>✅ Gestion permissions</li>
+                    <li>✅ Mise à jour temps réel</li>
+                </ul>
+                
+                <h4>Tests UX (4)</h4>
+                <ul>
+                    <li>✅ Animations et transitions</li>
+                    <li>✅ Responsive design</li>
+                    <li>✅ Feedback visuel</li>
+                    <li>✅ Accessibilité</li>
+                </ul>
+                
+                <h4>Tests Performance (3)</h4>
+                <ul>
+                    <li>✅ Lazy loading composants</li>
+                    <li>✅ Cache données</li>
+                    <li>✅ Optimisation rendu</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="accordion-item">
+            <h3 class="accordion-header">📡 Server Monitor (15 tests)</h3>
+            <div class="accordion-content">
+                <h4>Tests Critiques (8)</h4>
+                <ul>
+                    <li>✅ Status serveur</li>
+                    <li>✅ Métriques temps réel</li>
+                    <li>✅ Alertes système</li>
+                    <li>✅ Historique métriques</li>
+                    <li>✅ Seuils d'alerte</li>
+                    <li>✅ Connexion base données</li>
+                    <li>✅ Services externes</li>
+                    <li>✅ Logs système</li>
+                </ul>
+                
+                <h4>Tests Performance (4)</h4>
+                <ul>
+                    <li>✅ Polling optimisé</li>
+                    <li>✅ Compression données</li>
+                    <li>✅ Cache métriques</li>
+                    <li>✅ Batch updates</li>
+                </ul>
+                
+                <h4>Tests Robustesse (3)</h4>
+                <ul>
+                    <li>✅ Reconnexion automatique</li>
+                    <li>✅ Fallback modes</li>
+                    <li>✅ Error recovery</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="accordion-item">
+            <h3 class="accordion-header">🛠️ Shared Utils (18 tests)</h3>
+            <div class="accordion-content">
+                <p><strong>Tests Utilitaires complets couvrant :</strong></p>
+                <div class="utils-grid">
+                    <div class="utils-category">
+                        <h5>Formatage</h5>
+                        <ul>
+                            <li>✅ Formatage dates</li>
+                            <li>✅ Number formatting</li>
+                            <li>✅ Error formatting</li>
+                        </ul>
+                    </div>
+                    <div class="utils-category">
+                        <h5>Validation</h5>
+                        <ul>
+                            <li>✅ Validation email</li>
+                            <li>✅ Sanitization HTML</li>
+                            <li>✅ URL parsing</li>
+                        </ul>
+                    </div>
+                    <div class="utils-category">
+                </div>
+                <div class="utils-details">
+                    <h4>🧪 Tests unitaires spécifiques – <code>analyze-bundle-size.js</code></h4>
+                    <p>Des tests unitaires couvrent les fonctions utilitaires critiques du script d’analyse de bundles&nbsp;:</p>
+                    <ul>
+                        <li><b>formatBytes</b> : Vérifie le formatage lisible des tailles (octets, Ko, Mo, etc.).</li>
+                        <li><b>getPerformanceScore</b> : Calcule un score de performance selon la taille du bundle.</li>
+                        <li><b>getPerformanceRating</b> : Retourne une appréciation textuelle (excellent, good, average, poor).</li>
+                        <li><b>getPerformanceEmoji</b> : Associe un emoji au score de performance.</li>
+                        <li><b>getPerformanceClass</b> : Retourne la classe CSS pour affichage visuel du score.</li>
+                    </ul>
+                    <div class="code-block">
+                        <h5>Exemples de tests</h5>
+                        <pre><code>expect(formatBytes(1536)).toBe('1.5 KB');
+                        <h5>Stockage</h5>
+                        <ul>
+                            <li>✅ Local storage</li>
+                            <li>✅ Session storage</li>
+                            <li>✅ Gestion cookies</li>
+                    </div>
+                    <p>Ces tests garantissent la fiabilité des indicateurs affichés dans les rapports d’analyse de bundles.</p>
+                </div>
+                        </ul>
+                    </div>
+                    <div class="utils-category">
+                        <h5>Performance</h5>
+                        <ul>
+                            <li>✅ Debounce functions</li>
+                            <li>✅ Throttle functions</li>
+                            <li>✅ Deep clone objects</li>
+                        </ul>
+                    </div>
+                    <div class="utils-category">
+                        <h5>Sécurité</h5>
+                        <ul>
+                            <li>✅ Cryptage client</li>
+                            <li>✅ Génération UUID</li>
+                        </ul>
+                    </div>
+                    <div class="utils-category">
+                        <h5>Fichiers</h5>
+                        <ul>
+                            <li>✅ File upload</li>
+                            <li>✅ Image processing</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content-section">
+    <h2>⚙️ Configuration Technique</h2>
+    
+    <h3>Configuration Vitest</h3>
+    <div class="code-block">
+        <pre><code>// vitest.config.js
+export default defineConfig({
+  test: {
+    globals: true,                    // APIs globales
+    environment: 'jsdom',             // Simulation DOM
+    setupFiles: ['./tests/frontend/setup.js'],
+    coverage: {
+      provider: 'v8',                 // Engine V8
+      thresholds: {
+        global: {
+          branches: 60,               // 60% minimum
+          functions: 60,
+          lines: 60,
+          statements: 60
+        }
+      }
+    }
+  }
+});</code></pre>
+    </div>
+    
+    <h3>Mocks Disponibles</h3>
+    <div class="info-grid">
+        <div class="info-card">
+            <h4>Browser APIs</h4>
+            <ul>
+                <li>localStorage/sessionStorage</li>
+                <li>fetch API</li>
+                <li>clipboard API</li>
+                <li>DOM manipulation</li>
+            </ul>
+        </div>
+        <div class="info-card">
+            <h4>API Responses</h4>
+            <ul>
+                <li>Health checks</li>
+                <li>Authentication flows</li>
+                <li>User profiles</li>
+                <li>Error scenarios</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="content-section">
+    <h2>📈 Roadmap Tests</h2>
+    
+    <div class="roadmap">
+        <div class="roadmap-item completed">
+            <h3>✅ Phase 3.1 - Tests Frontend</h3>
+            <ul>
+                <li>Framework Vitest configuré</li>
+                <li>63 tests frontend implémentés</li>
+                <li>Mocks complets</li>
+                <li>Documentation intégrée</li>
+            </ul>
+        </div>
+        
+        <div class="roadmap-item next">
+            <h3>🔄 Phase 3.2 - Tests Backend</h3>
+            <ul>
+                <li>Tests unitaires (Jest/Vitest)</li>
+                <li>Tests d'intégration (Supertest)</li>
+                <li>Tests base de données</li>
+                <li>Tests API complets</li>
+            </ul>
+        </div>
+        
+        <div class="roadmap-item future">
+            <h3>🔮 Phase 3.3 - Tests E2E</h3>
+            <ul>
+                <li>Playwright/Cypress</li>
+                <li>Scénarios utilisateur complets</li>
+                <li>Tests cross-browser</li>
+                <li>Tests d'accessibilité</li>
+            </ul>
+        </div>
+        
+        <div class="roadmap-item future">
+            <h3>🔮 Phase 3.4 - Tests Performance</h3>
+            <ul>
+                <li>Tests de charge (k6/Artillery)</li>
+                <li>Benchmarks API</li>
+                <li>Monitoring continu</li>
+                <li>Regression testing</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="content-section">
+    <h2>🛡️ Bonnes Pratiques</h2>
+    
+    <div class="best-practices">
+        <div class="practice-category">
+            <h3>📝 Écriture de Tests</h3>
+            <ul>
+                <li><strong>Noms descriptifs</strong> : Tests auto-documentés</li>
+                <li><strong>Structure AAA</strong> : Arrange-Act-Assert</li>
+                <li><strong>Tests atomiques</strong> : Un concept par test</li>
+                <li><strong>Mocks réalistes</strong> : Données proches réalité</li>
+            </ul>
+        </div>
+        
+        <div class="practice-category">
+            <h3>🏃 Exécution</h3>
+            <ul>
+                <li><strong>Tests rapides</strong> : &lt; 10s pour suite complète</li>
+                <li><strong>Tests déterministes</strong> : Pas de flaky tests</li>
+                <li><strong>Isolation</strong> : Tests indépendants</li>
+                <li><strong>Cleanup</strong> : Nettoyage entre tests</li>
+            </ul>
+        </div>
+        
+        <div class="practice-category">
+            <h3>📊 Maintenance</h3>
+            <ul>
+                <li><strong>Coverage monitoring</strong> : Seuils respectés</li>
+                <li><strong>Documentation à jour</strong> : Tests documentés</li>
+                <li><strong>Refactoring régulier</strong> : Code de test propre</li>
+                <li><strong>CI/CD integration</strong> : Tests automatisés</li>
+            </ul>
+        </div>
+        <div class="practice-category">
+            <h3>🛡️ Gestion d’erreur explicite</h3>
+            <ul>
+                <li>Le script <code>analyze-bundle-size.js</code> affiche systématiquement le chemin du fichier concerné lors d’une erreur de lecture ou d’écriture (bundles, config, rapports…).</li>
+                <li>Permet un diagnostic rapide en cas de problème d’accès aux fichiers.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="content-section">
+    <h2>🔧 Debugging et Troubleshooting</h2>
+    
+    <div class="code-block">
+        <h3>Commandes de Debug</h3>
+        <pre><code># Debug un test spécifique
+npx vitest auth-service --inspect-brk
+
+# Tests avec pattern
+npx vitest --grep "login"
+
+# Verbose output
+npx vitest --reporter=verbose
+
+# Interface graphique
+npm run test:frontend:ui</code></pre>
+    </div>
+    
+    <div class="troubleshooting">
+        <h3>Problèmes Courants</h3>
+        <div class="problem-solution">
+            <h4>❌ Tests flaky</h4>
+            <p><strong>Solution :</strong> Vérifier les mocks, ajouter await appropriés, isoler les tests</p>
+        </div>
+        
+        <div class="problem-solution">
+            <h4>❌ Coverage insuffisant</h4>
+            <p><strong>Solution :</strong> Identifier les lignes non couvertes, ajouter tests manquants</p>
+        </div>
+        
+        <div class="problem-solution">
+            <h4>❌ Tests lents</h4>
+            <p><strong>Solution :</strong> Optimiser les mocks, paralléliser si possible</p>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,265 @@
+/**
+ * Styles des composants SuperOAuth
+ * @version 1.0.0
+ */
+
+/* Statut du serveur */
+.status {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.status-online {
+    background: #4CAF50;
+    animation: pulse 2s infinite;
+}
+
+.status-offline {
+    background: #f44336;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Boutons */
+/**
+ * Composants UI SuperOAuth - Optimisé Phase 2
+ * @version 1.0.0
+ */
+
+@import 'variables.css';
+
+/* Boutons */
+.btn {
+    display: inline-block;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 500;
+    text-align: center;
+    transition: var(--transition);
+    margin: var(--spacing-xs);
+}
+
+.btn:hover {
+    background: #5a6fd8;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    max-width: 150px;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-primary {
+    background: #667eea;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover {
+    background: #5a6fd8;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-success {
+    background: #28a745;
+}
+
+.btn-success:hover {
+    background: #218838;
+}
+
+.btn-danger {
+    background: #dc3545;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    max-width: 100px;
+}
+
+/* OAuth Buttons */
+.oauth-providers {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.oauth-btn {
+    flex: 1;
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.oauth-discord {
+    background: #5865F2;
+}
+
+.oauth-twitch {
+    background: #9146FF;
+}
+
+.oauth-google {
+    background: #db4437;
+}
+
+.oauth-github {
+    background: #333;
+}
+
+/* Zone de réponse */
+.response-area {
+    background: #2d3748;
+    color: #e2e8f0;
+    padding: 20px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 15px;
+}
+
+/* API Documentation */
+.api-endpoint {
+    background: #f8f9fa;
+    border-left: 4px solid #667eea;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 5px;
+    font-family: 'Courier New', monospace;
+}
+
+.method {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.get {
+    background: #4CAF50;
+    color: white;
+}
+
+.post {
+    background: #2196F3;
+    color: white;
+}
+
+.put {
+    background: #FF9800;
+    color: white;
+}
+
+.delete {
+    background: #f44336;
+    color: white;
+}
+
+/* 🔄 Service Worker Update Notifications */
+.update-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--bg-card);
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 300px;
+    animation: slideInRight 0.3s ease-out;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.notification-content span {
+    flex: 1;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.btn-update {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.btn-update:hover {
+    background: var(--primary-hover);
+}
+
+.btn-close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.btn-close:hover {
+    color: var(--text-primary);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

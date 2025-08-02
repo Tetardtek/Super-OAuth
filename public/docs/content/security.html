@@ -1,0 +1,430 @@
+<h2 aria-label="Guide de Sécurité SuperOAuth" tabindex="0">🔒 Guide de Sécurité SuperOAuth</h2>
+
+<div class="security-overview">
+    <p>SuperOAuth implémente une approche de sécurité en profondeur avec plusieurs couches de protection pour garantir la confidentialité et l'intégrité des données utilisateur.</p>
+</div>
+
+<div class="security-status">
+    <div class="status-item active">
+        <span class="status-icon">🛡️</span>
+        <span>Authentification Forte</span>
+    </div>
+    <div class="status-item active">
+        <span class="status-icon">🔐</span>
+        <span>Tokens JWT Sécurisés</span>
+    </div>
+    <div class="status-item active">
+        <span class="status-icon">🌐</span>
+        <span>Protection Web CSP</span>
+    </div>
+    <div class="status-item active">
+        <span class="status-icon">🔍</span>
+        <span>Validation Stricte</span>
+    </div>
+</div>
+
+<h3 aria-label="Authentification" tabindex="0">🔐 Authentification</h3>
+
+<div class="security-section">
+    <h4 aria-label="Hachage des Mots de Passe" tabindex="0">🏗️ Hachage des Mots de Passe</h4>
+    <div class="code-block">import * as bcrypt from 'bcrypt';
+
+class PasswordService {
+  private static readonly SALT_ROUNDS = 12;
+
+  static async hash(password: string): Promise&lt;string&gt; {
+    return bcrypt.hash(password, this.SALT_ROUNDS);
+  }
+
+  static async verify(password: string, hash: string): Promise&lt;boolean&gt; {
+    return bcrypt.compare(password, hash);
+  }
+}</div>
+
+    <div class="component-card">
+        <h5 aria-label="Politique de Mots de Passe" tabindex="0">🔒 Politique de Mots de Passe</h5>
+        <ul>
+            <li><strong>Minimum 8 caractères</strong></li>
+            <li><strong>Au moins 1 minuscule</strong> (a-z)</li>
+            <li><strong>Au moins 1 majuscule</strong> (A-Z)</li>
+            <li><strong>Au moins 1 chiffre</strong> (0-9)</li>
+            <li><strong>Au moins 1 caractère spécial</strong> (@$!%*?&)</li>
+        </ul>
+    </div>
+</div>
+
+<div class="security-section">
+    <h4 aria-label="Protection contre les Attaques" tabindex="0">🛡️ Protection contre les Attaques</h4>
+    
+    <div class="code-block">// Rate Limiting - Limitation des tentatives
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Maximum 5 tentatives
+  message: 'Trop de tentatives de connexion',
+  standardHeaders: true,
+  legacyHeaders: false,
+});</div>
+
+    <div class="attack-protection-grid">
+        <div class="protection-card">
+            <h5 aria-label="Brute Force" tabindex="0">🚫 Brute Force</h5>
+            <p>Limitation à 5 tentatives par 15 minutes</p>
+        </div>
+        <div class="protection-card">
+            <h5 aria-label="Lockout Temporaire" tabindex="0">🕐 Lockout Temporaire</h5>
+            <p>Blocage de 30 minutes après échecs répétés</p>
+        </div>
+        <div class="protection-card">
+            <h5 aria-label="Monitoring" tabindex="0">📊 Monitoring</h5>
+            <p>Surveillance des tentatives d'intrusion</p>
+        </div>
+    </div>
+</div>
+
+<h3 aria-label="Sécurité Web" tabindex="0">🌐 Sécurité Web</h3>
+
+<div class="security-section">
+    <h4 aria-label="Content Security Policy (CSP)" tabindex="0">🔒 Content Security Policy (CSP)</h4>
+    <div class="code-block">app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      scriptSrcAttr: ["'none'"], // Bloque les onclick inline
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+}));</div>
+
+    <div class="csp-impact">
+        <div class="impact-example bad">
+            <h5>❌ Bloqué par CSP</h5>
+            <div class="code-block">&lt;button onclick="myFunction()"&gt;Click&lt;/button&gt;</div>
+        </div>
+        <div class="impact-example good">
+            <h5>✅ Autorisé par CSP</h5>
+            <div class="code-block">document.getElementById('button').addEventListener('click', myFunction);</div>
+        </div>
+    </div>
+</div>
+
+<div class="security-section">
+    <h4>🛡️ Headers de Sécurité</h4>
+    <div class="security-headers-grid">
+        <div class="header-card">
+            <h5>🚫 X-Frame-Options</h5>
+            <p>Protection contre le clickjacking</p>
+        </div>
+        <div class="header-card">
+            <h5>🔒 HSTS</h5>
+            <p>Force l'utilisation de HTTPS</p>
+        </div>
+        <div class="header-card">
+            <h5>🛡️ X-Content-Type-Options</h5>
+            <p>Prévient le sniffing MIME</p>
+        </div>
+        <div class="header-card">
+            <h5>🔍 Referrer-Policy</h5>
+            <p>Contrôle les informations de référent</p>
+        </div>
+    </div>
+</div>
+
+<h3>🔑 Gestion des Tokens</h3>
+
+<div class="security-section">
+    <h4>🎫 Configuration JWT</h4>
+    <div class="code-block">// Durées de vie optimisées pour la sécurité
+const ACCESS_TOKEN_EXPIRY = '15m';  // Court pour limiter l'exposition
+const REFRESH_TOKEN_EXPIRY = '7d';  // Plus long pour l'ergonomie
+
+class TokenService {
+  static generateAccessToken(payload: any): string {
+    return jwt.sign(payload, process.env.JWT_SECRET!, {
+      expiresIn: ACCESS_TOKEN_EXPIRY,
+      issuer: 'SuperOAuth',
+      audience: 'SuperOAuth-Users'
+    });
+  }
+}</div>
+
+    <div class="token-security-features">
+        <div class="feature-card">
+            <div class="feature-icon">⏱️</div>
+            <h5>Durée de Vie Courte</h5>
+            <p>Access tokens expirent en 15 minutes</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🔄</div>
+            <h5>Rotation Automatique</h5>
+            <p>Refresh tokens sont renouvelés à chaque usage</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🚫</div>
+            <h5>Révocation</h5>
+            <p>Blacklist des tokens compromis</p>
+        </div>
+    </div>
+</div>
+
+<div class="security-section">
+    <h4>🔄 Rotation des Tokens</h4>
+    <div class="code-block">class RefreshTokenService {
+  static async rotateTokens(refreshToken: string) {
+    // Vérifier et invalider l'ancien refresh token
+    const payload = this.verifyRefreshToken(refreshToken);
+    await this.revokeRefreshToken(refreshToken);
+    
+    // Générer de nouveaux tokens
+    const newAccessToken = TokenService.generateAccessToken(payload);
+    const newRefreshToken = TokenService.generateRefreshToken(payload);
+    
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+  }
+}</div>
+</div>
+
+<h3>✅ Validation et Sanitisation</h3>
+
+<div class="security-section">
+    <h4>🔍 Validation des Entrées</h4>
+    <div class="code-block">import { IsEmail, IsString, MinLength, MaxLength } from 'class-validator';
+
+class CreateUserDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(8)
+  @MaxLength(128)
+  password: string;
+
+  @IsString()
+  @MinLength(2)
+  @MaxLength(50)
+  nickname: string;
+}</div>
+
+    <div class="validation-rules">
+        <h5>📋 Règles de Validation</h5>
+        <ul>
+            <li><strong>Email</strong> : Format RFC valide obligatoire</li>
+            <li><strong>Mot de passe</strong> : 8-128 caractères avec complexité</li>
+            <li><strong>Pseudo</strong> : 2-50 caractères, alphanumériques</li>
+            <li><strong>Sanitisation</strong> : Nettoyage automatique XSS</li>
+        </ul>
+    </div>
+</div>
+
+<h3>🚨 Monitoring et Logs</h3>
+
+<div class="security-section">
+    <h4>📊 Logging de Sécurité</h4>
+    <div class="code-block">class SecurityLogger {
+  static logFailedLogin(email: string, ip: string) {
+    securityLogger.warn('Failed login attempt', {
+      email,
+      ip,
+      timestamp: new Date().toISOString(),
+      event: 'FAILED_LOGIN'
+    });
+  }
+
+  static logSuspiciousActivity(userId: string, activity: string) {
+    securityLogger.error('Suspicious activity detected', {
+      userId,
+      activity,
+      timestamp: new Date().toISOString(),
+      event: 'SUSPICIOUS_ACTIVITY'
+    });
+  }
+}</div>
+
+    <div class="monitoring-events">
+        <h5>🎯 Événements Surveillés</h5>
+        <div class="events-grid">
+            <div class="event-card critical">
+                <h6>🚨 Critiques</h6>
+                <ul>
+                    <li>Tentatives de connexion échouées</li>
+                    <li>Accès non autorisés</li>
+                    <li>Manipulation de tokens</li>
+                </ul>
+            </div>
+            <div class="event-card warning">
+                <h6>⚠️ Avertissements</h6>
+                <ul>
+                    <li>Connexions inhabituelles</li>
+                    <li>Changements de mot de passe</li>
+                    <li>Activité suspecte</li>
+                </ul>
+            </div>
+            <div class="event-card info">
+                <h6>ℹ️ Informations</h6>
+                <ul>
+                    <li>Connexions réussies</li>
+                    <li>Création de comptes</li>
+                    <li>Usage normal des API</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3>🛠️ Configuration Sécurisée</h3>
+
+<div class="security-section">
+    <h4>⚙️ Variables d'Environnement</h4>
+    <div class="code-block"># Secrets forts (générer avec openssl rand -base64 32)
+JWT_SECRET=your_256_bit_secret_key_here
+JWT_REFRESH_SECRET=your_different_256_bit_refresh_key
+
+# Base de données avec utilisateur dédié
+DB_USERNAME=superoauth_user  # Pas root !
+DB_PASSWORD=strong_random_password
+
+# Configuration de production
+NODE_ENV=production
+CORS_ORIGIN=https://yourdomain.com</div>
+
+    <div class="config-checklist">
+        <h5>✅ Checklist de Configuration</h5>
+        <div class="checklist-grid">
+            <div class="checklist-item">
+                <span class="check">✅</span> Secrets de 256 bits minimum
+            </div>
+            <div class="checklist-item">
+                <span class="check">✅</span> Utilisateur DB dédié (non-root)
+            </div>
+            <div class="checklist-item">
+                <span class="check">✅</span> CORS configuré strictement
+            </div>
+            <div class="checklist-item">
+                <span class="check">✅</span> Variables d'environnement sécurisées
+            </div>
+            <div class="checklist-item">
+                <span class="check">✅</span> HTTPS forcé en production
+            </div>
+            <div class="checklist-item">
+                <span class="check">✅</span> Rate limiting activé
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3>🆘 Réponse aux Incidents</h3>
+
+<div class="security-section">
+    <h4>🚨 Plan de Réponse</h4>
+    <div class="incident-response">
+        <div class="response-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h5>🔍 Détection</h5>
+                <p>Monitoring automatique et alertes en temps réel</p>
+            </div>
+        </div>
+        <div class="response-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h5>🚫 Isolation</h5>
+                <p>Blocage automatique des comptes/IPs suspects</p>
+            </div>
+        </div>
+        <div class="response-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h5>🔬 Investigation</h5>
+                <p>Analyse des logs et évaluation de l'impact</p>
+            </div>
+        </div>
+        <div class="response-step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h5>🔧 Remédiation</h5>
+                <p>Correction des vulnérabilités identifiées</p>
+            </div>
+        </div>
+        <div class="response-step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <h5>📢 Communication</h5>
+                <p>Notification des utilisateurs si nécessaire</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3>🎯 Bonnes Pratiques</h3>
+
+<div class="best-practices-grid">
+    <div class="practice-card">
+        <h4>🔐 Authentification</h4>
+        <ul>
+            <li>Mots de passe complexes obligatoires</li>
+            <li>Hachage bcrypt avec salt élevé</li>
+            <li>Rate limiting sur les endpoints sensibles</li>
+            <li>Monitoring des tentatives d'intrusion</li>
+        </ul>
+    </div>
+    
+    <div class="practice-card">
+        <h4>🎫 Gestion des Tokens</h4>
+        <ul>
+            <li>Durée de vie courte pour les access tokens</li>
+            <li>Rotation systématique des refresh tokens</li>
+            <li>Révocation en cas de compromission</li>
+            <li>Signature forte avec secrets séparés</li>
+        </ul>
+    </div>
+    
+    <div class="practice-card">
+        <h4>🌐 Sécurité Web</h4>
+        <ul>
+            <li>CSP strict sans inline scripts</li>
+            <li>Headers de sécurité complets</li>
+            <li>Validation stricte des entrées</li>
+            <li>Sanitisation automatique XSS</li>
+        </ul>
+    </div>
+    
+    <div class="practice-card">
+        <h4>📊 Monitoring</h4>
+        <ul>
+            <li>Logging de tous les événements sécuritaires</li>
+            <li>Alertes automatiques en temps réel</li>
+            <li>Audit régulier des accès</li>
+            <li>Métriques de sécurité</li>
+        </ul>
+    </div>
+</div>
+
+<div class="security-summary">
+    <h4>🎯 Résumé de la Posture Sécuritaire</h4>
+    <p>SuperOAuth implémente une approche de sécurité en profondeur avec de multiples couches de protection. L'architecture privilégie la sécurité dès la conception (Security by Design) tout en maintenant une expérience utilisateur fluide.</p>
+    
+    <div class="security-metrics">
+        <div class="metric">
+            <span class="metric-value">256-bit</span>
+            <span class="metric-label">Clés de chiffrement</span>
+        </div>
+        <div class="metric">
+            <span class="metric-value">15min</span>
+            <span class="metric-label">Durée access token</span>
+        </div>
+        <div class="metric">
+            <span class="metric-value">12 rounds</span>
+            <span class="metric-label">Salt bcrypt</span>
+        </div>
+        <div class="metric">
+            <span class="metric-value">5/15min</span>
+            <span class="metric-label">Rate limiting</span>
+        </div>
+    </div>
+</div>

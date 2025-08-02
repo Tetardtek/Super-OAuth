@@ -1,0 +1,172 @@
+<h2 aria-label="Architecture Modulaire" tabindex="0">🏗️ Architecture Modulaire</h2>
+
+<h3 aria-label="Vue d'ensemble" tabindex="0">📋 Vue d'ensemble</h3>
+<p>SuperOAuth a été conçu avec une architecture modulaire pour maximiser la <strong>maintenabilité</strong>, la <strong>réutilisabilité</strong> et la <strong>portabilité</strong>.</p>
+
+<div class="architecture-diagram">
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐<br>
+│   UI Events     │───▶│   Components     │───▶│   AuthService   │<br>
+│                 │    │                  │    │                 │<br>
+│ • Click         │    │ • AuthComponent  │    │ • API Calls     │<br>
+│ • Input         │    │ • Dashboard      │    │ • Token Mgmt    │<br>
+│ • Focus         │    │ • ServerMonitor  │    │ • State Mgmt    │<br>
+└─────────────────┘    └──────────────────┘    └─────────────────┘<br>
+                                 │                        │<br>
+                                 ▼                        ▼<br>
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐<br>
+│   UI Updates    │◀───│    Utils         │◀───│   API Server    │<br>
+│                 │    │                  │    │                 │<br>
+│ • DOM Manip     │    │ • Storage        │    │ • /auth/*       │<br>
+│ • Feedback      │    │ • Validation     │    │ • /health       │<br>
+│ • State         │    │ • HTTP Helpers   │    │ • OAuth         │<br>
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+</div>
+
+<h3 aria-label="Structure des fichiers" tabindex="0">📁 Structure des fichiers</h3>
+<div class="file-tree">
+public/<br>
+├── index.html                  # Interface HTML modulaire<br>
+├── css/                        # Styles séparés<br>
+│   ├── main.css               # Styles principaux et layout<br>
+│   ├── components.css         # Styles des composants UI<br>
+│   └── dashboard.css          # Styles spécifiques au dashboard<br>
+├── js/                        # Logique JavaScript modulaire<br>
+│   ├── config.js              # Configuration et constantes<br>
+│   ├── utils.js               # Utilitaires et helpers<br>
+│   ├── auth-service.js        # Service d'authentification<br>
+│   ├── auth-component.js      # Composant d'interface auth<br>
+│   ├── dashboard-component.js # Composant dashboard<br>
+│   ├── server-monitor.js      # Monitoring du serveur<br>
+│   └── app.js                 # Application principale<br>
+├── docs/                      # Documentation modulaire<br>
+│   ├── index.html             # Page principale de documentation<br>
+│   ├── styles/                # Styles de la documentation<br>
+│   ├── js/                    # JavaScript modulaire docs<br>
+│   └── content/               # Contenu des onglets<br>
+└── components/                # Composants réutilisables (future)
+</div>
+
+<h3 aria-label="Contrôleurs et Routing" tabindex="0">🧩 Contrôleurs et Routing</h3>
+<p>
+<strong>SuperOAuth</strong> propose trois controllers complémentaires pour couvrir tous les usages d'authentification&nbsp;:
+</p>
+<ul>
+  <li>
+    <strong>AuthController</strong> <em>(classique)</em>&nbsp;: Gère l’inscription, la connexion, le refresh et le logout par email/mot de passe. Indispensable pour les utilisateurs sans provider OAuth, ou pour lier un provider à un compte existant.
+  </li>
+  <li>
+    <strong>OAuthController</strong>&nbsp;: Gère tout le flux OAuth (initiation, callback, gestion des comptes liés, unlink, etc.) avec redirections automatiques et sécurité renforcée.
+  </li>
+  <li>
+    <strong>AuthController Simple</strong> <em>(auth.controller.simple.ts)</em>&nbsp;: Version minimaliste, tout en JSON, sans redirection. Idéal pour API REST pure, tests automatisés, ou intégrations front custom (SPA/mobile).
+  </li>
+</ul>
+<p>
+<strong>Comparatif des controllers&nbsp;:</strong>
+</p>
+<table class="script-table">
+  <thead>
+    <tr>
+      <th>Controller</th>
+      <th>Auth classique</th>
+      <th>OAuth (init/callback)</th>
+      <th>Réponse</th>
+      <th>Redirection</th>
+      <th>Usage principal</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>auth.controller.simple.ts</strong></td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>JSON</td>
+      <td>❌</td>
+      <td>API pure, tests, front custom</td>
+    </tr>
+    <tr>
+      <td><strong>auth.controller.ts</strong></td>
+      <td>✅</td>
+      <td>(parfois, à éviter)</td>
+      <td>JSON</td>
+      <td>❌</td>
+      <td>Auth classique, prod</td>
+    </tr>
+    <tr>
+      <td><strong>oauth.controller.ts</strong></td>
+      <td>❌</td>
+      <td>✅</td>
+      <td>Redirection/JSON</td>
+      <td>✅</td>
+      <td>OAuth web, UX fluide, prod</td>
+    </tr>
+  </tbody>
+</table>
+<p>
+<strong>Routes principales&nbsp;:</strong>
+</p>
+<ul>
+  <li><code>/api/v1/auth/*</code> → Auth classique (register, login, refresh, logout)</li>
+  <li><code>/api/v1/oauth/*</code> → Flux OAuth complet (init, callback, gestion des providers, comptes liés)</li>
+</ul>
+<p>
+Le routing principal (<code>main.ts</code>) monte ces routes sur des espaces dédiés, garantissant l’absence de conflit et une architecture claire et évolutive.
+</p>
+<div class="feature-grid">
+    <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h4>Séparation des responsabilités</h4>
+        <p>Chaque module a une responsabilité claire et bien définie.</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h4>Faible couplage</h4>
+        <p>Les modules sont indépendants et communiquent via des interfaces.</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">🎪</div>
+        <h4>Haute cohésion</h4>
+        <p>Les éléments de chaque module travaillent ensemble vers un objectif commun.</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">🚀</div>
+        <h4>Performance</h4>
+        <p>Chargement modulaire et optimisé pour de meilleures performances.</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">🧪</div>
+        <h4>Testabilité</h4>
+        <p>Chaque module peut être testé individuellement.</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">📦</div>
+        <h4>Réutilisabilité</h4>
+        <p>Composants réutilisables dans d'autres projets.</p>
+    </div>
+</div>
+
+<h3 aria-label="Avantages de l'architecture modulaire" tabindex="0">📦 Avantages de l'architecture modulaire</h3>
+<div class="component-card">
+    <h4>✅ Maintenabilité</h4>
+    <p>Code organisé et documenté, facile à maintenir et déboguer.</p>
+</div>
+
+<div class="component-card">
+    <h4>✅ Évolutivité</h4>
+    <p>Ajout facile de nouvelles fonctionnalités sans affecter l'existant.</p>
+</div>
+
+<div class="component-card">
+    <h4>✅ Collaboration d'équipe</h4>
+    <p>Plusieurs développeurs peuvent travailler simultanément sur différents modules.</p>
+</div>
+
+<div class="component-card">
+    <h4>✅ Performance optimisée</h4>
+    <p>Chargement uniquement des modules nécessaires, réduction du bundle.</p>
+</div>

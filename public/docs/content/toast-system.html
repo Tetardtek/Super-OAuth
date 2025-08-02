@@ -1,0 +1,251 @@
+<h2>🍞 Système de Toast Notifications</h2>
+
+<div class="feature-overview">
+    <p>Le système de toast de SuperOAuth offre une expérience utilisateur moderne et intuitive pour les notifications en temps réel.</p>
+</div>
+
+<div class="demo-section">
+    <h3>🎯 Démonstration Live</h3>
+    <div class="toast-demo-controls">
+        <button id="demoToastSuccess" class="demo-btn success" aria-label="Toast succès" tabindex="0">Toast Success</button>
+        <button id="demoToastError" class="demo-btn error" aria-label="Toast erreur" tabindex="0">Toast Error</button>
+        <button id="demoToastWarning" class="demo-btn warning" aria-label="Toast avertissement" tabindex="0">Toast Warning</button>
+        <button id="demoToastInfo" class="demo-btn info" aria-label="Toast info" tabindex="0">Toast Info</button>
+    </div>
+</div>
+
+<h3>📋 Vue d'ensemble</h3>
+<p>Le <code>ToastManager</code> est une classe JavaScript qui gère l'affichage de notifications toast dans l'interface utilisateur. Il est automatiquement initialisé au chargement de l'application.</p>
+
+<div class="component-card">
+    <h4>✨ Fonctionnalités Principales</h4>
+    <ul>
+        <li><strong>4 types de notifications</strong> : Success ✅, Error ❌, Warning ⚠️, Info ℹ️</li>
+        <li><strong>Animations fluides</strong> : Entrée/sortie avec transitions CSS</li>
+        <li><strong>Auto-fermeture</strong> : Durée personnalisable (défaut 5 secondes)</li>
+        <li><strong>Fermeture manuelle</strong> : Clic sur le toast pour le fermer</li>
+        <li><strong>Design moderne</strong> : Couleurs, ombres et icônes appropriées</li>
+        <li><strong>Responsive</strong> : S'adapte à toutes les tailles d'écran</li>
+    </ul>
+</div>
+
+<h3>🚀 Utilisation</h3>
+
+<div class="code-section">
+    <h4>Instance Globale</h4>
+    <div class="code-block">// Instance disponible globalement
+const Toast = new ToastManager();</div>
+</div>
+
+<div class="code-section">
+    <h4>Méthodes Principales</h4>
+    <div class="code-block">// Toast de Succès
+Toast.success('Connexion réussie !');
+Toast.success('Compte créé avec succès !', 3000); // Durée personnalisée
+
+// Toast d'Erreur
+Toast.error('Identifiants incorrects');
+Toast.error('Une erreur est survenue', 5000);
+
+// Toast d'Avertissement
+Toast.warning('Les mots de passe ne correspondent pas');
+Toast.warning('Attention, action irréversible', 7000);
+
+// Toast d'Information
+Toast.info('Redirection en cours...');
+Toast.info('Nouvelle fonctionnalité disponible', 4000);</div>
+</div>
+
+<h3>🎨 Design et Types</h3>
+
+<div class="toast-types-grid">
+    <div class="toast-type-card success">
+        <div class="toast-icon">✅</div>
+        <h4>Success</h4>
+        <p>Couleur: Vert (#10b981)</p>
+        <p>Usage: Opérations réussies</p>
+    </div>
+    
+    <div class="toast-type-card error">
+        <div class="toast-icon">❌</div>
+        <h4>Error</h4>
+        <p>Couleur: Rouge (#ef4444)</p>
+        <p>Usage: Erreurs et échecs</p>
+    </div>
+    
+    <div class="toast-type-card warning">
+        <div class="toast-icon">⚠️</div>
+        <h4>Warning</h4>
+        <p>Couleur: Orange (#f59e0b)</p>
+        <p>Usage: Avertissements</p>
+    </div>
+    
+    <div class="toast-type-card info">
+        <div class="toast-icon">ℹ️</div>
+        <h4>Info</h4>
+        <p>Couleur: Bleu (#3b82f6)</p>
+        <p>Usage: Informations</p>
+    </div>
+</div>
+
+<h3>⚙️ Configuration</h3>
+
+<div class="component-card">
+    <h4>🕐 Durées par Défaut</h4>
+    <ul>
+        <li><strong>success</strong> : 5000ms (5 secondes)</li>
+        <li><strong>error</strong> : 5000ms (5 secondes)</li>
+        <li><strong>warning</strong> : 5000ms (5 secondes)</li>
+        <li><strong>info</strong> : 5000ms (5 secondes)</li>
+    </ul>
+</div>
+
+<div class="code-section">
+    <h4>Personnalisation des Durées</h4>
+    <div class="code-block">// Durées courtes pour les confirmations rapides
+Toast.success('Sauvegardé !', 2000);
+
+// Durées longues pour les messages importants
+Toast.error('Erreur critique', 10000);
+
+// Toast permanent (ne se ferme pas automatiquement)
+Toast.info('Message permanent', 0);</div>
+</div>
+
+<h3>🔧 Fonctionnalités Avancées</h3>
+
+<div class="feature-grid">
+    <div class="feature-card">
+        <div class="feature-icon">👆</div>
+        <h4>Fermeture Manuelle</h4>
+        <p>Clic sur le toast pour fermeture immédiate</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">📚</div>
+        <h4>Gestion Multiple</h4>
+        <p>Empilement vertical des notifications</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h4>Responsive Design</h4>
+        <p>Adaptation automatique mobile/desktop</p>
+    </div>
+</div>
+
+<h3>🛠️ Intégration dans l'Application</h3>
+
+<div class="integration-examples">
+    <h4>Messages Contextuels par Fonctionnalité</h4>
+    
+    <div class="code-section">
+        <h5>🔐 Authentification</h5>
+        <div class="code-block">// Connexion
+Toast.success('Connexion réussie ! Bienvenue John');
+Toast.error('Identifiants incorrects');
+
+// Inscription  
+Toast.success('Compte créé avec succès !');
+Toast.error('Cette adresse email est déjà utilisée');
+
+// Déconnexion
+Toast.success('Vous avez été déconnecté');</div>
+    </div>
+    
+    <div class="code-section">
+        <h5>✅ Validation de Formulaires</h5>
+        <div class="code-block">// Validation en temps réel
+Toast.warning('Les mots de passe ne correspondent pas');
+Toast.error('Tous les champs sont obligatoires');</div>
+    </div>
+    
+    <div class="code-section">
+        <h5>🔗 Intégration avec les API</h5>
+        <div class="code-block">async function apiCall() {
+  try {
+    Toast.info('Requête en cours...');
+    
+    const response = await fetch('/api/endpoint');
+    const data = await response.json();
+    
+    if (response.ok) {
+      Toast.success('Opération réussie !');
+    } else {
+      Toast.error(data.message || 'Erreur inconnue');
+    }
+  } catch (error) {
+    Toast.error('Erreur de connexion au serveur');
+  }
+}</div>
+    </div>
+</div>
+
+<h3>🎯 Bonnes Pratiques</h3>
+
+<div class="best-practices">
+    <div class="practice-card good">
+        <h4>✅ Messages Efficaces</h4>
+        <div class="code-block">Toast.success('Mot de passe mis à jour');
+Toast.error('Format d\'email invalide');
+Toast.warning('Session expire dans 5 minutes');
+Toast.info('Redirection vers PayPal...');</div>
+    </div>
+    
+    <div class="practice-card bad">
+        <h4>❌ Messages à Éviter</h4>
+        <div class="code-block">Toast.error('Erreur'); // Trop vague
+Toast.success('Ok'); // Pas informatif
+Toast.info('Quelque chose s\'est passé'); // Inutile</div>
+    </div>
+</div>
+
+<div class="component-card">
+    <h4>📏 Règles de Rédaction</h4>
+    <ul>
+        <li><strong>Concis</strong> : Messages courts et clairs</li>
+        <li><strong>Contextuels</strong> : Spécifiques à l'action effectuée</li>
+        <li><strong>Actionables</strong> : Indiquent la prochaine étape si nécessaire</li>
+        <li><strong>Positifs</strong> : Encouragent l'utilisateur même en cas d'erreur</li>
+    </ul>
+</div>
+
+<h3>🧪 Tests et Debug</h3>
+
+<div class="code-section">
+    <h4>Mode Debug</h4>
+    <div class="code-block">// Activer les logs de debug
+const Toast = new ToastManager();
+Toast.debug = true; // Mode debug
+
+// Les toasts loggeront automatiquement :
+// - Création du toast
+// - Affichage  
+// - Fermeture
+// - Erreurs éventuelles</div>
+</div>
+
+<div class="code-section">
+    <h4>Inspection des Toasts</h4>
+    <div class="code-block">// Accéder à tous les toasts actifs
+console.log(Toast.toasts);
+
+// Forcer la fermeture de tous les toasts
+Toast.toasts.forEach(toast => Toast.remove(toast));</div>
+</div>
+
+<div class="component-card">
+    <h4>🔍 Métriques d'Usage</h4>
+    <p>Le système peut être étendu pour tracker l'usage des notifications :</p>
+    <ul>
+        <li>Fréquence d'affichage par type</li>
+        <li>Taux de fermeture manuelle vs automatique</li>
+        <li>Messages les plus fréquents</li>
+        <li>Performance et impact UX</li>
+    </ul>
+</div>
+
+<div class="summary-box">
+    <h4>📊 Résumé Technique</h4>
+    <p>Le système de toast améliore significativement l'expérience utilisateur en fournissant un feedback immédiat et contextuel pour toutes les actions de l'application. Il remplace avantageusement les anciennes méthodes comme <code>alert()</code> ou les messages statiques dans la page.</p>
+</div>

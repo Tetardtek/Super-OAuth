@@ -1,0 +1,497 @@
+<h2>🚀 Guide d'intégration - Phase 4.2.B.1</h2>
+
+<div class="integration-overview">
+    <div class="status-badge success">✅ OAuth Integration Complete</div>
+    <p>SuperOAuth intègre maintenant 4 providers OAuth complets : Discord, Twitch, Google et GitHub</p>
+</div>
+
+<h3>📥 Installation et démarrage</h3>
+<div class="code-block"># Cloner le projet
+git clone [repository-url]
+cd SuperOAuth
+
+# Installation des dépendances
+npm install
+
+# Configuration de la base de données
+# Modifier les paramètres dans .env
+
+# Démarrage développement
+npm run dev
+
+# Démarrage production
+npm run build && npm run start
+
+# L'application sera disponible sur http://localhost:3000</div>
+
+<h3>🔧 Configuration OAuth</h3>
+<div class="component-card">
+    <h4>Variables d'environnement (.env)</h4>
+    <div class="code-block"># Serveur
+NODE_ENV=production
+PORT=3000
+JWT_SECRET=your_jwt_secret_here
+SESSION_SECRET=your_session_secret_here
+
+# Base de données
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=superoauth
+DB_PASSWORD=your_db_password
+DB_DATABASE=superoauth
+
+# OAuth Discord 🎮
+DISCORD_CLIENT_ID=your_discord_client_id
+DISCORD_CLIENT_SECRET=your_discord_client_secret
+
+# OAuth Twitch 🟣
+TWITCH_CLIENT_ID=your_twitch_client_id
+TWITCH_CLIENT_SECRET=your_twitch_client_secret
+
+# OAuth Google 🔍
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# OAuth GitHub 🐙
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret</div>
+</div>
+
+<h3>🎮 OAuth Providers Supportés</h3>
+<div class="providers-grid">
+    <div class="provider-card discord">
+        <div class="provider-icon">🎮</div>
+        <h4>Discord</h4>
+        <p><strong>Scopes:</strong> identify, email</p>
+        <p><strong>Callback:</strong> /api/v1/oauth/discord/callback</p>
+        <div class="provider-config">
+            <code>Redirect URI: http://localhost:3000/api/v1/oauth/discord/callback</code>
+        </div>
+    </div>
+    
+    <div class="provider-card twitch">
+        <div class="provider-icon">🟣</div>
+        <h4>Twitch</h4>
+        <p><strong>Scopes:</strong> user:read:email</p>
+        <p><strong>Callback:</strong> /api/v1/oauth/twitch/callback</p>
+        <div class="provider-config">
+            <code>Redirect URI: http://localhost:3000/api/v1/oauth/twitch/callback</code>
+        </div>
+    </div>
+    
+    <div class="provider-card google">
+        <div class="provider-icon">🔍</div>
+        <h4>Google</h4>
+        <p><strong>Scopes:</strong> openid, profile, email</p>
+        <p><strong>Callback:</strong> /api/v1/oauth/google/callback</p>
+        <div class="provider-config">
+            <code>Redirect URI: http://localhost:3000/api/v1/oauth/google/callback</code>
+        </div>
+    </div>
+    
+    <div class="provider-card github">
+        <div class="provider-icon">🐙</div>
+        <h4>GitHub</h4>
+        <p><strong>Scopes:</strong> user:email</p>
+        <p><strong>Callback:</strong> /api/v1/oauth/github/callback</p>
+        <div class="provider-config">
+            <code>Redirect URI: http://localhost:3000/api/v1/oauth/github/callback</code>
+        </div>
+    </div>
+</div>
+
+<h3>🔗 Endpoints OAuth</h3>
+<div class="api-section">
+    <h4>Endpoints Publics</h4>
+    <div class="endpoint-card">
+        <div class="http-method get">GET</div>
+        <div class="endpoint-path">/api/v1/oauth/providers</div>
+        <div class="endpoint-desc">Liste des providers OAuth disponibles</div>
+    </div>
+    
+    <div class="endpoint-card">
+        <div class="http-method get">GET</div>
+        <div class="endpoint-path">/api/v1/oauth/:provider</div>
+        <div class="endpoint-desc">Démarrer l'authentification OAuth</div>
+    </div>
+    
+    <div class="endpoint-card">
+        <div class="http-method get">GET</div>
+        <div class="endpoint-path">/api/v1/oauth/:provider/callback</div>
+        <div class="endpoint-desc">Callback OAuth (redirection provider)</div>
+    </div>
+    
+    <h4>Endpoints Privés (Authentication requise)</h4>
+    <div class="endpoint-card">
+        <div class="http-method get">GET</div>
+        <div class="endpoint-path">/api/v1/oauth/linked</div>
+        <div class="endpoint-desc">Voir les comptes OAuth liés</div>
+        <div class="auth-required">🔒 JWT Token requis</div>
+    </div>
+    
+    <div class="endpoint-card">
+        <div class="http-method post">POST</div>
+        <div class="endpoint-path">/api/v1/oauth/:provider/unlink</div>
+        <div class="endpoint-desc">Délier un compte OAuth</div>
+        <div class="auth-required">🔒 JWT Token requis</div>
+    </div>
+</div>
+
+<h3>🔄 Flux OAuth - Guide Complet</h3>
+<div class="flow-section">
+    <div class="flow-step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+            <h4>Initiation OAuth</h4>
+            <div class="code-block">// Frontend initie OAuth
+window.location.href = '/api/v1/oauth/discord';
+
+// Serveur génère URL et redirige
+Location: https://discord.com/api/oauth2/authorize?
+  client_id=YOUR_CLIENT_ID&
+  response_type=code&
+  scope=identify%20email&
+  state=SECURE_RANDOM_STATE&
+  redirect_uri=http://localhost:3000/api/v1/oauth/discord/callback</div>
+        </div>
+    </div>
+    
+    <div class="flow-step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+            <h4>Callback Provider</h4>
+            <div class="code-block">// Discord redirige vers callback
+GET /api/v1/oauth/discord/callback?code=AUTHORIZATION_CODE&state=SECURE_STATE
+
+// Serveur traite callback:
+// ✅ Valide le state parameter
+// ✅ Échange code contre access token
+// ✅ Récupère infos utilisateur via API Discord
+// ✅ Crée/met à jour utilisateur en base
+// ✅ Génère JWT access/refresh tokens</div>
+        </div>
+    </div>
+    
+    <div class="flow-step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+            <h4>Redirection Frontend</h4>
+            <div class="code-block">// Redirection vers frontend avec tokens
+Location: http://localhost:3001/auth/success?
+  token=JWT_ACCESS_TOKEN&
+  refresh=JWT_REFRESH_TOKEN&
+  provider=discord&
+  user=USER_ID
+
+// Frontend récupère et stocke tokens
+const urlParams = new URLSearchParams(window.location.search);
+const accessToken = urlParams.get('token');
+const refreshToken = urlParams.get('refresh');
+
+localStorage.setItem('accessToken', accessToken);
+localStorage.setItem('refreshToken', refreshToken);</div>
+        </div>
+    </div>
+</div>
+
+<h3>🔌 Intégration Frontend</h3>
+<div class="component-card">
+    <h4>Exemple d'intégration OAuth Button</h4>
+    <div class="code-block">// HTML Button OAuth
+&lt;button onclick="loginWithProvider('discord')" class="oauth-btn discord"&gt;
+  🎮 Se connecter avec Discord
+&lt;/button&gt;
+
+// JavaScript OAuth Handler
+function loginWithProvider(provider) {
+  // Redirection vers endpoint OAuth
+  window.location.href = `/api/v1/oauth/${provider}`;
+}
+
+// Gestion du retour OAuth
+function handleOAuthCallback() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  const refreshToken = urlParams.get('refresh');
+  
+  if (token) {
+    // Stockage sécurisé des tokens
+    localStorage.setItem('accessToken', token);
+    localStorage.setItem('refreshToken', refreshToken);
+    
+    // Redirection vers dashboard
+    window.location.href = '/dashboard';
+  }
+}</div>
+</div>
+
+<div class="component-card">
+    <h4>Configuration des Providers</h4>
+    <div class="code-block">// js/config.js - Configuration Frontend
+export const OAUTH_PROVIDERS = {
+  discord: {
+    name: 'Discord',
+    icon: '🎮',
+    color: '#5865F2',
+    url: '/api/v1/oauth/discord'
+  },
+  twitch: {
+    name: 'Twitch',
+    icon: '�',
+    color: '#9146FF',
+    url: '/api/v1/oauth/twitch'
+  },
+  google: {
+    name: 'Google',
+    icon: '�',
+    color: '#4285F4',
+    url: '/api/v1/oauth/google'
+  },
+  github: {
+    name: 'GitHub',
+    icon: '🐙',
+    color: '#24292F',
+    url: '/api/v1/oauth/github'
+  }
+};</div>
+</div>
+
+<h3>🏗️ Architecture OAuth Backend</h3>
+<div class="architecture-diagram">
+    <div class="code-block">src/
+├── infrastructure/oauth/
+│   ├── oauth-config.ts      # Configuration des providers OAuth
+│   └── oauth.service.ts     # Service principal OAuth
+├── application/services/
+│   ├── user.service.ts      # Gestion des utilisateurs OAuth
+│   └── auth.service.ts      # Service d'authentification JWT
+├── presentation/
+│   ├── controllers/oauth.controller.ts  # Contrôleur OAuth
+│   ├── routes/oauth.routes.ts          # Routes OAuth (/api/v1/oauth/*)
+│   └── middleware/
+│       ├── auth.middleware.ts          # Middleware d'authentification
+│       └── async-handler.middleware.ts # Gestionnaire d'erreurs async
+└── shared/utils/
+    └── response.util.ts     # Utilitaire de réponses API</div>
+</div>
+
+<h3>🔒 Sécurité OAuth</h3>
+<div class="security-section">
+    <div class="security-card">
+        <h4>🛡️ State Management</h4>
+        <ul>
+            <li>États OAuth cryptographiquement sécurisés</li>
+            <li>Validation côté serveur obligatoire</li>
+            <li>Expiration automatique (10 minutes)</li>
+            <li>Stockage en session sécurisée</li>
+        </ul>
+    </div>
+    
+    <div class="security-card">
+        <h4>🔐 Token Security</h4>
+        <ul>
+            <li>JWT access tokens (15 minutes TTL)</li>
+            <li>JWT refresh tokens (7 jours TTL)</li>
+            <li>Secrets JWT configurables (.env)</li>
+            <li>Validation stricte des signatures</li>
+        </ul>
+    </div>
+    
+    <div class="security-card">
+        <h4>✅ Provider Validation</h4>
+        <ul>
+            <li>Vérification des configurations OAuth</li>
+            <li>Validation des URLs de redirection</li>
+            <li>Gestion des erreurs OAuth standards</li>
+            <li>Protection contre CSRF avec state</li>
+        </ul>
+    </div>
+</div>
+
+<h3>🧪 Tests OAuth Interactifs</h3>
+<div class="interactive-testing">
+    <div class="test-section">
+        <h4>🔍 Test des Providers</h4>
+        <p>Testez en temps réel les endpoints OAuth de l'API SuperOAuth :</p>
+        
+        <div class="test-controls">
+            <button onclick="testOAuthProviders()" class="test-btn primary">
+                📋 Tester Liste des Providers
+            </button>
+            <div id="providers-test" class="test-result-container"></div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h4>🎮 Test des Providers Individuels</h4>
+        <p>Testez l'initiation OAuth pour chaque provider :</p>
+        
+        <div class="provider-tests">
+            <div class="provider-test">
+                <button onclick="testOAuthProvider('discord')" class="test-btn discord">
+                    🎮 Test Discord OAuth
+                </button>
+                <div id="discord-test" class="test-result-container"></div>
+            </div>
+            
+            <div class="provider-test">
+                <button onclick="testOAuthProvider('twitch')" class="test-btn twitch">
+                    🟣 Test Twitch OAuth
+                </button>
+                <div id="twitch-test" class="test-result-container"></div>
+            </div>
+            
+            <div class="provider-test">
+                <button onclick="testOAuthProvider('google')" class="test-btn google">
+                    🔍 Test Google OAuth
+                </button>
+                <div id="google-test" class="test-result-container"></div>
+            </div>
+            
+            <div class="provider-test">
+                <button onclick="testOAuthProvider('github')" class="test-btn github">
+                    🐙 Test GitHub OAuth
+                </button>
+                <div id="github-test" class="test-result-container"></div>
+            </div>
+        </div>
+        
+        <div class="test-controls">
+            <button onclick="testAllOAuth()" class="test-btn secondary">
+                🚀 Tester Tous les Providers
+            </button>
+        </div>
+    </div>
+    
+    <div class="test-info">
+        <h5>ℹ️ Notes sur les Tests</h5>
+        <ul>
+            <li><strong>Liste Providers :</strong> Retourne la configuration des 4 providers OAuth</li>
+            <li><strong>Test Individual :</strong> Vérifie que l'endpoint génère une redirection OAuth valide</li>
+            <li><strong>Sécurité :</strong> Les tests ne suivent pas les redirections (CORS protection)</li>
+            <li><strong>Status 302 :</strong> Normal, indique une redirection vers le provider OAuth</li>
+        </ul>
+    </div>
+</div>
+
+<h3>🧪 Tests OAuth</h3>
+<div class="component-card">
+    <h4>Tests Manuel API</h4>
+    <div class="code-block"># 1. Lister les providers disponibles
+curl -X GET "http://localhost:3000/api/v1/oauth/providers"
+
+# 2. Démarrer OAuth Discord (suivre redirection)
+curl -X GET "http://localhost:3000/api/v1/oauth/discord"
+
+# 3. Vérifier les comptes liés (après authentification)
+curl -X GET "http://localhost:3000/api/v1/oauth/linked" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# 4. Délier un compte OAuth
+curl -X POST "http://localhost:3000/api/v1/oauth/discord/unlink" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"</div>
+</div>
+
+<div class="component-card">
+    <h4>Tests Automatisés</h4>
+    <div class="code-block"># Tests OAuth spécifiques
+npm run test:oauth
+
+# Tests d'intégration complète
+npm run test:integration
+
+# Tests end-to-end OAuth flow
+npm run test:e2e:oauth</div>
+</div>
+
+<h3>� Déploiement Production</h3>
+<div class="component-card">
+    <h4>Checklist OAuth Production</h4>
+    <ul class="checklist">
+        <li>✅ Configurer toutes les variables d'environnement OAuth</li>
+        <li>✅ Mettre à jour les URLs de callback pour production</li>
+        <li>✅ Configurer HTTPS obligatoire</li>
+        <li>✅ Sécuriser les secrets JWT (rotation régulière)</li>
+        <li>✅ Configurer les CORS pour les domaines autorisés</li>
+        <li>✅ Activer le monitoring des endpoints OAuth</li>
+        <li>✅ Configurer les logs de sécurité</li>
+        <li>✅ Tests de charge sur les endpoints OAuth</li>
+        <li>✅ Documentation des flows OAuth</li>
+        <li>✅ Backup de configuration providers</li>
+    </ul>
+</div>
+
+<div class="component-card">
+    <h4>Scripts de déploiement OAuth</h4>
+    <div class="code-block"># Build de production avec vérification OAuth
+npm run build:prod
+
+# Validation configuration OAuth
+npm run oauth:validate
+
+# Tests complets OAuth avant déploiement
+npm run test:oauth:full
+
+# Déploiement avec vérification endpoints
+npm run deploy:oauth
+
+# Health check post-déploiement
+npm run health-check:oauth</div>
+</div>
+
+<h3>� Monitoring et Troubleshooting</h3>
+<div class="monitoring-section">
+    <div class="monitor-card">
+        <h4>📊 Métriques OAuth</h4>
+        <ul>
+            <li>Taux de réussite par provider</li>
+            <li>Temps de réponse des callbacks</li>
+            <li>Erreurs OAuth par type</li>
+            <li>Nombre d'authentifications par jour</li>
+        </ul>
+    </div>
+    
+    <div class="monitor-card">
+        <h4>🔧 Debug OAuth</h4>
+        <ul>
+            <li>Logs détaillés des flows OAuth</li>
+            <li>Validation des states en temps réel</li>
+            <li>Monitoring des tokens expirés</li>
+            <li>Alertes sur erreurs critiques</li>
+        </ul>
+    </div>
+</div>
+
+<h3>📚 Ressources OAuth</h3>
+<div class="component-card">
+    <h4>Documentation Providers</h4>
+    <ul>
+        <li><a href="https://discord.com/developers/docs/topics/oauth2" target="_blank">🎮 Discord OAuth2 Documentation</a></li>
+        <li><a href="https://dev.twitch.tv/docs/authentication" target="_blank">🟣 Twitch Authentication Guide</a></li>
+        <li><a href="https://developers.google.com/identity/protocols/oauth2" target="_blank">� Google OAuth 2.0 Documentation</a></li>
+        <li><a href="https://docs.github.com/en/developers/apps/building-oauth-apps" target="_blank">� GitHub OAuth Apps Documentation</a></li>
+        <li><a href="https://oauth.net/2/" target="_blank">🌐 OAuth 2.0 Specification</a></li>
+        <li><a href="https://jwt.io/" target="_blank">🔐 JWT.io - JSON Web Tokens</a></li>
+    </ul>
+</div>
+
+<div class="component-card">
+    <h4>Status Phase 4.2.B.1</h4>
+    <div class="status-overview">
+        <div class="status-item completed">✅ Configuration OAuth multi-providers</div>
+        <div class="status-item completed">✅ Service OAuth principal (oauth.service.ts)</div>
+        <div class="status-item completed">✅ Contrôleur OAuth (oauth.controller.ts)</div>
+        <div class="status-item completed">✅ Routes OAuth (/api/v1/oauth/*)</div>
+        <div class="status-item completed">✅ Middlewares d'authentification</div>
+        <div class="status-item completed">✅ Services application (User/Auth)</div>
+        <div class="status-item completed">✅ Types TypeScript et validation</div>
+        <div class="status-item completed">✅ Gestion d'erreurs complète</div>
+        <div class="status-item completed">✅ Tests OAuth fonctionnels</div>
+        <div class="status-item completed">✅ Documentation intégrée</div>
+    </div>
+    
+    <div class="next-phase">
+        <h5>🚀 Prêt pour Phase 4.3 - Documentation Web Interactive</h5>
+        <p>L'intégration OAuth est complète et production-ready !</p>
+    </div>
+</div>

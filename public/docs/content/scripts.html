@@ -1,0 +1,234 @@
+<div class="content-section">
+        <h1>🛠️ Scripts d'automatisation & outils</h1>
+        <p>Cette page regroupe la documentation complète sur les scripts d’automatisation et outils fournis avec SuperOAuth. Utilisez-les pour optimiser, analyser et maintenir votre projet efficacement.</p>
+
+        <h2>analyze-bundle-size.js</h2>
+        <p>Analyse la taille des bundles, minifie, génère des rapports détaillés et recommandations pour optimiser le poids de vos assets.<br>
+        <b>CLI robuste avec commander.js</b>.<br>
+        Tous les logs sont centralisés dans <code>logs/analyze-bundle-size.log</code> (ou personnalisable via <code>--log</code>).</p>
+        <table class="script-table">
+            <thead>
+                <tr><th>Commande exemple</th><th>Utilité principale</th><th>Sortie/Rapport</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>node scripts/analyze-bundle-size.js --report html</code></td><td>Audit taille bundles, rapport HTML</td><td>bundle-analysis.html, logs/analyze-bundle-size.log</td></tr>
+                <tr><td><code>node scripts/analyze-bundle-size.js --report json</code></td><td>Audit taille bundles, rapport JSON</td><td>bundle-analysis.json, logs/analyze-bundle-size.log</td></tr>
+                <tr><td><code>node scripts/analyze-bundle-size.js --report all</code></td><td>Audit complet (HTML + JSON)</td><td>bundle-analysis.html, .json, logs/analyze-bundle-size.log</td></tr>
+                <tr><td><code>node scripts/analyze-bundle-size.js --report html --log logs/mon-analyse.log</code></td><td>Audit avec log personnalisé</td><td>bundle-analysis.html, logs/mon-analyse.log</td></tr>
+            </tbody>
+        </table>
+        <div class="script-doc-details">
+            <h3>À quoi sert ce script&nbsp;?</h3>
+            <p>Ce script analyse la taille de tous vos bundles JS/CSS/HTML, détecte les assets trop volumineux, génère des rapports détaillés (HTML, JSON) et propose des recommandations d’optimisation. Il permet de surveiller l’évolution du poids de vos assets à chaque build et d’anticiper les régressions de performance.</p>
+            <h3>Exemples d'utilisation avancée</h3>
+            <ul>
+                <li><code>node scripts/analyze-bundle-size.js --report html --log logs/mon-analyse.log</code> : Audit HTML avec log personnalisé</li>
+                <li><code>node scripts/analyze-bundle-size.js --report all --dry-run</code> : Simulation d’un audit complet sans générer de rapport</li>
+                <li><code>node scripts/analyze-bundle-size.js --report json --log logs/poids.log</code> : Audit JSON avec log dédié</li>
+            </ul>
+            <h3>Exemple de log généré</h3>
+            <pre><code>[2025-07-23T17:40:00.123Z] 📦 Audit des bundles démarré
+[2025-07-23T17:40:01.456Z] - Analyse de dist/app.bundle.js : 1.2Mo
+[2025-07-23T17:40:02.789Z] ⚠️ Alerte : core.bundle.js > 2Mo
+[2025-07-23T17:40:03.000Z] ✅ Rapport généré : bundle-analysis.html
+            </code></pre>
+            <h3>Erreurs courantes</h3>
+            <ul>
+                <li><b>Fichier bundle introuvable :</b> Vérifiez le chemin des assets à auditer (ex: <code>dist/</code> absent après build).</li>
+                <li><b>Permission refusée sur logs/ :</b> Assurez-vous que le dossier <code>logs/</code> existe et est accessible en écriture.</li>
+                <li><b>Option inconnue :</b> Utilisez <code>--help</code> pour la liste complète des options CLI.</li>
+                <li><b>Rapport vide :</b> Aucun bundle détecté, vérifiez la configuration du build.</li>
+            </ul>
+            <h3>Bonnes pratiques & conseils</h3>
+            <ul>
+                <li>Automatisez l’audit après chaque build de production (CI/CD).</li>
+                <li>Fixez des seuils de taille critique pour vos bundles et surveillez les alertes dans les logs.</li>
+                <li>Utilisez <code>--dry-run</code> pour tester la configuration sans générer de rapport.</li>
+                <li>Consultez les recommandations d’optimisation dans le rapport HTML.</li>
+                <li>En cas de problème, lancez <code>optimize-bundles.js</code> pour corriger les assets trop volumineux.</li>
+            </ul>
+        </div>
+
+        <h2>optimize-bundles.js</h2>
+        <p>Optimise et minifie tous les assets JS, CSS, HTML et images pour la production, afin d’améliorer les performances du projet.<br>
+        <b>CLI robuste avec commander.js</b>.<br>
+        Tous les logs sont centralisés dans <code>logs/optimize-bundles.log</code> (ou personnalisable via <code>--log</code>).</p>
+        <table class="script-table">
+            <thead>
+                <tr><th>Commande exemple</th><th>Utilité principale</th><th>Sortie/Rapport</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>node scripts/optimize-bundles.js</code></td>
+                    <td>Optimisation/minification de tous les assets</td>
+                    <td>/dist, manifest.json, logs/optimize-bundles.log</td>
+                </tr>
+                <tr>
+                    <td><code>node scripts/optimize-bundles.js --include core,app</code></td>
+                    <td>Optimiser uniquement certains bundles</td>
+                    <td>/dist/core.bundle.js, /dist/app.bundle.js, logs/optimize-bundles.log</td>
+                </tr>
+                <tr>
+                    <td><code>node scripts/optimize-bundles.js --exclude vendor,legacy</code></td>
+                    <td>Ignorer certains bundles lors de l’optimisation</td>
+                    <td>/dist (hors vendor.bundle.js, legacy.bundle.js), logs/optimize-bundles.log</td>
+                </tr>
+                <tr>
+                    <td><code>node scripts/optimize-bundles.js --log logs/mon-optim.log</code></td>
+                    <td>Optimisation avec log personnalisé</td>
+                    <td>/dist, manifest.json, logs/mon-optim.log</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="script-doc-details">
+            <h3>À quoi sert ce script&nbsp;?</h3>
+            <p>Ce script automatise la minification, la compression et l’optimisation de tous les fichiers de production (JS, CSS, HTML, images). Il réduit le temps de chargement, améliore le score Lighthouse, et prépare le projet pour la mise en ligne.</p>
+            <h3>Exemples d'utilisation avancée</h3>
+            <ul>
+                <li><code>node scripts/optimize-bundles.js --include core,app --log logs/optim-core.log</code> : Optimiser uniquement certains bundles avec log dédié</li>
+                <li><code>node scripts/optimize-bundles.js --exclude vendor,legacy --dry-run</code> : Simulation d’optimisation sans modification</li>
+                <li><code>node scripts/optimize-bundles.js --log logs/optim-prod.log</code> : Log personnalisé pour suivi CI/CD</li>
+            </ul>
+            <h3>Exemple de log généré</h3>
+            <pre><code>[2025-07-23T17:42:00.123Z] 🚀 Optimisation démarrée
+[2025-07-23T17:42:01.456Z] - core.bundle.js minifié (1.2Mo → 800Ko)
+[2025-07-23T17:42:02.789Z] ✅ Optimisation terminée
+            </code></pre>
+            <h3>Erreurs courantes</h3>
+            <ul>
+                <li><b>Fichier introuvable :</b> Vérifiez les chemins des bundles à optimiser (ex: <code>dist/</code> absent).</li>
+                <li><b>Permission refusée sur logs/ :</b> Assurez-vous que le dossier <code>logs/</code> existe et est accessible en écriture.</li>
+                <li><b>Option inconnue :</b> Utilisez <code>--help</code> pour la liste complète des options CLI.</li>
+                <li><b>Optimisation incomplète :</b> Certains fichiers n’ont pas pu être traités (voir log pour détails).</li>
+            </ul>
+            <h3>Bonnes pratiques & conseils</h3>
+            <ul>
+                <li>Automatisez l’optimisation après chaque build de production.</li>
+                <li>Vérifiez le résultat dans <code>/dist</code> et comparez la taille avant/après dans les logs.</li>
+                <li>Utilisez <code>--dry-run</code> pour valider la configuration sans modifier les fichiers.</li>
+                <li>Après optimisation, relancez <code>analyze-bundle-size.js</code> pour vérifier l’impact sur le poids des assets.</li>
+                <li>Consultez les logs pour détecter les fichiers non optimisés ou problématiques.</li>
+            </ul>
+        </div>
+
+        <h2>generate-test-report.js</h2>
+        <p>Génère un rapport synthétique sur les tests backend et frontend, avec plusieurs formats de sortie pour faciliter l’analyse.</p>
+        <table class="script-table">
+            <thead>
+                <tr><th>Commande exemple</th><th>Utilité principale</th><th>Sortie/Rapport</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>node scripts/generate-test-report.js --report html|json|txt</code></td><td>Rapport synthèse des tests</td><td>test-report.html, .json, .txt</td></tr>
+            </tbody>
+        </table>
+        <div class="script-doc-details">
+            <h3>Exemples d'utilisation avancée</h3>
+            <ul>
+                <li><code>node scripts/generate-test-report.js --report html</code> : Rapport synthèse des tests (HTML)</li>
+                <li><code>node scripts/generate-test-report.js --report json</code> : Rapport synthèse des tests (JSON)</li>
+                <li><code>node scripts/generate-test-report.js --report txt</code> : Rapport synthèse des tests (texte)</li>
+                <li><code>node scripts/generate-test-report.js --log logs/mon-test.log</code> : Rapport avec log personnalisé</li>
+                <li><code>node scripts/generate-test-report.js --no-run</code> : Génère le rapport à partir des fichiers existants (sans relancer les tests)</li>
+                <li><code>node scripts/generate-test-report.js --dry-run</code> : Affiche les actions sans générer de rapport</li>
+            </ul>
+            <h3>Exemple de log généré</h3>
+            <pre><code>[2025-07-23T17:28:50.676Z] 📈 Génération du rapport de couverture...
+[2025-07-23T17:28:54.770Z] ✅ Rapport généré : logs/TESTS_REPORT.md
+[2025-07-23T17:28:54.772Z] - Backend : 32/32 réussis
+[2025-07-23T17:28:54.773Z] - Frontend : 66/66 réussis
+[2025-07-23T17:28:54.774Z] - logs/TESTS_REPORT.md (ce rapport)
+[2025-07-23T17:28:54.775Z] - coverage/index.html (si couverture générée)
+            </code></pre>
+            <h3>Erreurs courantes</h3>
+            <ul>
+                <li><b>Tests non trouvés :</b> Vérifiez la configuration Jest/Vitest et la présence des fichiers de test.</li>
+                <li><b>Problème de permission sur logs/ :</b> Assurez-vous que le dossier <code>logs/</code> existe et est accessible en écriture.</li>
+                <li><b>Option inconnue :</b> Utilisez <code>--help</code> pour la liste complète des options CLI.</li>
+            </ul>
+            <h3>Bonnes pratiques</h3>
+            <ul>
+                <li>Générez toujours le rapport dans <code>logs/</code> pour centraliser les résultats.</li>
+                <li>Utilisez <code>--no-run</code> pour regénérer un rapport à partir de tests déjà exécutés.</li>
+                <li>Consultez <code>logs/generate-test-report.log</code> pour le détail des exécutions et diagnostics.</li>
+            </ul>
+        </div>
+
+        <h2>reset-database.js</h2>
+        <p>Réinitialise la base de données (⚠️ destructif). Utilise <b>commander.js</b> pour une CLI robuste. Peut cibler certaines tables, simuler l’opération avec <code>--dry-run</code> (aucune donnée supprimée), et journaliser toutes les actions/erreurs SQL dans un fichier du dossier <code>logs/</code> (par défaut <code>logs/reset-database.log</code>, ou personnalisé via <code>--log</code>).</p>
+        <table class="script-table">
+            <thead>
+                <tr><th>Commande exemple</th><th>Utilité principale</th><th>Sortie/Rapport</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>node scripts/reset-database.js --confirm</code></td>
+                    <td>Réinitialisation complète (toutes les tables, sans confirmation interactive)</td>
+                    <td>console</td>
+                </tr>
+                <tr>
+                    <td><code>node scripts/reset-database.js --tables users --confirm</code></td>
+                    <td>Réinitialiser uniquement la table <code>users</code> (sans confirmation interactive)</td>
+                    <td>console</td>
+                </tr>
+                <tr>
+                    <td><code>node scripts/reset-database.js --tables users,sessions --confirm</code></td>
+                    <td>Réinitialiser uniquement <code>users</code> et <code>sessions</code> (sans confirmation interactive)</td>
+                    <td>console</td>
+                </tr>
+                <tr>
+                    <td><code>node scripts/reset-database.js --dry-run --tables users --confirm</code></td>
+                    <td>Simulation (aucune suppression réelle, affiche la suppression simulée de <code>users</code>)</td>
+                    <td>console</td>
+                </tr>
+                <tr>
+                    <td><code>node scripts/reset-database.js --dry-run --confirm</code></td>
+                    <td>Simulation (aucune suppression réelle, affiche la suppression simulée de toutes les tables)</td>
+                    <td>console</td>
+                </tr>
+                <tr>
+                    <td><code>node scripts/reset-database.js --tables users --log reset.log --confirm</code></td>
+                    <td>Réinitialiser uniquement <code>users</code> et journaliser toutes les actions/erreurs dans <code>reset.log</code></td>
+                    <td>console + reset.log</td>
+                </tr>
+                <tr>
+                    <td><code>node scripts/reset-database.js --dry-run --tables users --log reset.log --confirm</code></td>
+                    <td>Simulation de la suppression de <code>users</code> avec journalisation dans <code>reset.log</code></td>
+                    <td>console + reset.log</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="script-doc-details">
+            <h3>Exemples d'utilisation avancée</h3>
+            <ul>
+                <li><code>node scripts/reset-database.js --confirm</code> : Réinitialisation complète sans confirmation interactive</li>
+                <li><code>node scripts/reset-database.js --tables users --confirm</code> : Réinitialiser uniquement la table <code>users</code></li>
+                <li><code>node scripts/reset-database.js --tables users,sessions --confirm</code> : Réinitialiser <code>users</code> et <code>sessions</code></li>
+                <li><code>node scripts/reset-database.js --dry-run --tables users --confirm</code> : Simulation de la suppression de <code>users</code> (aucune donnée supprimée)</li>
+                <li><code>node scripts/reset-database.js --log logs/mon-reset.log --confirm</code> : Réinitialisation avec log personnalisé</li>
+            </ul>
+            <h3>Exemple de log généré</h3>
+            <pre><code>[2025-07-23T17:35:10.123Z] ⚠️ Réinitialisation de la base demandée
+[2025-07-23T17:35:10.456Z] - Suppression de la table users...
+[2025-07-23T17:35:10.789Z] ✅ Table users supprimée
+[2025-07-23T17:35:11.001Z] ✅ Réinitialisation terminée
+            </code></pre>
+            <h3>Erreurs courantes</h3>
+            <ul>
+                <li><b>Permission refusée sur logs/ :</b> Vérifiez que le dossier <code>logs/</code> existe et est accessible en écriture.</li>
+                <li><b>Table inconnue :</b> Vérifiez le nom des tables passées à <code>--tables</code>.</li>
+                <li><b>Option inconnue :</b> Utilisez <code>--help</code> pour la liste complète des options CLI.</li>
+                <li><b>Confirmation manquante :</b> L’option <code>--confirm</code> est obligatoire pour toute suppression.</li>
+            </ul>
+            <h3>Bonnes pratiques</h3>
+            <ul>
+                <li>Utilisez toujours <code>--dry-run</code> pour simuler avant toute suppression réelle.</li>
+                <li>Centralisez les logs dans <code>logs/reset-database.log</code> ou un fichier dédié.</li>
+                <li>Ne jamais exécuter ce script en production sans sauvegarde préalable.</li>
+                <li>Vérifiez la liste des tables ciblées avant validation.</li>
+            </ul>
+        </div>
+
+        <div class="alert alert-warning" style="margin-top:1em;">
+            <b>📝 Astuce :</b> Tous les logs des scripts sont centralisés dans le dossier <code>logs/</code> à la racine du projet.<br>
+            Par défaut, <b>analyze-bundle-size.js</b> écrit dans <code>logs/analyze-bundle-size.log</code>.<br>
+            Utilisez <code>--log logs/mon-analyse.log</code> pour personnaliser le fichier log.<br>

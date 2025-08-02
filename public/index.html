@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperOAuth - Système d'authentification entreprise</title>
+    
+    <!-- Styles modulaires -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 SuperOAuth</h1>
+            <p>Système d'authentification OAuth2 entreprise</p>
+        </div>
+
+        <div class="dashboard">
+            <!-- Dashboard Utilisateur -->
+            <div class="card dashboard-section" id="userDashboard" style="display: none;">
+                <div class="section-badge dashboard-badge">👤 Mon Dashboard</div>
+                <h3>🏠 Dashboard Utilisateur</h3>
+                <div id="userInfo">
+                    <!-- Les informations utilisateur seront injectées ici -->
+                </div>
+                
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px;">
+                    <button id="refreshUserBtn" class="btn btn-secondary">🔄 Actualiser</button>
+                    <button id="logoutBtn2" class="btn btn-secondary">🚪 Se déconnecter</button>
+                </div>
+                
+                <div class="response-area" id="dashboardResponse" style="display: none;"></div>
+            </div>
+
+            <!-- État du serveur -->
+            <div class="card">
+                <h3>📊 État du serveur</h3>
+                <div class="status">
+                    <div class="status-dot status-online" id="serverStatus"></div>
+                    <span id="serverStatusText">En ligne - development (v1.0.0)</span>
+                </div>
+                <button id="checkServerBtn" class="btn">🔄 Vérifier le statut</button>
+                <div class="response-area" id="healthResponse" style="display: none;"></div>
+            </div>
+
+            <!-- Connexion -->
+            <div class="card login-section">
+                <div class="section-badge login-badge">👤 Utilisateurs existants</div>
+                <h3>🔑 Connexion</h3>
+                <p>Se connecter avec un compte existant</p>
+                
+                <div style="margin: 20px 0;">
+                    <input type="email" id="loginEmail" placeholder="votre@email.com" value="" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
+                    <input type="password" id="loginPassword" placeholder="Votre mot de passe" value="" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                    <button id="loginBtn" class="btn btn-primary">🔑 Se connecter</button>
+                    <button id="refreshTokenBtn" class="btn btn-secondary">🔄 Refresh Token</button>
+                    <button id="logoutBtn1" class="btn btn-secondary">🚪 Se déconnecter</button>
+                </div>
+                
+                <div class="response-area" id="loginResponse" style="display: none;"></div>
+            </div>
+
+            <!-- Inscription -->
+            <div class="card register-section">
+                <div class="section-badge register-badge">✨ Nouveaux utilisateurs</div>
+                <h3>📝 Inscription</h3>
+                <p>Créer un nouveau compte utilisateur</p>
+                
+                <div style="margin: 20px 0;">
+                    <input type="email" id="registerEmail" placeholder="nouvel@utilisateur.com" value="" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
+                    <input type="password" id="registerPassword" placeholder="MonMotDePasse123!" value="" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
+                    <input type="password" id="registerPasswordConfirm" placeholder="Confirmer le mot de passe" value="" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
+                    <input type="text" id="registerNickname" placeholder="MonPseudo123" value="" style="width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                
+                <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; border-radius: 5px; padding: 10px; margin: 10px 0; font-size: 0.9em;">
+                    <strong>⚠️ Règles importantes :</strong><br>
+                    • <strong>Email :</strong> Doit être unique et valide<br>
+                    • <strong>Mot de passe :</strong> Min. 8 caractères avec majuscule, minuscule, chiffre et caractère spécial<br>
+                    • <strong>Confirmation :</strong> Les deux mots de passe doivent être identiques<br>
+                    • <strong>Pseudo :</strong> Doit être unique, 3-20 caractères (pas de mots réservés comme 'admin', 'root', etc.)
+                </div>
+                
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                    <button id="registerBtn" class="btn btn-success">📝 S'inscrire</button>
+                    <button id="testBtn" class="btn" style="background: #ff6b6b; max-width: 120px;">🔧 Test Debug</button>
+                </div>
+                
+                <div class="response-area" id="registerResponse" style="display: none;"></div>
+            </div>
+
+            <!-- OAuth Providers -->
+            <div class="card">
+                <h3>🌐 Authentification OAuth</h3>
+                <p>Connexion avec vos comptes sociaux</p>
+                
+                <div class="oauth-providers">
+                    <button id="discordBtn" class="btn oauth-btn oauth-discord">
+                        <span>🎮</span> Discord
+                    </button>
+                    <button id="twitchBtn" class="btn oauth-btn oauth-twitch">
+                        <span>📺</span> Twitch
+                    </button>
+                    <button id="googleBtn" class="btn oauth-btn oauth-google">
+                        <span>📧</span> Google
+                    </button>
+                    <button id="githubBtn" class="btn oauth-btn oauth-github">
+                        <span>🐱</span> GitHub
+                    </button>
+                </div>
+                
+                <div class="response-area" id="oauthResponse" style="display: none;"></div>
+            </div>
+
+            <!-- API Documentation -->
+            <div class="card">
+                <h3>📚 API Endpoints ✅ Phase 5 Active</h3>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <span>/health</span>
+                    <div style="font-size: 0.9em; color: #48bb78; margin-top: 5px;">✅ Opérationnel - Vérification serveur</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <span>/api/v1</span>
+                    <div style="font-size: 0.9em; color: #48bb78; margin-top: 5px;">✅ Opérationnel - Informations API</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method post">POST</span>
+                    <span>/api/v1/auth/register</span>
+                    <div style="font-size: 0.9em; color: #48bb78; margin-top: 5px;">✅ Opérationnel - Inscription utilisateur</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method post">POST</span>
+                    <span>/api/v1/auth/login</span>
+                    <div style="font-size: 0.9em; color: #48bb78; margin-top: 5px;">✅ Opérationnel - Connexion utilisateur</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method post">POST</span>
+                    <span>/api/v1/auth/refresh</span>
+                    <div style="font-size: 0.9em; color: #48bb78; margin-top: 5px;">✅ Opérationnel - Refresh token</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method post">POST</span>
+                    <span>/api/v1/auth/logout</span>
+                    <div style="font-size: 0.9em; color: #48bb78; margin-top: 5px;">✅ Opérationnel - Déconnexion</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <span>/api/v1/auth/oauth/{provider}</span>
+                    <div style="font-size: 0.9em; color: #48bb78; margin-top: 5px;">✅ Opérationnel - Discord, Google, GitHub, Twitch</div>
+                </div>
+                <div class="api-endpoint">
+                    <span class="method get">GET</span>
+                    <span>/api/v1/auth/me</span>
+                    <div style="font-size: 0.9em; color: #48bb78; margin-top: 5px;">✅ Opérationnel - Profil utilisateur</div>
+                </div>
+                
+                <div style="margin-top: 15px; padding: 10px; background: rgba(72, 187, 120, 0.1); border-left: 4px solid #48bb78; border-radius: 4px;">
+                    <strong>🎉 Phase 5 Terminée !</strong><br>
+                    <small>Tous les endpoints d'authentification sont fonctionnels</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="version-info">
+            <h4>🎉 Phase 5 Terminée - SuperOAuth REST API (Architecture Modulaire)</h4>
+            <p><strong>Version:</strong> 1.0.0</p>
+            <p><strong>Architecture:</strong> Hexagonale (Clean Architecture) + Composants modulaires</p>
+            <p><strong>Technologies:</strong> Node.js, TypeScript, Express, TypeORM, MySQL</p>
+            <p><strong>Frontend:</strong> JavaScript ES6 Modules, CSS modulaire</p>
+            <p><strong>Providers OAuth:</strong> Discord, Google, GitHub, Twitch ✅ ACTIFS</p>
+            <p><strong>Sécurité:</strong> JWT, bcrypt, CORS, Helmet, Sessions</p>
+            <p><strong>Endpoints REST:</strong> 8/8 fonctionnels (register, login, refresh, logout, oauth, callback, me, health)</p>
+            <p><strong>Composants:</strong> AuthService, DashboardComponent, AuthComponent, ServerMonitor</p>
+            <p><strong>Prochaine phase:</strong> Phase 6 - Tests automatisés & Déploiement</p>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 SuperOAuth - Système d'authentification entreprise</p>
+            <p>Développé avec ❤️ en TypeScript et JavaScript modulaire</p>
+                        <div class="footer-links">
+                <a href="docs/index.html" class="docs-link">📚 Documentation développeur</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application modulaire -->
+    <script type="module" src="js/app.js"></script>
+    
+
+    
+    <!-- Vérification immédiate du statut serveur -->
+    <script>
+        // Vérification immédiate du statut serveur (fallback)
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                const statusDot = document.getElementById('serverStatus');
+                const statusText = document.getElementById('serverStatusText');
+                
+                if (statusDot && statusText) {
+                    if (response.ok && data.status === 'ok') {
+                        statusDot.className = 'status-dot status-online';
+                        statusText.textContent = `En ligne - ${data.environment || 'development'} (${data.version || 'v1.0.0'})`;
+                    } else {
+                        statusDot.className = 'status-dot status-offline';
+                        statusText.textContent = 'Hors ligne';
+                    }
+                }
+            } catch (error) {
+                console.warn('Impossible de vérifier le statut du serveur:', error);
+                const statusDot = document.getElementById('serverStatus');
+                const statusText = document.getElementById('serverStatusText');
+                if (statusDot && statusText) {
+                    statusDot.className = 'status-dot status-offline';
+                    statusText.textContent = 'Erreur de connexion';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

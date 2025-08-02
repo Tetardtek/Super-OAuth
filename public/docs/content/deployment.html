@@ -1,0 +1,605 @@
+<h2>🚀 Guide de Déploiement SuperOAuth</h2>
+
+<div class="deployment-overview">
+    <p>Ce guide vous accompagne pas à pas dans le déploiement de SuperOAuth en production avec toutes les bonnes pratiques de sécurité et de performance.</p>
+</div>
+
+<div class="deployment-status">
+    <div class="status-progress">
+        <div class="progress-step completed">
+            <span class="step-icon">💻</span>
+            <span>Serveur</span>
+        </div>
+        <div class="progress-step">
+            <span class="step-icon">🛠️</span>
+            <span>Installation</span>
+        </div>
+        <div class="progress-step">
+            <span class="step-icon">📦</span>
+            <span>Application</span>
+        </div>
+        <div class="progress-step">
+            <span class="step-icon">🌐</span>
+            <span>Nginx</span>
+        </div>
+        <div class="progress-step">
+            <span class="step-icon">🔒</span>
+            <span>SSL</span>
+        </div>
+        <div class="progress-step">
+            <span class="step-icon">✅</span>
+            <span>Tests</span>
+        </div>
+    </div>
+</div>
+
+<h3>📋 Prérequis</h3>
+
+<div class="requirements-grid">
+    <div class="requirement-card">
+        <h4>🖥️ Serveur de Production</h4>
+        <ul>
+            <li><strong>OS</strong> : Ubuntu 20.04+ ou CentOS 8+</li>
+            <li><strong>RAM</strong> : Minimum 2GB, recommandé 4GB+</li>
+            <li><strong>CPU</strong> : 2 vCPU minimum</li>
+            <li><strong>Stockage</strong> : 20GB SSD minimum</li>
+            <li><strong>Réseau</strong> : Accès HTTPS (port 443)</li>
+        </ul>
+    </div>
+    
+    <div class="requirement-card">
+        <h4>🛠️ Logiciels Requis</h4>
+        <ul>
+            <li><strong>Node.js</strong> 18+ LTS</li>
+            <li><strong>MySQL</strong> 8.0+</li>
+            <li><strong>Nginx</strong> (proxy inverse)</li>
+            <li><strong>PM2</strong> (gestionnaire de processus)</li>
+            <li><strong>Certbot</strong> (certificats SSL)</li>
+        </ul>
+    </div>
+</div>
+
+<h3>🛠️ Préparation du Serveur</h3>
+
+<div class="deployment-section">
+    <h4>1️⃣ Mise à jour du Système</h4>
+    <div class="code-block"># Ubuntu/Debian
+sudo apt update && sudo apt upgrade -y
+
+# CentOS/RHEL
+sudo yum update -y</div>
+</div>
+
+<div class="deployment-section">
+    <h4>2️⃣ Installation de Node.js</h4>
+    <div class="code-block"># Via NodeSource
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Vérification
+node --version
+npm --version</div>
+</div>
+
+<div class="deployment-section">
+    <h4>3️⃣ Installation et Configuration MySQL</h4>
+    <div class="code-block"># Installation
+sudo apt install mysql-server
+
+# Configuration sécurisée
+sudo mysql_secure_installation
+
+# Création de la base de données
+sudo mysql -u root -p</div>
+    
+    <div class="code-block"># Commandes SQL
+CREATE DATABASE superoauth;
+CREATE USER 'superoauth_user'@'localhost' IDENTIFIED BY 'your_secure_password';
+GRANT ALL PRIVILEGES ON superoauth.* TO 'superoauth_user'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;</div>
+</div>
+
+<div class="deployment-section">
+    <h4>4️⃣ Installation de Nginx et PM2</h4>
+    <div class="code-block"># Nginx
+sudo apt install nginx
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+# PM2
+sudo npm install -g pm2</div>
+</div>
+
+<h3>📦 Déploiement de l'Application</h3>
+
+<div class="deployment-section">
+    <h4>1️⃣ Clonage et Préparation</h4>
+    <div class="code-block"># Création du répertoire
+sudo mkdir -p /var/www/superoauth
+sudo chown $USER:$USER /var/www/superoauth
+
+# Clonage
+cd /var/www/superoauth
+git clone &lt;your-repository-url&gt; .
+
+# Installation des dépendances
+npm ci --only=production</div>
+</div>
+
+<div class="deployment-section">
+    <h4>2️⃣ Configuration de Production</h4>
+    <div class="env-config">
+        <h5>🔧 Variables d'Environnement</h5>
+        <div class="code-block"># Création du fichier .env
+cat > .env << EOF
+NODE_ENV=production
+PORT=3000
+
+# Base de données
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=superoauth_user
+DB_PASSWORD=your_secure_password
+DB_DATABASE=superoauth
+
+# JWT Secrets (générer avec openssl rand -base64 32)
+JWT_SECRET=your_256_bit_secret_key_here
+JWT_REFRESH_SECRET=your_different_256_bit_refresh_key
+
+# OAuth Configuration
+DISCORD_CLIENT_ID=your_discord_client_id
+DISCORD_CLIENT_SECRET=your_discord_client_secret
+DISCORD_REDIRECT_URI=https://yourdomain.com/api/v1/auth/oauth/discord/callback
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_REDIRECT_URI=https://yourdomain.com/api/v1/auth/oauth/google/callback
+
+# Whitelist dynamique des redirect_uri OAuth (multi-environnements)
+# Ajoutez ici toutes les URLs de callback autorisées pour chaque provider, séparées par des virgules
+REDIRECT_URIS_DISCORD=https://yourdomain.com/api/v1/auth/oauth/discord/callback,https://localhost:3000/auth/discord/callback
+REDIRECT_URIS_GOOGLE=https://yourdomain.com/api/v1/auth/oauth/google/callback,https://localhost:3000/auth/google/callback
+REDIRECT_URIS_TWITCH=https://yourdomain.com/api/v1/auth/oauth/twitch/callback,https://localhost:3000/auth/twitch/callback
+REDIRECT_URIS_GITHUB=https://yourdomain.com/api/v1/auth/oauth/github/callback,https://localhost:3000/auth/github/callback
+
+# Sécurité
+CORS_ORIGIN=https://yourdomain.com
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=100
+EOF
+
+# Sécuriser le fichier
+chmod 600 .env</div>
+        <div class="doc-note info" style="margin-top:12px;">
+            <strong>ℹ️ Astuce :</strong> Pour chaque environnement (dev, staging, prod), ajoutez toutes les URLs de callback nécessaires dans la variable REDIRECT_URIS_{PROVIDER}.<br>
+            <strong>Exemple :</strong> <code>REDIRECT_URIS_DISCORD=https://prod.monsite.com/auth/discord/callback,https://localhost:3000/auth/discord/callback</code><br>
+            Ces URLs doivent aussi être enregistrées dans le dashboard du provider OAuth.
+        </div>
+    </div>
+</div>
+
+<div class="deployment-section">
+    <h4>3️⃣ Build et Migration</h4>
+    <div class="code-block"># Compilation TypeScript
+npm run build
+
+# Migration de la base de données
+npm run migration:run</div>
+</div>
+
+<div class="deployment-section">
+    <h4>4️⃣ Configuration PM2</h4>
+    <div class="code-block"># Création du fichier ecosystem
+cat > ecosystem.config.js << EOF
+module.exports = {
+  apps: [{
+    name: 'superoauth',
+    script: 'dist/index.js',
+    instances: 'max',
+    exec_mode: 'cluster',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 3000
+    },
+    log_file: '/var/log/superoauth/combined.log',
+    out_file: '/var/log/superoauth/out.log',
+    error_file: '/var/log/superoauth/error.log',
+    time: true,
+    max_memory_restart: '1G',
+    node_args: '--max-old-space-size=1024'
+  }]
+};
+EOF
+
+# Création du répertoire de logs
+sudo mkdir -p /var/log/superoauth
+sudo chown $USER:$USER /var/log/superoauth
+
+# Démarrage avec PM2
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup</div>
+</div>
+
+<h3>🌐 Configuration Nginx</h3>
+
+<div class="deployment-section">
+    <h4>🔧 Configuration du Site</h4>
+    <div class="code-block">sudo tee /etc/nginx/sites-available/superoauth << EOF
+server {
+    listen 80;
+    server_name yourdomain.com www.yourdomain.com;
+    
+    # Redirection HTTPS
+    return 301 https://\$server_name\$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name yourdomain.com www.yourdomain.com;
+
+    # Certificats SSL (Certbot les configurera)
+    ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
+    
+    # Configuration SSL sécurisée
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    
+    # Headers de sécurité
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-Frame-Options DENY;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Referrer-Policy "strict-origin-when-cross-origin";
+
+    # Fichiers statiques
+    location /public {
+        alias /var/www/superoauth/public;
+        expires 1y;
+        add_header Cache-Control "public, no-transform";
+        
+        # Gzip pour les fichiers statiques
+        gzip on;
+        gzip_types text/css application/javascript text/javascript;
+    }
+
+    # API et application
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # Limite la taille des uploads
+    client_max_body_size 10M;
+    
+    # Logs
+    access_log /var/log/nginx/superoauth_access.log;
+    error_log /var/log/nginx/superoauth_error.log;
+}
+EOF
+
+# Activation du site
+sudo ln -s /etc/nginx/sites-available/superoauth /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx</div>
+</div>
+
+<h3>🔒 Certificats SSL avec Let's Encrypt</h3>
+
+<div class="ssl-section">
+    <div class="ssl-step">
+        <h4>1️⃣ Installation de Certbot</h4>
+        <div class="code-block">sudo apt install certbot python3-certbot-nginx</div>
+    </div>
+    
+    <div class="ssl-step">
+        <h4>2️⃣ Obtention des Certificats</h4>
+        <div class="code-block"># Arrêt temporaire de Nginx
+sudo systemctl stop nginx
+
+# Obtention du certificat
+sudo certbot certonly --standalone -d yourdomain.com -d www.yourdomain.com
+
+# Redémarrage de Nginx
+sudo systemctl start nginx</div>
+    </div>
+    
+    <div class="ssl-step">
+        <h4>3️⃣ Renouvellement Automatique</h4>
+        <div class="code-block"># Test du renouvellement
+sudo certbot renew --dry-run
+
+# Configuration du cron job
+sudo crontab -e
+# Ajouter : 0 12 * * * /usr/bin/certbot renew --quiet</div>
+    </div>
+</div>
+
+<h3>🔥 Configuration du Firewall</h3>
+
+<div class="firewall-section">
+    <div class="firewall-config">
+        <h4>🛡️ UFW (Ubuntu)</h4>
+        <div class="code-block"># Activation
+sudo ufw enable
+
+# Règles essentielles
+sudo ufw allow ssh
+sudo ufw allow 'Nginx Full'
+sudo ufw allow 3306 # MySQL (si base distante)
+
+# Vérification
+sudo ufw status</div>
+    </div>
+    
+    <div class="firewall-config">
+        <h4>🚫 Fail2Ban (Protection contre les attaques)</h4>
+        <div class="code-block"># Installation
+sudo apt install fail2ban
+
+# Configuration
+sudo tee /etc/fail2ban/jail.local << EOF
+[DEFAULT]
+bantime = 1h
+findtime = 10m
+maxretry = 5
+
+[sshd]
+enabled = true
+
+[nginx-http-auth]
+enabled = true
+
+[nginx-limit-req]
+enabled = true
+EOF
+
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban</div>
+    </div>
+</div>
+
+<h3>📊 Monitoring et Logs</h3>
+
+<div class="monitoring-section">
+    <h4>📝 Configuration des Logs</h4>
+    <div class="code-block"># Rotation des logs avec logrotate
+sudo tee /etc/logrotate.d/superoauth << EOF
+/var/log/superoauth/*.log {
+    daily
+    missingok
+    rotate 52
+    compress
+    delaycompress
+    notifempty
+    create 644 $USER $USER
+    postrotate
+        pm2 reloadLogs
+    endscript
+}
+EOF</div>
+
+    <h4>📈 Commandes de Monitoring</h4>
+    <div class="monitoring-commands">
+        <div class="command-card">
+            <h5>PM2 Monitoring</h5>
+            <div class="code-block"># Monitoring en temps réel
+pm2 monit
+
+# Logs en temps réel
+pm2 logs superoauth
+
+# Statut des processus
+pm2 status</div>
+        </div>
+        
+        <div class="command-card">
+            <h5>Système</h5>
+            <div class="code-block"># Installation des outils
+sudo apt install htop iotop mytop
+
+# Monitoring MySQL
+mytop
+
+# Surveillance système
+htop</div>
+        </div>
+    </div>
+</div>
+
+<h3>🚀 Déploiement Automatisé</h3>
+
+<div class="automation-section">
+    <h4>📜 Script de Déploiement</h4>
+    <div class="code-block">#!/bin/bash
+# deploy.sh
+
+set -e
+
+echo "🚀 Déploiement SuperOAuth..."
+
+# Variables
+APP_DIR="/var/www/superoauth"
+BACKUP_DIR="/var/backups/superoauth"
+
+# Sauvegarde
+echo "📦 Création de la sauvegarde..."
+sudo mkdir -p $BACKUP_DIR
+sudo mysqldump -u superoauth_user -p superoauth > $BACKUP_DIR/db_$(date +%Y%m%d_%H%M%S).sql
+
+# Mise à jour du code
+echo "📥 Mise à jour du code..."
+cd $APP_DIR
+git pull origin main
+
+# Installation des dépendances
+echo "📦 Installation des dépendances..."
+npm ci --only=production
+
+# Build
+echo "🔨 Build de l'application..."
+npm run build
+
+# Migration base de données
+echo "🗄️ Migration base de données..."
+npm run migration:run
+
+# Redémarrage de l'application
+echo "🔄 Redémarrage de l'application..."
+pm2 reload superoauth
+
+# Test de santé
+echo "🏥 Test de santé..."
+sleep 5
+curl -f http://localhost:3000/health || (echo "❌ Échec du test de santé" && exit 1)
+
+echo "✅ Déploiement terminé avec succès !"</div>
+
+    <div class="script-usage">
+        <h5>🎯 Utilisation du Script</h5>
+        <div class="code-block"># Rendre le script exécutable
+chmod +x deploy.sh
+
+# Lancer le déploiement
+./deploy.sh</div>
+    </div>
+</div>
+
+<h3>✅ Checklist de Déploiement</h3>
+
+<div class="checklist-section">
+    <div class="checklist-column">
+        <h4>🔧 Avant le Déploiement</h4>
+        <div class="checklist-items">
+            <label class="checklist-item">
+                <input type="checkbox"> Serveur configuré et sécurisé
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox"> Base de données créée
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox"> Variables d'environnement configurées
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox"> Certificats SSL obtenus
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox"> Firewall configuré
+            </label>
+        </div>
+    </div>
+    
+    <div class="checklist-column">
+        <h4>⚡ Pendant le Déploiement</h4>
+        <div class="checklist-items">
+            <label class="checklist-item">
+                <input type="checkbox"> Code compilé sans erreur
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox"> Migrations de base exécutées
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox"> Application démarrée avec PM2
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox"> Nginx configuré et redémarré
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox"> Tests de santé passés
+            </label>
+        </div>
+    </div>
+    
+    <div class="checklist-column">
+        <h4>🎯 Après le Déploiement</h4>
+        <div class="checklist-items">
+            <label class="checklist-item">
+                <input type="checkbox"> Monitoring activé
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox"> Logs configurés
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox"> Sauvegardes programmées
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox"> Tests fonctionnels validés
+            </label>
+            <label class="checklist-item">
+                <input type="checkbox"> Performance vérifiée
+            </label>
+        </div>
+    </div>
+</div>
+
+<h3>🆘 Dépannage</h3>
+
+<div class="troubleshooting-section">
+    <div class="problem-card">
+        <h4>⚠️ Application ne démarre pas</h4>
+        <div class="code-block"># Vérifier les logs
+pm2 logs superoauth
+
+# Vérifier la configuration
+npm run check:config
+
+# Tester la connexion DB
+npm run test:db</div>
+    </div>
+    
+    <div class="problem-card">
+        <h4>⚠️ Nginx 502 Bad Gateway</h4>
+        <div class="code-block"># Vérifier que l'app tourne
+pm2 status
+
+# Vérifier les logs Nginx
+sudo tail -f /var/log/nginx/error.log
+
+# Tester la connectivité
+curl http://localhost:3000/health</div>
+    </div>
+    
+    <div class="problem-card">
+        <h4>⚠️ Problèmes SSL</h4>
+        <div class="code-block"># Vérifier les certificats
+sudo certbot certificates
+
+# Tester la configuration SSL
+openssl s_client -connect yourdomain.com:443</div>
+    </div>
+</div>
+
+<div class="deployment-summary">
+    <h4>🎯 Résumé du Déploiement</h4>
+    <p>Ce guide fournit une approche complète et sécurisée pour déployer SuperOAuth en production. Suivez chaque étape méthodiquement et n'hésitez pas à tester en environnement de staging avant la production finale.</p>
+    
+    <div class="summary-metrics">
+        <div class="metric">
+            <span class="metric-value">~30min</span>
+            <span class="metric-label">Temps d'installation</span>
+        </div>
+        <div class="metric">
+            <span class="metric-value">SSL A+</span>
+            <span class="metric-label">Note sécurité</span>
+        </div>
+        <div class="metric">
+            <span class="metric-value">99.9%</span>
+            <span class="metric-label">Uptime cible</span>
+        </div>
+    </div>
+</div>

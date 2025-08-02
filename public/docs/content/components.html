@@ -1,0 +1,269 @@
+<h2 aria-label="Composants Frontend" tabindex="0">🧩 Composants Frontend</h2>
+
+<h3 aria-label="config.js - Configuration centrale" tabindex="0">📦 config.js - Configuration centrale</h3>
+<div class="component-card">
+    <h4>Responsabilité</h4>
+    <p>Gestion centralisée de toutes les configurations, constantes et paramètres de l'application.</p>
+    
+    <h4>Exports principaux</h4>
+    <div class="code-block">export const API_CONFIG = {
+  BASE_URL: 'http://localhost:3000',
+  ENDPOINTS: {
+    REGISTER: '/auth/register',
+    LOGIN: '/auth/login',
+    LOGOUT: '/auth/logout',
+    ME: '/auth/me',
+    REFRESH: '/auth/refresh',
+    HEALTH: '/health'
+  }
+};
+
+export const OAUTH_PROVIDERS = {
+  google: {
+    name: 'Google',
+    icon: '🔍',
+    url: '/auth/google'
+  }
+};
+
+export const MESSAGES = {
+  SUCCESS: {
+    LOGIN: 'Connexion réussie !',
+    REGISTER: 'Inscription réussie !',
+    LOGOUT: 'Déconnexion réussie !'
+  },
+  ERROR: {
+    INVALID_CREDENTIALS: 'Email ou mot de passe incorrect',
+    SERVER_ERROR: 'Erreur serveur, veuillez réessayer',
+    NETWORK_ERROR: 'Erreur de connexion'
+  }
+};</div>
+</div>
+
+<h3 aria-label="utils.js - Utilitaires" tabindex="0">🔧 utils.js - Utilitaires</h3>
+<div class="component-card">
+    <h4>Responsabilité</h4>
+    <p>Fonctions utilitaires réutilisables pour le stockage, la validation, les requêtes HTTP et la manipulation du DOM.</p>
+    
+    <h4>Classes principales</h4>
+    <div class="code-block">// Gestion du stockage local
+class Storage {
+  static set(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (error) {
+      console.error('Erreur stockage:', error);
+      return false;
+    }
+  }
+  
+  static get(key) {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : null;
+    } catch (error) {
+      console.error('Erreur lecture:', error);
+      return null;
+    }
+  }
+}
+
+// Helpers pour l'interface utilisateur
+class UI {
+  static showMessage(message, type = 'info') {
+    // Affichage de messages utilisateur
+  }
+  
+  static setLoading(element, loading) {
+    // Gestion des états de chargement
+  }
+}
+
+// Validation des données
+class Validation {
+  static email(email) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  }
+  
+  static password(password) {
+    return password && password.length >= 6;
+  }
+}</div>
+</div>
+
+<h3 aria-label="auth-service.js - Service d'authentification" tabindex="0">🔐 auth-service.js - Service d'authentification</h3>
+<div class="component-card">
+    <h4>Responsabilité</h4>
+    <p>Logique métier pour l'authentification, gestion des tokens et communication avec l'API backend.</p>
+    
+    <h4>Méthodes principales</h4>
+    <div class="code-block">class AuthService {
+  // Inscription d'un nouvel utilisateur
+  async register(userData) {
+    const response = await HTTP.post(API_CONFIG.ENDPOINTS.REGISTER, userData);
+    if (response.success) {
+      Storage.set(STORAGE_KEYS.TOKEN, response.data.token);
+      Storage.set(STORAGE_KEYS.USER, response.data.user);
+    }
+    return response;
+  }
+  
+  // Connexion utilisateur
+  async login(email, password) {
+    const response = await HTTP.post(API_CONFIG.ENDPOINTS.LOGIN, {
+      email, password
+    });
+    
+    if (response.success) {
+      this.handleSuccessfulAuth(response.data);
+    }
+    return response;
+  }
+  
+  // Déconnexion et nettoyage
+  async logout() {
+    try {
+      await HTTP.post(API_CONFIG.ENDPOINTS.LOGOUT);
+    } finally {
+      this.clearAuthData();
+    }
+  }
+  
+  // Vérification du statut de connexion
+  isAuthenticated() {
+    const token = Storage.get(STORAGE_KEYS.TOKEN);
+    return token && !this.isTokenExpired(token);
+  }
+}</div>
+</div>
+
+<h3>🎨 auth-component.js - Interface d'authentification</h3>
+<div class="component-card">
+    <h4>Responsabilité</h4>
+    <p>Gestion de l'interface utilisateur pour l'inscription et la connexion, validation des formulaires côté client.</p>
+    
+    <h4>Fonctionnalités clés</h4>
+    <ul>
+        <li>✅ Basculement inscription/connexion</li>
+        <li>✅ Validation en temps réel</li>
+        <li>✅ Gestion des erreurs visuelles</li>
+        <li>✅ Intégration OAuth</li>
+        <li>✅ Messages de feedback</li>
+        <li>✅ Animations et transitions</li>
+    </ul>
+    
+    <div class="code-block">class AuthComponent {
+  constructor() {
+    this.isLoginMode = true;
+    this.authService = new AuthService();
+    this.init();
+  }
+  
+  init() {
+    this.bindEvents();
+    this.setupValidation();
+    this.renderOAuthProviders();
+  }
+  
+  async handleSubmit(formData) {
+    if (this.isLoginMode) {
+      return await this.authService.login(
+        formData.email, 
+        formData.password
+      );
+    } else {
+      return await this.authService.register(formData);
+    }
+  }
+}</div>
+</div>
+
+<h3>📊 dashboard-component.js - Tableau de bord</h3>
+<div class="component-card">
+    <h4>Responsabilité</h4>
+    <p>Affichage des informations utilisateur, gestion des avatars et interface du dashboard.</p>
+    
+    <h4>Fonctionnalités</h4>
+    <ul>
+        <li>👤 Profil utilisateur dynamique</li>
+        <li>🖼️ Gestion d'avatars avec prévisualisation</li>
+        <li>📈 Statistiques de connexion</li>
+        <li>🔗 Providers OAuth connectés</li>
+        <li>⚙️ Actions utilisateur (déconnexion, paramètres)</li>
+    </ul>
+    
+    <div class="code-block">class DashboardComponent {
+  constructor() {
+    this.authService = new AuthService();
+    this.currentUser = null;
+  }
+  
+  async render() {
+    this.currentUser = await this.authService.getCurrentUser();
+    
+    const dashboardHTML = `
+      <div class="dashboard-container">
+        ${this.renderUserProfile()}
+        ${this.renderAvatarSection()}
+        ${this.renderOAuthProviders()}
+        ${this.renderUserActions()}
+      </div>
+    `;
+    
+    return dashboardHTML;
+  }
+}</div>
+</div>
+
+<h3>🔍 server-monitor.js - Monitoring</h3>
+<div class="component-card">
+    <h4>Responsabilité</h4>
+    <p>Surveillance de l'état du serveur et indicateurs de connexion en temps réel.</p>
+    
+    <h4>Fonctionnalités</h4>
+    <ul>
+        <li>🔄 Vérification périodique du serveur</li>
+        <li>🚥 Indicateur visuel d'état</li>
+        <li>📡 Gestion des déconnexions</li>
+        <li>⚠️ Alertes automatiques</li>
+    </ul>
+</div>
+
+<h3>🚀 app.js - Application principale</h3>
+<div class="component-card">
+    <h4>Responsabilité</h4>
+    <p>Orchestration de l'application, initialisation des composants et gestion du routing.</p>
+    
+    <h4>Flux d'initialisation</h4>
+    <div class="code-block">class App {
+  async init() {
+    console.log('🚀 Initialisation de SuperOAuth...');
+    
+    try {
+      // 1. Vérification du serveur
+      await this.checkServerStatus();
+      
+      // 2. Vérification de l'authentification
+      const user = await this.checkAuthentication();
+      
+      // 3. Initialisation des composants
+      if (user) {
+        await this.showDashboard(user);
+      } else {
+        this.showAuth();
+      }
+      
+      // 4. Démarrage du monitoring
+      this.startServerMonitoring();
+      
+      console.log('✅ Application initialisée');
+      
+    } catch (error) {
+      console.error('❌ Erreur d\'initialisation:', error);
+      this.showError(error);
+    }
+  }
+}</div>
+</div>

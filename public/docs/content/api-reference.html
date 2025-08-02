@@ -1,0 +1,156 @@
+<div class="content-section">
+<h2>🔌 API Reference</h2>
+
+<h3>🌐 Endpoints disponibles</h3>
+
+<div class="endpoint">
+    <div class="endpoint-header">
+        <span class="method" aria-label="Méthode POST" tabindex="0">POST</span>
+        <span aria-label="Endpoint /auth/register" tabindex="0">/auth/register</span>
+    </div>
+    <div class="endpoint-body">
+        <p><strong>Description :</strong> Inscription d'un nouvel utilisateur</p>
+        <div class="code-block">// Paramètres requis
+{
+  "nom": "Dupont",
+  "prenom": "Jean", 
+  "email": "jean.dupont@example.com",
+  "password": "motdepasse123",
+  "confirmPassword": "motdepasse123"
+}
+
+// Réponse succès
+{
+  "success": true,
+  "message": "Utilisateur créé avec succès",
+  "data": {
+    "user": {
+      "id": 1,
+      "nom": "Dupont",
+      "prenom": "Jean",
+      "email": "jean.dupont@example.com"
+    }
+  }
+}</div>
+    </div>
+</div>
+
+<div class="endpoint">
+    <div class="endpoint-header">
+        <span class="method" aria-label="Méthode POST" tabindex="0">POST</span>
+        <span aria-label="Endpoint /auth/login" tabindex="0">/auth/login</span>
+    </div>
+    <div class="endpoint-body">
+        <p><strong>Description :</strong> Connexion utilisateur</p>
+        <div class="code-block">// Paramètres requis
+{
+  "email": "jean.dupont@example.com",
+  "password": "motdepasse123"
+}
+
+// Réponse succès
+{
+  "success": true,
+  "message": "Connexion réussie",
+  "data": {
+    "user": {
+      "id": 1,
+      "nom": "Dupont",
+      "prenom": "Jean",
+      "email": "jean.dupont@example.com",
+      "avatar": "avatar1.jpg",
+      "oauth_providers": ["google", "facebook"]
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}</div>
+    </div>
+</div>
+
+<div class="endpoint">
+    <div class="endpoint-header">
+        <span class="method" aria-label="Méthode GET" tabindex="0">GET</span>
+        <span aria-label="Endpoint /auth/me" tabindex="0">/auth/me</span>
+    </div>
+    <div class="endpoint-body">
+        <p><strong>Description :</strong> Récupération des informations de l'utilisateur connecté</p>
+        <div class="code-block">// Headers requis
+Authorization: Bearer {token}
+
+// Réponse succès
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": 1,
+      "nom": "Dupont",
+      "prenom": "Jean",
+      "email": "jean.dupont@example.com",
+      "avatar": "avatar1.jpg",
+      "oauth_providers": ["google"],
+      "created_at": "2024-01-15T10:30:00Z"
+    }
+  }
+}</div>
+    </div>
+</div>
+
+<div class="endpoint">
+    <div class="endpoint-header">
+        <span class="method" aria-label="Méthode GET" tabindex="0">GET</span>
+        <span aria-label="Endpoint /health" tabindex="0">/health</span>
+    </div>
+    <div class="endpoint-body">
+        <p><strong>Description :</strong> Vérification du statut du serveur</p>
+        <div class="code-block">// Réponse succès
+{
+  "status": "healthy",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "database": "connected",
+  "uptime": "2h 15m 30s"
+}</div>
+    </div>
+</div>
+
+<h3>🔐 Authentification</h3>
+<p>L'API utilise des tokens JWT pour l'authentification. Incluez le token dans le header Authorization :</p>
+<div class="code-block">Authorization: Bearer {votre_token_jwt}</div>
+
+<h3>📊 Codes de réponse</h3>
+<ul>
+    <li><span class="badge success">200</span> Succès</li>
+    <li><span class="badge info">201</span> Créé avec succès</li>
+    <li><span class="badge warning">400</span> Erreur de validation</li>
+    <li><span class="badge danger">401</span> Non authentifié</li>
+    <li><span class="badge danger">403</span> Accès refusé</li>
+    <li><span class="badge danger">500</span> Erreur serveur</li>
+</ul>
+
+<h3>🌐 Endpoints OAuth</h3>
+
+<div class="endpoint">
+    <div class="endpoint-header">
+        <span class="method">GET</span>
+        <span>/auth/google</span>
+    </div>
+    <div class="endpoint-body">
+        <p><strong>Description :</strong> Initialisation OAuth Google</p>
+        <div class="code-block">// Redirection vers Google OAuth
+// Pas de paramètres requis
+// Retourne une redirection vers l'URL d'autorisation Google</div>
+    </div>
+</div>
+
+<div class="endpoint">
+    <div class="endpoint-header">
+        <span class="method">GET</span>
+        <span>/auth/google/callback</span>
+    </div>
+    <div class="endpoint-body">
+        <p><strong>Description :</strong> Callback OAuth Google</p>
+        <div class="code-block">// URL de callback automatique après autorisation Google
+// Paramètres automatiques : code, state
+// Redirection vers l'app avec token en paramètre</div>
+    </div>
+</div>
+

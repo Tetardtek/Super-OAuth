@@ -1,0 +1,18 @@
+{
+  "thresholds": {
+    "excellent": 50000,
+    "good": 100000,
+    "average": 200000,
+    "poor": 500000
+  },
+  "fileTypes": {
+    "js": { "color": "🟨", "category": "JavaScript" },
+    "css": { "color": "🟦", "category": "Styles" },
+    "html": { "color": "🟧", "category": "Markup" },
+    "png": { "color": "🟩", "category": "Images" },
+    "jpg": { "color": "🟩", "category": "Images" },
+    "jpeg": { "color": "🟩", "category": "Images" },
+    "svg": { "color": "🟪", "category": "Vectors" },
+    "json": { "color": "⬜", "category": "Data" }
+  }
+}

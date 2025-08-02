@@ -1,0 +1,140 @@
+/**
+ * Styles principaux SuperOAuth
+ * @version 1.0.0
+ */
+
+/* Import des variables globales */
+@import 'variables.css';
+
+/* Reset et base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    min-height: 100vh;
+    color: var(--dark-color);
+}
+
+/* Layout principal */
+.container {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+.header {
+    text-align: center;
+    color: white;
+    margin-bottom: 40px;
+}
+
+.header h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.header p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+/* Dashboard grid */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+/* Cards de base */
+.card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.card h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+}
+
+/* Sections spécialisées */
+.login-section {
+    border: 2px solid #667eea;
+}
+
+.register-section {
+    border: 2px solid #28a745;
+}
+
+.dashboard-section {
+    border: 2px solid #ff6b35;
+}
+
+/* Badges de section */
+.section-badge {
+    position: absolute;
+    top: -15px;
+    left: 20px;
+    background: white;
+    padding: 5px 15px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.login-badge {
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.register-badge {
+    color: #28a745;
+    border: 2px solid #28a745;
+}
+
+.dashboard-badge {
+    color: #ff6b35;
+    border: 2px solid #ff6b35;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    color: white;
+    margin-top: 40px;
+    opacity: 0.8;
+}
+
+.version-info {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+    color: white;
+}
+
+.version-info h4 {
+    margin-bottom: 10px;
+}
+
+.version-info p {
+    margin: 5px 0;
+    font-size: 0.9rem;
+}

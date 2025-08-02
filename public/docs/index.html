@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperOAuth - Documentation Développeur</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+    <link rel="stylesheet" href="styles/documentation.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 SuperOAuth</h1>
+            <p>Documentation Développeur - Architecture Modulaire</p>
+        </div>
+
+        <a href="../index.html" class="back-link">← Retour à l'application</a>
+
+        <div class="tabs-container">
+            <div class="nav-tabs" id="navTabs">
+                <button class="tab active" data-tab="architecture" aria-label="Architecture">🛠 Architecture</button>
+                <button class="tab" data-tab="scripts" aria-label="Scripts & Outils">🛠️ Scripts & Outils</button>
+                <button class="tab" data-tab="api" aria-label="API Reference">🔌 API Reference</button>
+                <button class="tab" data-tab="components" aria-label="Composants">📦 Composants</button>
+                <button class="tab" data-tab="toast" aria-label="Système Toast">🍞 Système Toast</button>
+                <button class="tab" data-tab="security" aria-label="Sécurité">🔐 Sécurité</button>
+                <button class="tab" data-tab="deployment" aria-label="Déploiement">🚚 Déploiement</button>
+                <button class="tab" data-tab="tests" aria-label="Tests">🧪 Tests</button>
+                <button class="tab" data-tab="performance" aria-label="Performance">📈 Performance</button>
+                <button class="tab" data-tab="integration" aria-label="Intégration">🔗 Intégration</button>
+            </div>
+            
+            <!-- Boutons de navigation pour le scroll -->
+            <div class="nav-controls">
+                <button class="nav-btn nav-prev" id="navPrev" aria-label="Onglet précédent">‹</button>
+                <button class="nav-btn nav-next" id="navNext" aria-label="Onglet suivant">›</button>
+            </div>
+        </div>
+
+        <div class="tab-content">
+            <!-- Les contenus seront chargés dynamiquement -->
+            <div id="tab-architecture" class="tab-pane active"></div>
+            <div id="tab-scripts" class="tab-pane"></div>
+            <div id="tab-api" class="tab-pane"></div>
+            <div id="tab-components" class="tab-pane"></div>
+            <div id="tab-toast" class="tab-pane"></div>
+            <div id="tab-security" class="tab-pane"></div>
+            <div id="tab-deployment" class="tab-pane"></div>
+            <div id="tab-tests" class="tab-pane"></div>
+            <div id="tab-performance" class="tab-pane"></div>
+            <div id="tab-integration" class="tab-pane"></div>
+        </div>
+
+        <div class="footer">
+            <p>📚 SuperOAuth Documentation - Architecture Modulaire v2.0</p>
+            <p>Dernière mise à jour : <span id="lastUpdate"></span></p>
+        </div>
+    </div>
+
+    <!-- Scripts modulaires -->
+    <script src="js/toast-manager.js"></script>
+    <script src="js/oauth-tester.js"></script>
+    <script type="module" src="js/docs-app.js"></script>
+</body>
+</html>
