@@ -1,0 +1,512 @@
+# SuperOAuth - Règles pour les Agents IA (Cursor, Claude Code, etc.)
+
+## 🎯 Objectif du Projet
+
+SuperOAuth est un système d'authentification OAuth moderne construit avec TypeScript, Express, et TypeORM, suivant les principes du Domain-Driven Design (DDD) et de l'Architecture Hexagonale.
+
+## 📐 Architecture
+
+- **Domain-Driven Design (DDD)** avec séparation en couches
+- **Clean Architecture** avec dépendances inversées
+- **SOLID Principles** strictement appliqués
+- **TypeScript Strict Mode** sans exceptions
+
+### Hiérarchie des Couches
+
+```
+Presentation → Application → Domain ← Infrastructure
+```
+
+**Règle d'or:** Les dépendances pointent TOUJOURS vers le Domain, jamais l'inverse.
+
+## 🚫 Interdictions Strictes
+
+### 1. Ne JAMAIS court-circuiter les couches
+
+❌ **INTERDIT:**
+```typescript
+// Controller accédant directement au repository
+class AuthController {
+  constructor(private userRepo: UserRepository) {}
+}
+
+// Use Case accédant directement à TypeORM
+class LoginUseCase {
+  async execute() {
+    const user = await getRepository(User).findOne(...);
+  }
+}
+```
+
+✅ **OBLIGATOIRE:**
+```typescript
+// Controller utilisant un Use Case
+class AuthController {
+  constructor(private loginUseCase: LoginClassicUseCase) {}
+}
+
+// Use Case utilisant une interface de repository
+class LoginUseCase {
+  constructor(private userRepository: IUserRepository) {}
+}
+```
+
+### 2. Ne JAMAIS utiliser 'any'
+
+❌ Interdit: `const data: any`
+✅ Utiliser: `unknown`, types spécifiques, ou génériques
+
+### 3. Ne JAMAIS mettre de logique métier dans les Controllers
+
+Les controllers sont des **adaptateurs HTTP uniquement**.
+
+### 4. Ne JAMAIS hardcoder de valeurs
+
+❌ `if (user.role === 'admin')`
+✅ `if (user.role === UserRole.ADMIN)` avec enum/const
+
+## ✅ Règles Obligatoires
+
+### 1. TypeScript Strict
+
+Tous les fichiers doivent compiler en mode strict:
+```typescript
+// Activer dans tsconfig.json
+"strict": true,
+"noImplicitAny": true,
+"strictNullChecks": true,
+"noUnusedLocals": true,
+"noUnusedParameters": true
+```
+
+### 2. Utiliser les Alias d'Imports
+
+```typescript
+✅ import { User } from '@domain/entities/user.entity';
+✅ import { RegisterDto } from '@application/dto/auth.dto';
+✅ import { logger } from '@shared/utils/logger.util';
+
+❌ import { User } from '../../../domain/entities/user.entity';
+```
+
+### 3. Injection de Dépendances
+
+Toujours injecter les dépendances via le constructeur:
+
+```typescript
+export class RegisterClassicUseCase {
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly passwordHasher: IPasswordHasher,
+    private readonly emailService: IEmailService
+  ) {}
+}
+```
+
+### 4. Gestion d'Erreurs Métier
+
+Créer des erreurs spécifiques dans `domain/errors/`:
+
+```typescript
+export class UserAlreadyExistsError extends Error {
+  constructor(email: string) {
+    super(`User with email ${email} already exists`);
+    this.name = 'UserAlreadyExistsError';
+  }
+}
+```
+
+### 5. Logging
+
+Utiliser le logger Winston pour toutes les opérations importantes:
+
+```typescript
+logger.info('User registered successfully', { userId: user.id });
+logger.error('Registration failed', { error: error.message, email });
+logger.warn('Suspicious login attempt', { ip, userAgent });
+logger.debug('Token validation details', { token, expiry });
+```
+
+### 6. Validation
+
+- **Requêtes HTTP:** Utiliser les validators Joi dans `presentation/validators/`
+- **Value Objects:** Valider dans le constructeur
+- **DTOs:** Définir dans `application/dto/`
+
+## 📁 Structure des Fichiers
+
+### Conventions de Nommage
+
+| Type | Pattern | Exemple |
+|------|---------|---------|
+| Entity | `{name}.entity.ts` | `user.entity.ts` |
+| Use Case | `{verb}-{noun}.use-case.ts` | `register-classic.use-case.ts` |
+| Repository | `{entity}.repository.ts` | `user.repository.ts` |
+| Repository Interface | `{entity}.repository.interface.ts` | `user.repository.interface.ts` |
+| Controller | `{entity}.controller.ts` | `auth.controller.ts` |
+| Service | `{name}.service.ts` | `email.service.ts` |
+| DTO | `{context}.dto.ts` | `auth.dto.ts` |
+| Value Object | `{name}.vo.ts` | `email.vo.ts` |
+| Error | `{context}-errors.ts` | `user-errors.ts` |
+| Middleware | `{name}.middleware.ts` | `auth.middleware.ts` |
+
+### Organisation par Couche
+
+```
+src/
+├── domain/              # Logique métier pure (pas de dépendances externes)
+│   ├── entities/       # Entités du domaine
+│   ├── value-objects/  # Objets valeur immuables
+│   ├── repositories/   # Interfaces des repositories
+│   └── errors/         # Erreurs métier
+│
+├── application/         # Orchestration des use cases
+│   ├── use-cases/      # Cas d'utilisation métier
+│   ├── dto/            # Data Transfer Objects
+│   ├── services/       # Services applicatifs
+│   └── interfaces/     # Interfaces
+│
+├── infrastructure/      # Implémentations concrètes
+│   ├── database/       # TypeORM, repositories, migrations
+│   ├── oauth/          # Providers OAuth
+│   ├── services/       # Services externes (email, SMS, etc.)
+│   └── di/             # Dependency Injection container
+│
+├── presentation/        # Couche HTTP/REST
+│   ├── controllers/    # Contrôleurs Express
+│   ├── routes/         # Définition des routes
+│   ├── middleware/     # Middlewares HTTP
+│   └── validators/     # Validation Joi
+│
+└── shared/              # Code partagé
+    ├── config/         # Configuration
+    ├── utils/          # Utilitaires
+    ├── types/          # Types globaux
+    └── constants/      # Constantes
+```
+
+## 🔧 Ajout de Fonctionnalités
+
+### Workflow pour Ajouter une Feature
+
+1. **Analyser la demande**
+   - Identifier la couche concernée
+   - Vérifier les dépendances existantes
+   - Lire les fichiers liés
+
+2. **Créer les composants dans l'ordre**
+   - Domain (Entities, Value Objects, Errors)
+   - Application (Use Cases, DTOs)
+   - Infrastructure (Repositories, Services)
+   - Presentation (Controllers, Routes, Validators)
+
+3. **Écrire les tests**
+   - Tests unitaires pour les Use Cases
+   - Tests d'intégration pour les Controllers
+   - Viser 85%+ de couverture
+
+4. **Documentation**
+   - JSDoc pour les fonctions publiques
+   - Commentaires pour la logique complexe
+   - Mise à jour du README si nécessaire
+
+### Exemple: Ajouter un Provider OAuth
+
+```typescript
+// 1. Domain: Ajouter le provider dans les types
+// src/shared/types/oauth.types.ts
+export type OAuthProvider = 'discord' | 'google' | 'github' | 'twitch' | 'linkedin';
+
+// 2. Infrastructure: Créer le provider
+// src/infrastructure/oauth/providers/linkedin.provider.ts
+export class LinkedInOAuthProvider implements IOAuthProvider {
+  getAuthorizationUrl(): string { ... }
+  handleCallback(code: string): Promise<OAuthUserInfo> { ... }
+}
+
+// 3. Infrastructure: Enregistrer dans la factory
+// src/infrastructure/oauth/oauth-provider.factory.ts
+case 'linkedin':
+  return new LinkedInOAuthProvider();
+
+// 4. Application: Le Use Case existant fonctionne automatiquement
+// Aucune modification nécessaire grâce à l'interface IOAuthProvider
+
+// 5. Presentation: Ajouter la route
+// src/presentation/routes/oauth.routes.ts
+router.get('/oauth/linkedin', oauthController.startOAuth);
+router.get('/oauth/linkedin/callback', oauthController.completeOAuth);
+
+// 6. Config: Ajouter les variables d'environnement
+// .env.example
+LINKEDIN_CLIENT_ID=your_client_id
+LINKEDIN_CLIENT_SECRET=your_client_secret
+```
+
+## 🧪 Tests
+
+### Règles de Test
+
+1. **Un test = Un comportement**
+2. **Pattern AAA:** Arrange, Act, Assert
+3. **Noms descriptifs:** `should_{behavior}_when_{condition}`
+4. **Mocker les dépendances externes**
+5. **Tester les cas limites et erreurs**
+
+### Structure d'un Test
+
+```typescript
+describe('RegisterClassicUseCase', () => {
+  let useCase: RegisterClassicUseCase;
+  let mockUserRepository: jest.Mocked<IUserRepository>;
+  let mockPasswordHasher: jest.Mocked<IPasswordHasher>;
+
+  beforeEach(() => {
+    // Arrange - Setup des mocks
+    mockUserRepository = {
+      findByEmail: jest.fn(),
+      save: jest.fn(),
+    } as any;
+
+    mockPasswordHasher = {
+      hash: jest.fn(),
+    } as any;
+
+    useCase = new RegisterClassicUseCase(
+      mockUserRepository,
+      mockPasswordHasher
+    );
+  });
+
+  it('should_register_user_when_email_not_exists', async () => {
+    // Arrange
+    const dto = { email: 'test@example.com', password: 'Pass123!' };
+    mockUserRepository.findByEmail.mockResolvedValue(null);
+    mockPasswordHasher.hash.mockResolvedValue('hashed_password');
+
+    // Act
+    const result = await useCase.execute(dto);
+
+    // Assert
+    expect(result).toBeDefined();
+    expect(mockUserRepository.save).toHaveBeenCalledTimes(1);
+  });
+
+  it('should_throw_error_when_user_already_exists', async () => {
+    // Arrange
+    const dto = { email: 'test@example.com', password: 'Pass123!' };
+    mockUserRepository.findByEmail.mockResolvedValue({} as User);
+
+    // Act & Assert
+    await expect(useCase.execute(dto)).rejects.toThrow(UserAlreadyExistsError);
+  });
+});
+```
+
+## 🔐 Sécurité
+
+### Checklist Sécurité
+
+- [ ] Mots de passe TOUJOURS hachés (bcrypt)
+- [ ] Validation stricte des entrées (Joi)
+- [ ] Pas de données sensibles dans les logs
+- [ ] Tokens JWT avec expiration courte
+- [ ] Rate limiting sur les endpoints sensibles
+- [ ] CORS configuré correctement
+- [ ] Helmet pour les headers HTTP
+- [ ] Protection CSRF avec state token (OAuth)
+- [ ] Sanitisation des données utilisateur
+- [ ] Pas de secrets dans le code (utiliser .env)
+
+### Données Sensibles
+
+❌ **JAMAIS logger:**
+- Mots de passe
+- Tokens JWT complets
+- Refresh tokens
+- Secrets OAuth
+
+✅ **Peut logger:**
+- User ID
+- Email (masqué: `u***@example.com`)
+- IP (partielle: `192.168.x.x`)
+- Actions utilisateur
+
+## 📊 Performance
+
+### Optimisations
+
+1. **Requêtes Database**
+   - Utiliser les relations TypeORM
+   - Éviter les N+1 queries
+   - Ajouter des index sur les colonnes fréquemment recherchées
+
+2. **Caching**
+   - Redis pour les sessions
+   - Cache les données peu changeantes
+   - Invalider le cache intelligemment
+
+3. **Async/Await**
+   - Paralléliser les opérations indépendantes
+   - Utiliser `Promise.all()` quand possible
+
+## 🎨 Formatage et Style
+
+### Prettier Configuration
+
+```json
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 100,
+  "tabWidth": 2
+}
+```
+
+### ESLint Rules
+
+- Pas de variables non utilisées
+- Pas d'imports non utilisés
+- Préférer `const` à `let`
+- Pas de `console.log` (utiliser logger)
+
+## 📝 Documentation Code
+
+### JSDoc pour Fonctions Publiques
+
+```typescript
+/**
+ * Registers a new user with email and password
+ *
+ * @param dto - User registration data containing email, password, and nickname
+ * @returns Promise resolving to the created user entity
+ * @throws {UserAlreadyExistsError} When email is already registered
+ * @throws {InvalidPasswordError} When password doesn't meet requirements
+ *
+ * @example
+ * ```typescript
+ * const user = await registerUseCase.execute({
+ *   email: 'user@example.com',
+ *   password: 'SecurePass123!',
+ *   nickname: 'JohnDoe'
+ * });
+ * ```
+ */
+async execute(dto: RegisterDto): Promise<User> {
+  // Implementation
+}
+```
+
+## 🔄 Git Commits
+
+### Format
+
+```
+type(scope): description
+
+[optional body]
+[optional footer]
+```
+
+### Types
+
+- `feat`: Nouvelle fonctionnalité
+- `fix`: Correction de bug
+- `refactor`: Refactoring sans changement fonctionnel
+- `docs`: Documentation
+- `test`: Tests
+- `chore`: Maintenance (deps, config)
+- `perf`: Performance
+- `style`: Formatage
+
+### Exemples
+
+```bash
+feat(auth): add LinkedIn OAuth provider
+fix(session): resolve token expiration issue
+refactor(user): extract email validation to value object
+docs(api): update authentication endpoints
+test(auth): add unit tests for register use case
+```
+
+## 🚀 Avant de Commiter
+
+```bash
+# 1. Vérifier le build TypeScript
+npm run build
+
+# 2. Lancer les tests
+npm run test
+
+# 3. Vérifier la couverture
+npm run test:coverage
+
+# 4. Formater le code
+npm run format
+
+# 5. Linter
+npm run lint:fix
+
+# 6. Vérifier les types
+npm run typecheck
+```
+
+## 📚 Fichiers Importants à Consulter
+
+Avant toute modification, consulter:
+
+1. `ARCHITECTURE.md` - Architecture détaillée du projet
+2. `CONTRIBUTING.md` - Guide de contribution complet
+3. `AI_AGENT_GUIDE.md` - Instructions spécifiques pour agents IA
+4. `PROJECT_STRUCTURE.md` - Structure détaillée des fichiers
+5. `README.md` - Documentation générale
+
+## 🤖 Instructions pour Agents IA
+
+### Workflow de Travail
+
+1. **Toujours lire avant d'écrire**
+   - Comprendre le contexte
+   - Identifier les dépendances
+   - Vérifier l'architecture existante
+
+2. **Analyser l'impact**
+   - Quelles couches sont affectées?
+   - Y a-t-il des breaking changes?
+   - Les tests doivent-ils être mis à jour?
+
+3. **Implémenter progressivement**
+   - Une couche à la fois
+   - Tester au fur et à mesure
+   - Documenter les changements
+
+4. **Valider le résultat**
+   - Les tests passent
+   - Le code compile
+   - La qualité est maintenue
+
+### Questions à se Poser
+
+- ✅ Est-ce que je respecte la séparation des couches?
+- ✅ Est-ce que j'utilise l'injection de dépendances?
+- ✅ Est-ce que mes erreurs sont typées et explicites?
+- ✅ Est-ce que je log les opérations importantes?
+- ✅ Est-ce que mon code est testé?
+- ✅ Est-ce que la sécurité est préservée?
+
+## 🎯 Objectifs de Qualité
+
+- **Couverture de tests:** 85%+
+- **Complexité cyclomatique:** < 10 par fonction
+- **Duplication de code:** < 3%
+- **Taille des fichiers:** < 300 lignes
+- **Taille des fonctions:** < 50 lignes
+
+---
+
+**En cas de doute, TOUJOURS privilégier:**
+- La clarté sur la concision
+- La sécurité sur la performance
+- La maintenabilité sur l'optimisation prématurée
+- Les tests sur le code de production

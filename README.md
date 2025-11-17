@@ -13,6 +13,7 @@ SuperOAuth est une solution complète d'authentification qui combine l'authentif
 - [📖 Documentation API](#-documentation-api)
 - [🎨 Interface Utilisateur](#-interface-utilisateur)
 - [🔒 Sécurité](#-sécurité)
+- [🤖 Pour les Agents IA](#-pour-les-agents-ia)
 - [📝 Changelog](#-changelog)
 
 ## 🚀 Fonctionnalités
@@ -338,6 +339,52 @@ npm run test:watch
 # Tests d'intégration
 npm run test:e2e
 ```
+
+## 🤖 Pour les Agents IA
+
+Si vous êtes un **agent IA** (Claude Code, Cursor, GitHub Copilot, etc.) travaillant sur ce projet, **commencez par consulter** :
+
+### 📁 [CLAUDE/](./CLAUDE/) - Documentation Complète pour Agents IA
+
+Cette documentation spécialisée contient tout ce dont vous avez besoin :
+
+#### 🚀 Démarrage Rapide
+- **[QUICK_START.md](./CLAUDE/QUICK_START.md)** - Démarrer en 5 minutes
+- **[.cursorrules](./CLAUDE/.cursorrules)** - Règles strictes (NON NÉGOCIABLES)
+
+#### 📚 Guides Techniques
+- **[ARCHITECTURE.md](./CLAUDE/guides/ARCHITECTURE.md)** - Architecture DDD et Clean Architecture
+- **[CONTRIBUTING.md](./CLAUDE/guides/CONTRIBUTING.md)** - Standards de code et workflow Git
+- **[AI_AGENT_GUIDE.md](./CLAUDE/guides/AI_AGENT_GUIDE.md)** - Patterns, exemples et best practices
+- **[PROJECT_STRUCTURE.md](./CLAUDE/guides/PROJECT_STRUCTURE.md)** - Navigation et localisation des fichiers
+
+#### 📊 Statut du Projet
+- **[PROJECT_STATUS.md](./CLAUDE/status/PROJECT_STATUS.md)** - État actuel, métriques, roadmap
+
+### ⚡ Ordre de Lecture Recommandé
+
+1. **QUICK_START.md** (5-10 min) - Installation et commandes essentielles
+2. **.cursorrules** (10 min) - Règles NON NÉGOCIABLES
+3. **ARCHITECTURE.md** (15 min) - Comprendre la structure DDD
+4. **AI_AGENT_GUIDE.md** (20-25 min) - Patterns et exemples de code
+5. **PROJECT_STRUCTURE.md** (5-10 min) - Localiser les fichiers rapidement
+
+### 🎯 Règles d'Or
+
+- ✅ **TOUJOURS** respecter la séparation des couches (Domain, Application, Infrastructure, Presentation)
+- ✅ **TOUJOURS** utiliser l'injection de dépendances
+- ✅ **TOUJOURS** créer des tests pour le nouveau code
+- ❌ **JAMAIS** court-circuiter les couches (Controller → Repository directement)
+- ❌ **JAMAIS** utiliser le type `any` en TypeScript
+- ❌ **JAMAIS** mettre de logique métier dans les Controllers
+
+### 📖 Documentation Complète
+
+Pour plus de détails, consultez le **[README du dossier CLAUDE](./CLAUDE/README.md)** qui contient :
+- Index complet de la documentation
+- Guide de navigation
+- Checklist avant de commencer
+- Ressources et support
 
 ## 📝 Changelog
 

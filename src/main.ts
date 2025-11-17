@@ -1,3 +1,30 @@
+/**
+ * SuperOAuth - Main Application Entry Point
+ *
+ * This file is the entry point of the SuperOAuth application.
+ * It initializes the Express server with all necessary middleware,
+ * routes, and error handling following Clean Architecture principles.
+ *
+ * Architecture Overview:
+ * - Presentation Layer: Controllers, Routes, Middleware
+ * - Application Layer: Use Cases, Services
+ * - Domain Layer: Entities, Value Objects, Business Rules
+ * - Infrastructure Layer: Database, OAuth Providers, External Services
+ *
+ * Server Initialization Flow:
+ * 1. Load environment variables from .env file
+ * 2. Set up security middleware (Helmet, CORS)
+ * 3. Configure rate limiting and request logging
+ * 4. Register API routes
+ * 5. Set up error handling
+ * 6. Validate environment configuration
+ * 7. Initialize database connection
+ * 8. Start HTTP server
+ * 9. Set up graceful shutdown handlers
+ *
+ * @module main
+ */
+
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
@@ -9,6 +36,12 @@ import { logger } from './shared/utils/logger.util';
 import { authRoutes, oauthRoutes } from './presentation/routes';
 import { errorHandler, notFoundHandler, requestLogger, apiRateLimit } from './presentation/middleware';
 
+/**
+ * SuperOAuth Server Class
+ *
+ * Main server class that encapsulates Express application setup and lifecycle.
+ * Implements dependency injection and follows SOLID principles.
+ */
 class SuperOAuthServer {
   private app: express.Application;
   private readonly config = getAppConfig();
@@ -20,55 +53,87 @@ class SuperOAuthServer {
     this.setupErrorHandling();
   }
 
+  /**
+   * Configure security, parsing, and utility middleware
+   *
+   * Middleware execution order is critical for security and functionality:
+   * 1. Security headers (Helmet, CORS)
+   * 2. Rate limiting (DDoS protection)
+   * 3. Request logging
+   * 4. Static file serving
+   * 5. Body parsing
+   * 6. Session management
+   */
   private setupMiddleware(): void {
-    // Security middleware
+    // Security middleware - Helmet sets various HTTP headers for security
+    // Content Security Policy (CSP) prevents XSS attacks
+    // See: https://helmetjs.github.io/
     this.app.use(helmet({
       contentSecurityPolicy: {
         directives: {
-          defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", "data:", "https:"],
+          defaultSrc: ["'self'"],                    // Only load resources from same origin
+          styleSrc: ["'self'", "'unsafe-inline'"],   // Allow inline styles (needed for frontend)
+          scriptSrc: ["'self'", "'unsafe-inline'"],  // Allow inline scripts (needed for frontend)
+          imgSrc: ["'self'", "data:", "https:"],     // Allow images from self, data URIs, and HTTPS
         },
       },
     }));
+
+    // CORS (Cross-Origin Resource Sharing) configuration
+    // Allows requests from specified origins with credentials
     this.app.use(cors({
       origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
-      credentials: true,
+      credentials: true,  // Allow cookies and authentication headers
     }));
 
-    // Rate limiting
+    // Rate limiting middleware - Protection against DDoS and brute force attacks
+    // Applied to all /api/* routes
     this.app.use('/api/', apiRateLimit);
 
-    // Request logging
+    // Request logging middleware - Logs all incoming HTTP requests
+    // Useful for debugging and security monitoring
     this.app.use(requestLogger);
 
-    // Static files middleware
+    // Static files middleware - Serves frontend assets (HTML, CSS, JS)
+    // Files from /public directory are accessible at root path
     this.app.use(express.static(path.join(__dirname, '..', 'public')));
 
-    // Body parsing middleware
+    // Body parsing middleware - Parses JSON and URL-encoded request bodies
+    // Limit set to 10mb to prevent memory exhaustion attacks
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true }));
 
     // Simple session middleware for OAuth state management
+    // Stores temporary OAuth state tokens to prevent CSRF attacks
     this.app.use((req: any, _res, next) => {
       req.session = req.session || {};
       next();
     });
   }
 
+  /**
+   * Configure application routes
+   *
+   * Routes are organized by feature:
+   * - Static HTML pages (/, /docs)
+   * - Health check endpoint (/health)
+   * - Authentication API (/api/v1/auth/*)
+   * - OAuth API (/api/v1/oauth/*)
+   * - 404 handler (catch-all)
+   */
   private setupRoutes(): void {
-    // Serve the main page
+    // Serve the main page - Landing page with login/register options
     this.app.get('/', (_req, res) => {
       res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
     });
 
-    // API Documentation page
+    // API Documentation page - Interactive API documentation
     this.app.get('/docs', (_req, res) => {
       res.sendFile(path.join(__dirname, '..', 'public', 'docs.html'));
     });
 
-    // Health check endpoint
+    // Health check endpoint - Used by load balancers and monitoring systems
+    // Returns server status, version, and environment information
     this.app.get('/health', (_req, res) => {
       res.json({
         status: 'ok',
@@ -79,9 +144,12 @@ class SuperOAuthServer {
       });
     });
 
-    // API routes
+    // API routes - RESTful endpoints for authentication and OAuth
+    // Authentication routes: register, login, refresh, logout
     this.app.use('/api/v1/auth', authRoutes);
+
     // OAuth routes (separate from auth routes to avoid conflicts)
+    // Handles OAuth flows: start, callback, link, unlink
     this.app.use('/api/v1/oauth', oauthRoutes);
 
     // API status endpoint

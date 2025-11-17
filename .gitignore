@@ -1,6 +1,7 @@
 # Fichiers de configuration & personnels
-PROJECT_CONTEXT.md
-SUIVI_PROJET.md
+# Note: CLAUDE/ contient la documentation technique et doit être versionné
+# Seul .claude/ (config locale de Claude Code) est ignoré
+.claude/
 
 # Fichiers d'environnement (ne jamais versionner !)
 .env
@@ -57,6 +58,7 @@ Desktop.ini
 .swo
 .swn
 .vscode-test/
+.cursor/
 
 # TypeScript
 *.tsbuildinfo
