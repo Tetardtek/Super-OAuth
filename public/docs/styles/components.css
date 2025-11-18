@@ -743,3 +743,447 @@
     left: 0;
     top: 8px;
 }
+
+/* Developer Guide Styles */
+.developer-cards {
+    margin: 20px 0;
+}
+
+.doc-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.doc-card .card-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.doc-card h4 {
+    color: white;
+    margin: 10px 0;
+    font-size: 1.8rem;
+}
+
+.doc-card .card-content {
+    margin-top: 20px;
+}
+
+.doc-card .card-content ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.doc-card .card-content li {
+    padding: 8px 0;
+    padding-left: 25px;
+    position: relative;
+}
+
+.doc-card .card-content li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #a3f7bf;
+    font-weight: bold;
+}
+
+.doc-card .card-actions {
+    margin-top: 25px;
+}
+
+.btn-primary {
+    background: white;
+    color: #667eea;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-block;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.quick-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.link-card {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 25px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.link-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-color: #667eea;
+}
+
+.link-card .link-icon {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.link-card h4 {
+    color: #2d3748;
+    margin: 10px 0;
+}
+
+.link-card p {
+    color: #718096;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.link-btn {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.link-btn:hover {
+    color: #764ba2;
+}
+
+.status-section {
+    margin: 30px 0;
+}
+
+.status-card {
+    background: #f7fafc;
+    border-radius: 12px;
+    padding: 25px;
+}
+
+.progress-grid {
+    margin: 20px 0;
+}
+
+.progress-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.progress-label {
+    min-width: 150px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 20px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #48bb78, #38a169);
+    transition: width 0.3s ease;
+}
+
+.progress-value {
+    min-width: 50px;
+    text-align: right;
+    font-weight: 600;
+    color: #38a169;
+}
+
+.rules-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.rule-card {
+    border-radius: 12px;
+    padding: 25px;
+}
+
+.rule-card.success {
+    background: #f0fff4;
+    border: 2px solid #48bb78;
+}
+
+.rule-card.danger {
+    background: #fff5f5;
+    border: 2px solid #f56565;
+}
+
+.rule-card .rule-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.rule-card h4 {
+    margin: 10px 0;
+}
+
+.rule-card.success h4 {
+    color: #22543d;
+}
+
+.rule-card.danger h4 {
+    color: #742a2a;
+}
+
+.rule-card ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.rule-card.success li {
+    padding: 8px 0;
+    padding-left: 25px;
+    position: relative;
+    color: #22543d;
+}
+
+.rule-card.success li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #48bb78;
+    font-weight: bold;
+}
+
+.rule-card.danger li {
+    padding: 8px 0;
+    padding-left: 25px;
+    position: relative;
+    color: #742a2a;
+}
+
+.rule-card.danger li::before {
+    content: "✗";
+    position: absolute;
+    left: 0;
+    color: #f56565;
+    font-weight: bold;
+}
+
+.architecture-overview {
+    margin: 20px 0;
+}
+
+.architecture-note {
+    background: #fef5e7;
+    border-left: 4px solid #f39c12;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 8px;
+}
+
+.architecture-note p {
+    margin: 10px 0;
+    color: #7d6608;
+}
+
+.architecture-note strong {
+    color: #7d6608;
+}
+
+.naming-conventions {
+    margin: 20px 0;
+}
+
+.commands-section {
+    margin: 20px 0;
+}
+
+.command-group {
+    margin: 25px 0;
+}
+
+.command-group h4 {
+    color: #2d3748;
+    margin-bottom: 15px;
+}
+
+.code-block.mini {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+}
+
+.project-structure {
+    margin: 20px 0;
+}
+
+.contribution-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.step-card {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    gap: 15px;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-content h4 {
+    color: #2d3748;
+    margin: 0 0 10px 0;
+}
+
+.step-content p {
+    color: #718096;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.support-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.support-card {
+    background: #f7fafc;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+}
+
+.support-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.support-card h4 {
+    color: #2d3748;
+    margin: 10px 0;
+}
+
+.support-card p {
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+.checklist-section {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 25px;
+    margin: 20px 0;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.checklist-item:hover {
+    background: #f7fafc;
+}
+
+.checklist-item:last-child {
+    border-bottom: none;
+}
+
+.checklist-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.checklist-item span {
+    color: #2d3748;
+    font-size: 1rem;
+}
+
+.checklist-item input[type="checkbox"]:checked + span {
+    color: #48bb78;
+    text-decoration: line-through;
+}
+
+.cta-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    margin: 30px 0;
+}
+
+.cta-section h4 {
+    color: white;
+    font-size: 2rem;
+    margin-bottom: 15px;
+}
+
+.cta-section p {
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: white;
+    border: 2px solid white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-block;
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn-secondary:hover {
+    background: white;
+    color: #667eea;
+}

@@ -3,6 +3,7 @@ export const DOCS_CONFIG = {
     CONTENT_PATH: './content/',
     TABS: {
         ARCHITECTURE: 'architecture',
+        DEVELOPERS: 'developers',
         API: 'api',
         COMPONENTS: 'components',
         TOAST: 'toast',
@@ -19,6 +20,7 @@ export const DOCS_CONFIG = {
 
 export const CONTENT_SOURCES = {
     [DOCS_CONFIG.TABS.ARCHITECTURE]: 'architecture.html',
+    [DOCS_CONFIG.TABS.DEVELOPERS]: 'developers.html',
     [DOCS_CONFIG.TABS.API]: 'api-reference.html',
     [DOCS_CONFIG.TABS.COMPONENTS]: 'components.html',
     [DOCS_CONFIG.TABS.TOAST]: 'toast-system.html',

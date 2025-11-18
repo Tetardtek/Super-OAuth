@@ -9,28 +9,46 @@
         <span aria-label="Endpoint /auth/register" tabindex="0">/auth/register</span>
     </div>
     <div class="endpoint-body">
-        <p><strong>Description :</strong> Inscription d'un nouvel utilisateur</p>
+        <p><strong>Description :</strong> Inscription d'un nouvel utilisateur avec email et mot de passe</p>
         <div class="code-block">// Paramètres requis
 {
-  "nom": "Dupont",
-  "prenom": "Jean", 
-  "email": "jean.dupont@example.com",
-  "password": "motdepasse123",
-  "confirmPassword": "motdepasse123"
+  "email": "user@example.com",
+  "password": "SecurePassword123!",
+  "nickname": "MonPseudo"
 }
 
-// Réponse succès
+// Réponse succès (201 Created)
 {
   "success": true,
-  "message": "Utilisateur créé avec succès",
+  "message": "User registered successfully",
   "data": {
     "user": {
-      "id": 1,
-      "nom": "Dupont",
-      "prenom": "Jean",
-      "email": "jean.dupont@example.com"
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "email": "user@example.com",
+      "nickname": "MonPseudo",
+      "emailVerified": false,
+      "isActive": true,
+      "createdAt": "2025-11-18T10:30:00Z"
+    },
+    "tokens": {
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     }
   }
+}
+
+// Réponse erreur - Email déjà utilisé (409 Conflict)
+{
+  "success": false,
+  "error": "USER_EXISTS",
+  "message": "User with this email already exists"
+}
+
+// Réponse erreur - Validation (400 Bad Request)
+{
+  "success": false,
+  "error": "VALIDATION_ERROR",
+  "message": "Password must be at least 8 characters with uppercase, lowercase, numbers and special characters"
 }</div>
     </div>
 </div>
@@ -41,28 +59,47 @@
         <span aria-label="Endpoint /auth/login" tabindex="0">/auth/login</span>
     </div>
     <div class="endpoint-body">
-        <p><strong>Description :</strong> Connexion utilisateur</p>
+        <p><strong>Description :</strong> Connexion utilisateur avec email et mot de passe</p>
         <div class="code-block">// Paramètres requis
 {
-  "email": "jean.dupont@example.com",
-  "password": "motdepasse123"
+  "email": "user@example.com",
+  "password": "SecurePassword123!"
 }
 
-// Réponse succès
+// Réponse succès (200 OK)
 {
   "success": true,
-  "message": "Connexion réussie",
+  "message": "Login successful",
   "data": {
     "user": {
-      "id": 1,
-      "nom": "Dupont",
-      "prenom": "Jean",
-      "email": "jean.dupont@example.com",
-      "avatar": "avatar1.jpg",
-      "oauth_providers": ["google", "facebook"]
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "email": "user@example.com",
+      "nickname": "MonPseudo",
+      "emailVerified": false,
+      "isActive": true,
+      "linkedProviders": ["discord", "google"],
+      "lastLoginAt": "2025-11-18T10:30:00Z",
+      "loginCount": 5
     },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    "tokens": {
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
   }
+}
+
+// Réponse erreur - Credentials invalides (401 Unauthorized)
+{
+  "success": false,
+  "error": "INVALID_CREDENTIALS",
+  "message": "Invalid email or password"
+}
+
+// Réponse erreur - Compte désactivé (403 Forbidden)
+{
+  "success": false,
+  "error": "ACCOUNT_DISABLED",
+  "message": "Account is disabled"
 }</div>
     </div>
 </div>
@@ -75,23 +112,88 @@
     <div class="endpoint-body">
         <p><strong>Description :</strong> Récupération des informations de l'utilisateur connecté</p>
         <div class="code-block">// Headers requis
-Authorization: Bearer {token}
+Authorization: Bearer {accessToken}
 
-// Réponse succès
+// Réponse succès (200 OK)
 {
   "success": true,
   "data": {
     "user": {
-      "id": 1,
-      "nom": "Dupont",
-      "prenom": "Jean",
-      "email": "jean.dupont@example.com",
-      "avatar": "avatar1.jpg",
-      "oauth_providers": ["google"],
-      "created_at": "2024-01-15T10:30:00Z"
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "email": "user@example.com",
+      "nickname": "MonPseudo",
+      "emailVerified": false,
+      "isActive": true,
+      "linkedProviders": ["discord", "google"],
+      "createdAt": "2025-11-18T10:30:00Z",
+      "lastLogin": "2025-11-18T14:25:00Z",
+      "loginCount": 5
     }
   }
+}
+
+// Réponse erreur - Token invalide (401 Unauthorized)
+{
+  "success": false,
+  "error": "INVALID_TOKEN",
+  "message": "Invalid or expired access token"
 }</div>
+    </div>
+</div>
+
+<div class="endpoint">
+    <div class="endpoint-header">
+        <span class="method" aria-label="Méthode POST" tabindex="0">POST</span>
+        <span aria-label="Endpoint /auth/refresh" tabindex="0">/auth/refresh</span>
+    </div>
+    <div class="endpoint-body">
+        <p><strong>Description :</strong> Rafraîchir l'access token avec un refresh token valide</p>
+        <div class="code-block">// Paramètres requis
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+
+// Réponse succès (200 OK)
+{
+  "success": true,
+  "message": "Token refreshed successfully",
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+
+// Réponse erreur - Refresh token invalide (401 Unauthorized)
+{
+  "success": false,
+  "error": "INVALID_REFRESH_TOKEN",
+  "message": "Invalid or expired refresh token"
+}</div>
+    </div>
+</div>
+
+<div class="endpoint">
+    <div class="endpoint-header">
+        <span class="method" aria-label="Méthode POST" tabindex="0">POST</span>
+        <span aria-label="Endpoint /auth/logout" tabindex="0">/auth/logout</span>
+    </div>
+    <div class="endpoint-body">
+        <p><strong>Description :</strong> Déconnexion et révocation des tokens</p>
+        <div class="code-block">// Headers requis
+Authorization: Bearer {accessToken}
+
+// Paramètres optionnels
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." // Optionnel
+}
+
+// Réponse succès (200 OK)
+{
+  "success": true,
+  "message": "Logout successful"
+}
+
+// Note : Si refreshToken non fourni, déconnexion de toutes les sessions</div>
     </div>
 </div>
 
@@ -101,13 +203,16 @@ Authorization: Bearer {token}
         <span aria-label="Endpoint /health" tabindex="0">/health</span>
     </div>
     <div class="endpoint-body">
-        <p><strong>Description :</strong> Vérification du statut du serveur</p>
-        <div class="code-block">// Réponse succès
+        <p><strong>Description :</strong> Vérification du statut du serveur (health check)</p>
+        <div class="code-block">// Pas d'authentification requise
+
+// Réponse succès (200 OK)
 {
-  "status": "healthy",
-  "timestamp": "2024-01-15T10:30:00Z",
-  "database": "connected",
-  "uptime": "2h 15m 30s"
+  "status": "ok",
+  "timestamp": "2025-11-18T10:30:00Z",
+  "version": "1.0.0",
+  "environment": "production",
+  "message": "SuperOAuth API is running"
 }</div>
     </div>
 </div>
@@ -130,27 +235,188 @@ Authorization: Bearer {token}
 
 <div class="endpoint">
     <div class="endpoint-header">
-        <span class="method">GET</span>
-        <span>/auth/google</span>
+        <span class="method" aria-label="Méthode GET" tabindex="0">GET</span>
+        <span aria-label="Endpoint /api/v1/oauth/providers" tabindex="0">/api/v1/oauth/providers</span>
     </div>
     <div class="endpoint-body">
-        <p><strong>Description :</strong> Initialisation OAuth Google</p>
-        <div class="code-block">// Redirection vers Google OAuth
-// Pas de paramètres requis
-// Retourne une redirection vers l'URL d'autorisation Google</div>
+        <p><strong>Description :</strong> Liste tous les providers OAuth disponibles</p>
+        <div class="code-block">// Pas d'authentification requise
+
+// Réponse succès (200 OK)
+{
+  "success": true,
+  "data": {
+    "providers": [
+      {
+        "name": "discord",
+        "displayName": "Discord",
+        "enabled": true,
+        "authUrl": "/api/v1/oauth/discord"
+      },
+      {
+        "name": "google",
+        "displayName": "Google",
+        "enabled": true,
+        "authUrl": "/api/v1/oauth/google"
+      },
+      {
+        "name": "github",
+        "displayName": "GitHub",
+        "enabled": true,
+        "authUrl": "/api/v1/oauth/github"
+      },
+      {
+        "name": "twitch",
+        "displayName": "Twitch",
+        "enabled": true,
+        "authUrl": "/api/v1/oauth/twitch"
+      }
+    ]
+  }
+}</div>
     </div>
 </div>
 
 <div class="endpoint">
     <div class="endpoint-header">
-        <span class="method">GET</span>
-        <span>/auth/google/callback</span>
+        <span class="method" aria-label="Méthode GET" tabindex="0">GET</span>
+        <span aria-label="Endpoint /api/v1/oauth/:provider" tabindex="0">/api/v1/oauth/:provider</span>
     </div>
     <div class="endpoint-body">
-        <p><strong>Description :</strong> Callback OAuth Google</p>
-        <div class="code-block">// URL de callback automatique après autorisation Google
-// Paramètres automatiques : code, state
-// Redirection vers l'app avec token en paramètre</div>
+        <p><strong>Description :</strong> Initialisation du flux OAuth pour un provider</p>
+        <div class="code-block">// Providers supportés : discord, google, github, twitch
+// Pas d'authentification requise pour nouveau compte
+// Authentification optionnelle pour lier un provider à un compte existant
+
+// Exemple : GET /api/v1/oauth/discord
+// Redirige automatiquement vers la page d'autorisation du provider
+
+// Headers optionnels pour lier un compte existant
+Authorization: Bearer {accessToken}
+
+// Réponse : Redirection 302 vers l'URL d'autorisation du provider</div>
     </div>
 </div>
+
+<div class="endpoint">
+    <div class="endpoint-header">
+        <span class="method" aria-label="Méthode GET" tabindex="0">GET</span>
+        <span aria-label="Endpoint /api/v1/oauth/:provider/callback" tabindex="0">/api/v1/oauth/:provider/callback</span>
+    </div>
+    <div class="endpoint-body">
+        <p><strong>Description :</strong> Callback OAuth automatique après autorisation</p>
+        <div class="code-block">// URL de callback configurée chez chaque provider
+// Gérée automatiquement par le serveur
+
+// Paramètres reçus automatiquement
+?code=authorization_code&state=random_state
+
+// Cas 1: Nouveau compte ou connexion existante
+// → Redirection vers /dashboard avec tokens
+// → URL: /dashboard?access_token=...&refresh_token=...
+
+// Cas 2: Liaison à un compte existant (utilisateur déjà connecté)
+// → Redirection vers /dashboard avec message de succès
+// → Le provider est ajouté à linkedProviders de l'utilisateur
+
+// Cas 3: Erreur
+// → Redirection vers /login avec message d'erreur
+// → URL: /login?error=...</div>
+    </div>
+</div>
+
+<div class="endpoint">
+    <div class="endpoint-header">
+        <span class="method" aria-label="Méthode GET" tabindex="0">GET</span>
+        <span aria-label="Endpoint /api/v1/oauth/linked" tabindex="0">/api/v1/oauth/linked</span>
+    </div>
+    <div class="endpoint-body">
+        <p><strong>Description :</strong> Récupère la liste des providers liés au compte de l'utilisateur connecté</p>
+        <div class="code-block">// Headers requis
+Authorization: Bearer {accessToken}
+
+// Réponse succès (200 OK)
+{
+  "success": true,
+  "data": {
+    "linkedProviders": [
+      {
+        "provider": "discord",
+        "providerId": "123456789012345678",
+        "email": "user@example.com",
+        "linkedAt": "2025-11-15T10:30:00Z"
+      },
+      {
+        "provider": "google",
+        "providerId": "google-user-id-123",
+        "email": "user@gmail.com",
+        "linkedAt": "2025-11-16T14:20:00Z"
+      }
+    ]
+  }
+}
+
+// Réponse erreur - Non authentifié (401 Unauthorized)
+{
+  "success": false,
+  "error": "INVALID_TOKEN",
+  "message": "Invalid or expired access token"
+}</div>
+    </div>
+</div>
+
+<div class="endpoint">
+    <div class="endpoint-header">
+        <span class="method" aria-label="Méthode DELETE" tabindex="0">DELETE</span>
+        <span aria-label="Endpoint /api/v1/oauth/:provider/unlink" tabindex="0">/api/v1/oauth/:provider/unlink</span>
+    </div>
+    <div class="endpoint-body">
+        <p><strong>Description :</strong> Délier un provider OAuth du compte utilisateur</p>
+        <div class="code-block">// Headers requis
+Authorization: Bearer {accessToken}
+
+// Exemple : DELETE /api/v1/oauth/discord/unlink
+
+// Réponse succès (200 OK)
+{
+  "success": true,
+  "message": "Provider unlinked successfully",
+  "data": {
+    "provider": "discord",
+    "remainingProviders": ["google"]
+  }
+}
+
+// Réponse erreur - Provider non lié (404 Not Found)
+{
+  "success": false,
+  "error": "PROVIDER_NOT_LINKED",
+  "message": "This provider is not linked to your account"
+}
+
+// Réponse erreur - Dernier provider (400 Bad Request)
+{
+  "success": false,
+  "error": "CANNOT_UNLINK_LAST_PROVIDER",
+  "message": "Cannot unlink last authentication method. Add another provider or set a password first."
+}</div>
+    </div>
+</div>
+
+<h3>📋 Providers OAuth Supportés</h3>
+<ul>
+    <li><strong>Discord</strong> - Authentification via Discord</li>
+    <li><strong>Google</strong> - Authentification via compte Google</li>
+    <li><strong>GitHub</strong> - Authentification via compte GitHub</li>
+    <li><strong>Twitch</strong> - Authentification via compte Twitch</li>
+</ul>
+
+<h3>🔗 URLs de Callback</h3>
+<p>URLs à configurer dans les consoles développeurs des providers :</p>
+<div class="code-block">Discord:  http://localhost:3000/api/v1/oauth/discord/callback
+Google:   http://localhost:3000/api/v1/oauth/google/callback
+GitHub:   http://localhost:3000/api/v1/oauth/github/callback
+Twitch:   http://localhost:3000/api/v1/oauth/twitch/callback
+
+Production: Remplacer localhost:3000 par votre domaine</div>
 

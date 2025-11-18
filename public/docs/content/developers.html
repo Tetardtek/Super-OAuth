@@ -1,0 +1,394 @@
+<h2>🤖 Guide Développeurs & Agents IA</h2>
+
+<div class="intro-section">
+    <p>Bienvenue dans le guide développeur de SuperOAuth ! Cette section est dédiée aux développeurs humains et agents IA qui souhaitent contribuer au projet ou comprendre son architecture en profondeur.</p>
+</div>
+
+<h3>📁 Documentation Technique Complète</h3>
+
+<div class="developer-cards">
+    <div class="doc-card primary">
+        <div class="card-icon">📚</div>
+        <h4>Documentation CLAUDE/</h4>
+        <p>Documentation technique complète pour développeurs et agents IA</p>
+        <div class="card-content">
+            <p><strong>Contenu :</strong></p>
+            <ul>
+                <li>Architecture DDD (Domain-Driven Design)</li>
+                <li>Clean Architecture et patterns</li>
+                <li>Standards de code TypeScript strict</li>
+                <li>Workflow Git et contribution</li>
+                <li>Exemples de code end-to-end</li>
+            </ul>
+            <div class="card-actions">
+                <a href="https://github.com/Tetardtek/Super-OAuth/tree/main/CLAUDE" class="btn-primary" target="_blank">📖 Accéder à la Documentation</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3>🚀 Démarrage Rapide pour Développeurs</h3>
+
+<div class="quick-links">
+    <div class="link-card">
+        <div class="link-icon">⚡</div>
+        <h4>Quick Start (5 minutes)</h4>
+        <p>Installation, configuration et premiers pas dans le projet</p>
+        <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/CLAUDE/QUICK_START.md" target="_blank" class="link-btn">Voir le guide →</a>
+    </div>
+
+    <div class="link-card">
+        <div class="link-icon">🏗️</div>
+        <h4>Architecture DDD</h4>
+        <p>Comprendre la structure en couches et les flux de données</p>
+        <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/CLAUDE/guides/ARCHITECTURE.md" target="_blank" class="link-btn">Lire la doc →</a>
+    </div>
+
+    <div class="link-card">
+        <div class="link-icon">🤝</div>
+        <h4>Guide de Contribution</h4>
+        <p>Standards de code, workflow Git et bonnes pratiques</p>
+        <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/CLAUDE/guides/CONTRIBUTING.md" target="_blank" class="link-btn">Contribuer →</a>
+    </div>
+
+    <div class="link-card">
+        <div class="link-icon">🤖</div>
+        <h4>Guide Agents IA</h4>
+        <p>Patterns, exemples et workflows pour agents IA</p>
+        <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/CLAUDE/guides/AI_AGENT_GUIDE.md" target="_blank" class="link-btn">Guide IA →</a>
+    </div>
+</div>
+
+<h3>📊 État du Projet</h3>
+
+<div class="status-section">
+    <div class="status-card">
+        <h4>📈 Progression Globale</h4>
+        <div class="progress-grid">
+            <div class="progress-item">
+                <span class="progress-label">Architecture</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%"></div>
+                </div>
+                <span class="progress-value">100%</span>
+            </div>
+            <div class="progress-item">
+                <span class="progress-label">Backend & API</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 95%"></div>
+                </div>
+                <span class="progress-value">95%</span>
+            </div>
+            <div class="progress-item">
+                <span class="progress-label">Frontend</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 90%"></div>
+                </div>
+                <span class="progress-value">90%</span>
+            </div>
+            <div class="progress-item">
+                <span class="progress-label">Tests</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 90%"></div>
+                </div>
+                <span class="progress-value">90%</span>
+            </div>
+            <div class="progress-item">
+                <span class="progress-label">Documentation</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%"></div>
+                </div>
+                <span class="progress-value">100%</span>
+            </div>
+        </div>
+        <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/CLAUDE/status/PROJECT_STATUS.md" target="_blank" class="link-btn">Voir le détail →</a>
+    </div>
+</div>
+
+<h3>🎯 Règles d'Or pour Développeurs</h3>
+
+<div class="rules-section">
+    <div class="rule-card success">
+        <div class="rule-icon">✅</div>
+        <h4>À TOUJOURS Faire</h4>
+        <ul>
+            <li>Respecter la séparation des couches DDD</li>
+            <li>Utiliser l'injection de dépendances</li>
+            <li>Créer des tests pour le nouveau code</li>
+            <li>Documenter les fonctions publiques (JSDoc)</li>
+            <li>Utiliser TypeScript strict (pas de <code>any</code>)</li>
+            <li>Suivre les conventions de nommage</li>
+        </ul>
+    </div>
+
+    <div class="rule-card danger">
+        <div class="rule-icon">❌</div>
+        <h4>À JAMAIS Faire</h4>
+        <ul>
+            <li>Court-circuiter les couches (Controller → Repository)</li>
+            <li>Utiliser le type <code>any</code> en TypeScript</li>
+            <li>Mettre de la logique métier dans les Controllers</li>
+            <li>Accéder directement à la base de données depuis les Use Cases</li>
+            <li>Créer des dépendances circulaires</li>
+            <li>Ignorer les erreurs de validation TypeScript</li>
+        </ul>
+    </div>
+</div>
+
+<h3>🏗️ Architecture en Couches</h3>
+
+<div class="architecture-overview">
+    <div class="code-block">┌─────────────────────────────────────────────┐
+│         Presentation Layer                  │
+│  (Controllers, Routes, Middleware)          │
+│                                              │
+│  ❌ PAS de logique métier ici !            │
+└──────────────────┬──────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────┐
+│         Application Layer                   │
+│  (Use Cases, DTOs, Services)                │
+│                                              │
+│  ✅ Orchestration de la logique métier     │
+└──────────────────┬──────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────┐
+│            Domain Layer                     │
+│  (Entities, Value Objects, Repositories)    │
+│                                              │
+│  ✅ Cœur de la logique métier              │
+└──────────────────┬──────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────┐
+│        Infrastructure Layer                 │
+│  (Database, OAuth, External Services)       │
+│                                              │
+│  ✅ Implémentations techniques             │
+└─────────────────────────────────────────────┘</div>
+
+    <div class="architecture-note">
+        <p><strong>Règle fondamentale :</strong> Les dépendances doivent <strong>TOUJOURS</strong> pointer vers le Domain, jamais l'inverse.</p>
+        <p>Le Domain ne doit dépendre d'aucune autre couche.</p>
+    </div>
+</div>
+
+<h3>📝 Conventions de Nommage</h3>
+
+<div class="naming-conventions">
+    <div class="code-block">// Classes: PascalCase
+class UserEntity {}
+class RegisterClassicUseCase {}
+
+// Interfaces: PascalCase avec 'I'
+interface IUserRepository {}
+interface IAuthService {}
+
+// Fonctions/Variables: camelCase
+const getUserById = () => {}
+const isEmailValid = true
+
+// Constantes: SCREAMING_SNAKE_CASE
+const MAX_LOGIN_ATTEMPTS = 5
+const JWT_EXPIRATION_TIME = '15m'
+
+// Fichiers: kebab-case
+user.entity.ts
+register-classic.use-case.ts
+auth.controller.ts</div>
+</div>
+
+<h3>🔧 Commandes Utiles</h3>
+
+<div class="commands-section">
+    <div class="command-group">
+        <h4>🚀 Développement</h4>
+        <div class="code-block">npm run dev              # Lancer en mode développement
+npm run build            # Compiler TypeScript
+npm start                # Lancer en production
+npm run typecheck        # Vérifier les types TypeScript</div>
+    </div>
+
+    <div class="command-group">
+        <h4>🧪 Tests</h4>
+        <div class="code-block">npm test                 # Tous les tests
+npm run test:coverage    # Tests avec couverture
+npm run test:watch       # Tests en mode watch
+npm run test:e2e         # Tests end-to-end</div>
+    </div>
+
+    <div class="command-group">
+        <h4>✨ Qualité du Code</h4>
+        <div class="code-block">npm run lint             # Vérifier le code
+npm run lint:fix         # Corriger automatiquement
+npm run format           # Formater avec Prettier
+npm run validate         # Lint + TypeCheck + Tests</div>
+    </div>
+
+    <div class="command-group">
+        <h4>🗄️ Base de Données</h4>
+        <div class="code-block">npm run migration:generate  # Générer une migration
+npm run migration:run       # Exécuter les migrations
+npm run migration:revert    # Annuler la dernière migration
+npm run db:reset           # Réinitialiser la DB</div>
+    </div>
+</div>
+
+<h3>🧩 Structure du Projet</h3>
+
+<div class="project-structure">
+    <div class="code-block">SuperOAuth/
+├── CLAUDE/                    # 📚 Documentation technique complète
+│   ├── README.md             # Index de la documentation
+│   ├── QUICK_START.md        # Démarrage rapide
+│   ├── .cursorrules          # Règles pour agents IA
+│   ├── guides/               # Guides détaillés
+│   │   ├── ARCHITECTURE.md
+│   │   ├── CONTRIBUTING.md
+│   │   ├── AI_AGENT_GUIDE.md
+│   │   └── PROJECT_STRUCTURE.md
+│   └── status/               # État du projet
+│       ├── PROJECT_STATUS.md
+│       └── DOCUMENTATION_STATUS.md
+│
+├── src/                      # 💻 Code source TypeScript
+│   ├── domain/              # Logique métier pure
+│   ├── application/         # Use Cases et orchestration
+│   ├── infrastructure/      # Implémentations techniques
+│   ├── presentation/        # Controllers et routes
+│   └── shared/              # Code partagé
+│
+├── public/                   # 🌐 Frontend
+│   ├── docs/                # Documentation web (cette page)
+│   ├── css/
+│   └── js/
+│
+└── tests/                    # 🧪 Tests
+    ├── unit/
+    ├── integration/
+    └── e2e/</div>
+
+    <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/CLAUDE/guides/PROJECT_STRUCTURE.md" target="_blank" class="link-btn">Voir la structure complète →</a>
+</div>
+
+<h3>🤝 Contribuer au Projet</h3>
+
+<div class="contribution-steps">
+    <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-content">
+            <h4>Lire la Documentation</h4>
+            <p>Commencez par lire <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/CLAUDE/QUICK_START.md" target="_blank">QUICK_START.md</a> et <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/CLAUDE/.cursorrules" target="_blank">.cursorrules</a></p>
+        </div>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-content">
+            <h4>Comprendre l'Architecture</h4>
+            <p>Étudiez l'<a href="https://github.com/Tetardtek/Super-OAuth/blob/main/CLAUDE/guides/ARCHITECTURE.md" target="_blank">architecture DDD</a> et les patterns utilisés</p>
+        </div>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-content">
+            <h4>Suivre les Standards</h4>
+            <p>Respectez les <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/CLAUDE/guides/CONTRIBUTING.md" target="_blank">standards de code</a> et le workflow Git</p>
+        </div>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">4</div>
+        <div class="step-content">
+            <h4>Créer une Branche</h4>
+            <div class="code-block mini">git checkout -b feature/ma-fonctionnalite</div>
+        </div>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">5</div>
+        <div class="step-content">
+            <h4>Développer avec Tests</h4>
+            <p>Écrivez du code avec des tests (couverture minimum 90%)</p>
+        </div>
+    </div>
+
+    <div class="step-card">
+        <div class="step-number">6</div>
+        <div class="step-content">
+            <h4>Soumettre une Pull Request</h4>
+            <p>Après validation locale (lint, tests, typecheck)</p>
+        </div>
+    </div>
+</div>
+
+<h3>🆘 Support et Aide</h3>
+
+<div class="support-section">
+    <div class="support-card">
+        <div class="support-icon">📚</div>
+        <h4>Documentation</h4>
+        <p>Consultez la <a href="https://github.com/Tetardtek/Super-OAuth/tree/main/CLAUDE" target="_blank">documentation CLAUDE/</a> pour toutes vos questions techniques</p>
+    </div>
+
+    <div class="support-card">
+        <div class="support-icon">🐛</div>
+        <h4>Problèmes & Bugs</h4>
+        <p>Consultez la section troubleshooting dans <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/CLAUDE/QUICK_START.md" target="_blank">QUICK_START.md</a></p>
+    </div>
+
+    <div class="support-card">
+        <div class="support-icon">💡</div>
+        <h4>Exemples de Code</h4>
+        <p>Patterns et exemples complets dans <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/CLAUDE/guides/AI_AGENT_GUIDE.md" target="_blank">AI_AGENT_GUIDE.md</a></p>
+    </div>
+</div>
+
+<h3>🎓 Checklist pour Nouveaux Développeurs</h3>
+
+<div class="checklist-section">
+    <label class="checklist-item">
+        <input type="checkbox" />
+        <span>J'ai lu QUICK_START.md</span>
+    </label>
+    <label class="checklist-item">
+        <input type="checkbox" />
+        <span>J'ai lu .cursorrules (règles NON NÉGOCIABLES)</span>
+    </label>
+    <label class="checklist-item">
+        <input type="checkbox" />
+        <span>Je comprends l'architecture DDD via ARCHITECTURE.md</span>
+    </label>
+    <label class="checklist-item">
+        <input type="checkbox" />
+        <span>Je connais les patterns via AI_AGENT_GUIDE.md</span>
+    </label>
+    <label class="checklist-item">
+        <input type="checkbox" />
+        <span>Je sais localiser les fichiers via PROJECT_STRUCTURE.md</span>
+    </label>
+    <label class="checklist-item">
+        <input type="checkbox" />
+        <span>J'ai vérifié PROJECT_STATUS.md pour l'état actuel</span>
+    </label>
+    <label class="checklist-item">
+        <input type="checkbox" />
+        <span>Je respecte les conventions de nommage</span>
+    </label>
+    <label class="checklist-item">
+        <input type="checkbox" />
+        <span>Je comprends la séparation des couches</span>
+    </label>
+</div>
+
+<div class="cta-section">
+    <h4>🚀 Prêt à Contribuer ?</h4>
+    <p>Une fois la checklist validée, vous êtes prêt à contribuer à SuperOAuth !</p>
+    <div class="cta-buttons">
+        <a href="https://github.com/Tetardtek/Super-OAuth/tree/main/CLAUDE" class="btn-primary" target="_blank">📖 Documentation Complète</a>
+        <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/CLAUDE/guides/CONTRIBUTING.md" class="btn-secondary" target="_blank">🤝 Guide de Contribution</a>
+    </div>
+</div>
