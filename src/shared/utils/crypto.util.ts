@@ -39,7 +39,12 @@ export class CryptoUtil {
     return crypto.createHmac(algorithm, secret).update(data).digest('hex');
   }
 
-  static verifyHmac(data: string, signature: string, secret: string, algorithm: string = 'sha256'): boolean {
+  static verifyHmac(
+    data: string,
+    signature: string,
+    secret: string,
+    algorithm: string = 'sha256'
+  ): boolean {
     const expectedSignature = this.createHmac(data, secret, algorithm);
     return crypto.timingSafeEqual(
       Buffer.from(signature, 'hex'),

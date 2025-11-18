@@ -19,7 +19,6 @@ interface ExtendedRequest extends Request {
 }
 
 export class OAuthController {
-
   /**
    * Start OAuth authentication flow
    * GET /auth/oauth/:provider
@@ -33,7 +32,7 @@ export class OAuthController {
 
       // Generate OAuth URL and state
       const { authUrl, state } = await oauthService.generateAuthUrl(
-        provider, 
+        provider,
         redirectUrl as string
       );
 
@@ -44,9 +43,12 @@ export class OAuthController {
 
       // Redirect to OAuth provider
       res.redirect(authUrl);
-
     } catch (error) {
-      logger.error(`❌ Failed to start OAuth for ${provider}`, error instanceof Error ? error : undefined, { provider });
+      logger.error(
+        `❌ Failed to start OAuth for ${provider}`,
+        error instanceof Error ? error : undefined,
+        { provider }
+      );
 
       if (error instanceof OAuthError) {
         switch (error.type) {
@@ -54,7 +56,9 @@ export class OAuthController {
             res.status(400).json(ApiResponse.error('Provider not supported', 'INVALID_PROVIDER'));
             return;
           default:
-            res.status(500).json(ApiResponse.error('OAuth initialization failed', 'OAUTH_INIT_FAILED'));
+            res
+              .status(500)
+              .json(ApiResponse.error('OAuth initialization failed', 'OAUTH_INIT_FAILED'));
             return;
         }
       }
@@ -72,36 +76,58 @@ export class OAuthController {
     const { code, state, error: oauthError } = req.query;
 
     try {
-      logger.info(`🔄 Processing OAuth callback for ${provider}`, { provider, hasCode: !!code, hasState: !!state });
+      logger.info(`🔄 Processing OAuth callback for ${provider}`, {
+        provider,
+        hasCode: !!code,
+        hasState: !!state,
+      });
 
       // Check for OAuth errors
       if (oauthError) {
         logger.warn(`⚠️ OAuth error from ${provider}`, { provider, error: oauthError });
-        res.redirect(`${process.env.FRONTEND_URL}/auth/error?error=access_denied&provider=${provider}`);
+        res.redirect(
+          `${process.env.FRONTEND_URL}/auth/error?error=access_denied&provider=${provider}`
+        );
         return;
       }
 
       // Validate required parameters
       if (!code || !state) {
-        logger.warn(`⚠️ Missing OAuth parameters for ${provider}`, { provider, hasCode: !!code, hasState: !!state });
-        res.redirect(`${process.env.FRONTEND_URL}/auth/error?error=invalid_request&provider=${provider}`);
+        logger.warn(`⚠️ Missing OAuth parameters for ${provider}`, {
+          provider,
+          hasCode: !!code,
+          hasState: !!state,
+        });
+        res.redirect(
+          `${process.env.FRONTEND_URL}/auth/error?error=invalid_request&provider=${provider}`
+        );
         return;
       }
 
       // Validate state matches session
       if (req.session.oauthState !== state) {
-        logger.warn(`⚠️ OAuth state mismatch for ${provider}`, { provider, sessionState: req.session.oauthState, receivedState: state });
-        res.redirect(`${process.env.FRONTEND_URL}/auth/error?error=state_mismatch&provider=${provider}`);
+        logger.warn(`⚠️ OAuth state mismatch for ${provider}`, {
+          provider,
+          sessionState: req.session.oauthState,
+          receivedState: state,
+        });
+        res.redirect(
+          `${process.env.FRONTEND_URL}/auth/error?error=state_mismatch&provider=${provider}`
+        );
         return;
       }
 
       // Process OAuth callback
-      const oauthUserInfo = await oauthService.handleCallback(provider, code as string, state as string);
+      const oauthUserInfo = await oauthService.handleCallback(
+        provider,
+        code as string,
+        state as string
+      );
 
-      logger.info(`👤 OAuth user info received for ${provider}`, { 
-        provider, 
-        userId: oauthUserInfo.id, 
-        email: oauthUserInfo.email 
+      logger.info(`👤 OAuth user info received for ${provider}`, {
+        provider,
+        userId: oauthUserInfo.id,
+        email: oauthUserInfo.email,
       });
 
       // Check if user exists with this OAuth provider
@@ -113,23 +139,29 @@ export class OAuthController {
 
         // Update OAuth info if needed
         await userService.updateOAuthInfo(user.id, provider, oauthUserInfo);
-
       } else {
         // Check if user exists with this email
         if (oauthUserInfo.email) {
           user = await userService.findByEmail(oauthUserInfo.email);
-          
+
           if (user) {
             // Link OAuth account to existing user
-            logger.info(`🔗 Linking ${provider} account to existing user`, { userId: user.id, provider, email: oauthUserInfo.email });
+            logger.info(`🔗 Linking ${provider} account to existing user`, {
+              userId: user.id,
+              provider,
+              email: oauthUserInfo.email,
+            });
             await userService.linkOAuthAccount(user.id, provider, oauthUserInfo);
           }
         }
 
         if (!user) {
           // Create new user
-          logger.info(`👤 Creating new user via ${provider}`, { provider, email: oauthUserInfo.email });
-          
+          logger.info(`👤 Creating new user via ${provider}`, {
+            provider,
+            email: oauthUserInfo.email,
+          });
+
           user = await userService.createFromOAuth(oauthUserInfo);
         }
       }
@@ -140,25 +172,29 @@ export class OAuthController {
       // Clear OAuth state from session
       delete req.session.oauthState;
 
-      logger.info(`✅ OAuth authentication successful for ${provider}`, { 
-        userId: user.id, 
+      logger.info(`✅ OAuth authentication successful for ${provider}`, {
+        userId: user.id,
         provider,
-        isNewUser: !user.lastLogin 
+        isNewUser: !user.lastLogin,
       });
 
       // Redirect to frontend with tokens
-      const redirectUrl = req.session.oauthRedirectUrl || `${process.env.FRONTEND_URL}/auth/success`;
+      const redirectUrl =
+        req.session.oauthRedirectUrl || `${process.env.FRONTEND_URL}/auth/success`;
       delete req.session.oauthRedirectUrl;
 
       const urlWithTokens = `${redirectUrl}?token=${tokens.accessToken}&refresh=${tokens.refreshToken}&provider=${provider}`;
       res.redirect(urlWithTokens);
-
     } catch (error) {
-      logger.error(`❌ OAuth callback failed for ${provider}`, error instanceof Error ? error : undefined, { provider });
+      logger.error(
+        `❌ OAuth callback failed for ${provider}`,
+        error instanceof Error ? error : undefined,
+        { provider }
+      );
 
       if (error instanceof OAuthError) {
         let errorCode = 'oauth_failed';
-        
+
         switch (error.type) {
           case OAuthErrorType.INVALID_STATE:
             errorCode = 'invalid_state';
@@ -174,11 +210,15 @@ export class OAuthController {
             break;
         }
 
-        res.redirect(`${process.env.FRONTEND_URL}/auth/error?error=${errorCode}&provider=${provider}`);
+        res.redirect(
+          `${process.env.FRONTEND_URL}/auth/error?error=${errorCode}&provider=${provider}`
+        );
         return;
       }
 
-      res.redirect(`${process.env.FRONTEND_URL}/auth/error?error=internal_error&provider=${provider}`);
+      res.redirect(
+        `${process.env.FRONTEND_URL}/auth/error?error=internal_error&provider=${provider}`
+      );
     }
   }
 
@@ -207,10 +247,14 @@ export class OAuthController {
 
       const canUnlink = await userService.canUnlinkOAuthProvider(userId, provider);
       if (!canUnlink) {
-        res.status(400).json(ApiResponse.error(
-          'Cannot unlink last authentication method. Please set a password first.',
-          'CANNOT_UNLINK_LAST_AUTH'
-        ));
+        res
+          .status(400)
+          .json(
+            ApiResponse.error(
+              'Cannot unlink last authentication method. Please set a password first.',
+              'CANNOT_UNLINK_LAST_AUTH'
+            )
+          );
         return;
       }
 
@@ -218,13 +262,18 @@ export class OAuthController {
 
       logger.info(`✅ Successfully unlinked ${provider} from user`, { userId, provider });
 
-      res.json(ApiResponse.success({
-        message: `Successfully unlinked ${provider} account`,
-        provider
-      }));
-
+      res.json(
+        ApiResponse.success({
+          message: `Successfully unlinked ${provider} account`,
+          provider,
+        })
+      );
     } catch (error) {
-      logger.error(`❌ Failed to unlink ${provider} from user`, error instanceof Error ? error : undefined, { userId, provider });
+      logger.error(
+        `❌ Failed to unlink ${provider} from user`,
+        error instanceof Error ? error : undefined,
+        { userId, provider }
+      );
       res.status(500).json(ApiResponse.error('Failed to unlink OAuth provider', 'UNLINK_FAILED'));
     }
   }
@@ -236,12 +285,13 @@ export class OAuthController {
   async getProviders(_req: Request, res: Response): Promise<void> {
     try {
       const providers = oauthService.getAllProvidersInfo();
-      
-      res.json(ApiResponse.success({
-        providers,
-        count: providers.length
-      }));
 
+      res.json(
+        ApiResponse.success({
+          providers,
+          count: providers.length,
+        })
+      );
     } catch (error) {
       logger.error('❌ Failed to get OAuth providers', error instanceof Error ? error : undefined);
       res.status(500).json(ApiResponse.error('Failed to get providers', 'PROVIDERS_FAILED'));
@@ -257,20 +307,27 @@ export class OAuthController {
 
     try {
       const providerInfo = oauthService.getProviderInfo(provider);
-      
+
       if (!providerInfo) {
         res.status(404).json(ApiResponse.error('Provider not found', 'PROVIDER_NOT_FOUND'));
         return;
       }
 
-      res.json(ApiResponse.success({
-        provider,
-        ...providerInfo
-      }));
-
+      res.json(
+        ApiResponse.success({
+          provider,
+          ...providerInfo,
+        })
+      );
     } catch (error) {
-      logger.error(`❌ Failed to get ${provider} info`, error instanceof Error ? error : undefined, { provider });
-      res.status(500).json(ApiResponse.error('Failed to get provider info', 'PROVIDER_INFO_FAILED'));
+      logger.error(
+        `❌ Failed to get ${provider} info`,
+        error instanceof Error ? error : undefined,
+        { provider }
+      );
+      res
+        .status(500)
+        .json(ApiResponse.error('Failed to get provider info', 'PROVIDER_INFO_FAILED'));
     }
   }
 
@@ -288,15 +345,22 @@ export class OAuthController {
 
     try {
       const linkedAccounts = await userService.getLinkedOAuthAccounts(userId);
-      
-      res.json(ApiResponse.success({
-        linkedAccounts,
-        count: linkedAccounts.length
-      }));
 
+      res.json(
+        ApiResponse.success({
+          linkedAccounts,
+          count: linkedAccounts.length,
+        })
+      );
     } catch (error) {
-      logger.error('❌ Failed to get linked OAuth accounts', error instanceof Error ? error : undefined, { userId });
-      res.status(500).json(ApiResponse.error('Failed to get linked accounts', 'LINKED_ACCOUNTS_FAILED'));
+      logger.error(
+        '❌ Failed to get linked OAuth accounts',
+        error instanceof Error ? error : undefined,
+        { userId }
+      );
+      res
+        .status(500)
+        .json(ApiResponse.error('Failed to get linked accounts', 'LINKED_ACCOUNTS_FAILED'));
     }
   }
 }

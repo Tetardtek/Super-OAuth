@@ -34,7 +34,12 @@ import { DatabaseConnection } from './infrastructure/database/config/database.co
 import { getAppConfig, EnvironmentValidator } from './shared/config';
 import { logger } from './shared/utils/logger.util';
 import { authRoutes, oauthRoutes } from './presentation/routes';
-import { errorHandler, notFoundHandler, requestLogger, apiRateLimit } from './presentation/middleware';
+import {
+  errorHandler,
+  notFoundHandler,
+  requestLogger,
+  apiRateLimit,
+} from './presentation/middleware';
 
 /**
  * SuperOAuth Server Class
@@ -68,23 +73,27 @@ class SuperOAuthServer {
     // Security middleware - Helmet sets various HTTP headers for security
     // Content Security Policy (CSP) prevents XSS attacks
     // See: https://helmetjs.github.io/
-    this.app.use(helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],                    // Only load resources from same origin
-          styleSrc: ["'self'", "'unsafe-inline'"],   // Allow inline styles (needed for frontend)
-          scriptSrc: ["'self'", "'unsafe-inline'"],  // Allow inline scripts (needed for frontend)
-          imgSrc: ["'self'", "data:", "https:"],     // Allow images from self, data URIs, and HTTPS
+    this.app.use(
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"], // Only load resources from same origin
+            styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles (needed for frontend)
+            scriptSrc: ["'self'", "'unsafe-inline'"], // Allow inline scripts (needed for frontend)
+            imgSrc: ["'self'", 'data:', 'https:'], // Allow images from self, data URIs, and HTTPS
+          },
         },
-      },
-    }));
+      })
+    );
 
     // CORS (Cross-Origin Resource Sharing) configuration
     // Allows requests from specified origins with credentials
-    this.app.use(cors({
-      origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
-      credentials: true,  // Allow cookies and authentication headers
-    }));
+    this.app.use(
+      cors({
+        origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
+        credentials: true, // Allow cookies and authentication headers
+      })
+    );
 
     // Rate limiting middleware - Protection against DDoS and brute force attacks
     // Applied to all /api/* routes
@@ -164,19 +173,19 @@ class SuperOAuthServer {
           docs: '/docs',
           auth: {
             auth: {
-          register: 'POST /api/v1/auth/register ✅',
-          login: 'POST /api/v1/auth/login ✅',
-          refresh: 'POST /api/v1/auth/refresh ✅',
-          logout: 'POST /api/v1/auth/logout ✅',
-          me: 'GET /api/v1/auth/me ✅',
-        },
-        oauth: {
-          providers: 'GET /api/v1/oauth/providers ✅',
-          start: 'GET /api/v1/oauth/{provider} ✅',
-          callback: 'GET /api/v1/oauth/{provider}/callback ✅',
-          linked: 'GET /api/v1/oauth/linked ✅',
-          unlink: 'DELETE /api/v1/oauth/{provider}/unlink ✅',
-        },
+              register: 'POST /api/v1/auth/register ✅',
+              login: 'POST /api/v1/auth/login ✅',
+              refresh: 'POST /api/v1/auth/refresh ✅',
+              logout: 'POST /api/v1/auth/logout ✅',
+              me: 'GET /api/v1/auth/me ✅',
+            },
+            oauth: {
+              providers: 'GET /api/v1/oauth/providers ✅',
+              start: 'GET /api/v1/oauth/{provider} ✅',
+              callback: 'GET /api/v1/oauth/{provider}/callback ✅',
+              linked: 'GET /api/v1/oauth/linked ✅',
+              unlink: 'DELETE /api/v1/oauth/{provider}/unlink ✅',
+            },
           },
           user: {
             profile: 'GET /api/v1/user/profile (Phase 6)',
@@ -217,7 +226,7 @@ class SuperOAuthServer {
           healthCheck: `http://localhost:${this.config.port}/health`,
           apiBase: `http://localhost:${this.config.port}${this.config.apiBasePath}`,
           phase: 'Phase 4.2.B.1 OAuth Integration - COMPLETE ✅',
-          nextPhase: 'Phase 4.3 - Web Documentation'
+          nextPhase: 'Phase 4.3 - Web Documentation',
         });
       });
 
@@ -245,7 +254,6 @@ class SuperOAuthServer {
           process.exit(0);
         });
       });
-
     } catch (error) {
       logger.error('Failed to start server', error as Error);
       process.exit(1);

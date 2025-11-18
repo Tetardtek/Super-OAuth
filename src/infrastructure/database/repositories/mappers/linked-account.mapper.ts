@@ -20,13 +20,13 @@ export class LinkedAccountMapper {
 
   static toEntity(linkedAccount: LinkedAccount): LinkedAccountEntity {
     const entity = new LinkedAccountEntity();
-    
+
     // Set primary key if exists
     const id = linkedAccount.getId();
     if (id) {
       entity.id = id.getValue();
     }
-    
+
     entity.userId = linkedAccount.getUserId().getValue();
     entity.provider = linkedAccount.getProvider();
     entity.providerId = linkedAccount.getProviderId();
@@ -36,7 +36,7 @@ export class LinkedAccountMapper {
     entity.metadata = linkedAccount.getMetadata() || null;
     entity.createdAt = linkedAccount.getCreatedAt();
     entity.updatedAt = linkedAccount.getUpdatedAt();
-    
+
     return entity;
   }
 }

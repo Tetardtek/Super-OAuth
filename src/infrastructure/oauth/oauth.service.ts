@@ -6,16 +6,16 @@
 
 import crypto from 'crypto';
 import axios from 'axios';
-import { 
-  OAUTH_PROVIDERS, 
-  OAuthState, 
-  OAuthTokenResponse, 
-  OAuthUserInfo, 
-  OAuthError, 
+import {
+  OAUTH_PROVIDERS,
+  OAuthState,
+  OAuthTokenResponse,
+  OAuthUserInfo,
+  OAuthError,
   OAuthErrorType,
   validateOAuthConfig,
   getOAuthConfig,
-  isProviderSupported
+  isProviderSupported,
 } from './oauth-config';
 import { logger } from '../../shared/utils/logger.util';
 
@@ -26,26 +26,35 @@ export class OAuthService {
   /**
    * Generate OAuth authorization URL
    */
-  async generateAuthUrl(provider: string, redirectUrl?: string): Promise<{ authUrl: string; state: string }> {
+  async generateAuthUrl(
+    provider: string,
+    redirectUrl?: string
+  ): Promise<{ authUrl: string; state: string }> {
     logger.info(`🔗 Generating OAuth URL for ${provider}`);
 
     if (!isProviderSupported(provider)) {
-      throw new OAuthError(OAuthErrorType.INVALID_PROVIDER, `Provider ${provider} is not supported`);
+      throw new OAuthError(
+        OAuthErrorType.INVALID_PROVIDER,
+        `Provider ${provider} is not supported`
+      );
     }
 
     if (!validateOAuthConfig(provider)) {
-      throw new OAuthError(OAuthErrorType.INVALID_PROVIDER, `Provider ${provider} is not properly configured`);
+      throw new OAuthError(
+        OAuthErrorType.INVALID_PROVIDER,
+        `Provider ${provider} is not properly configured`
+      );
     }
 
     const config = getOAuthConfig(provider)!;
     const state = this.generateState(provider, redirectUrl);
-    
+
     const params = new URLSearchParams({
       client_id: config.clientId,
       redirect_uri: config.redirectUri,
       response_type: 'code',
       scope: config.scope.join(' '),
-      state: state
+      state: state,
     });
 
     // Provider-specific parameters
@@ -59,7 +68,7 @@ export class OAuthService {
     }
 
     const authUrl = `${config.authUrl}?${params.toString()}`;
-    
+
     logger.info(`✅ OAuth URL generated for ${provider}`, { provider, hasState: !!state });
     return { authUrl, state };
   }
@@ -71,42 +80,53 @@ export class OAuthService {
     logger.info(`🔄 Processing OAuth callback for ${provider}`);
 
     if (!isProviderSupported(provider)) {
-      throw new OAuthError(OAuthErrorType.INVALID_PROVIDER, `Provider ${provider} is not supported`, provider);
+      throw new OAuthError(
+        OAuthErrorType.INVALID_PROVIDER,
+        `Provider ${provider} is not supported`,
+        provider
+      );
     }
 
     // Validate state
     const stateData = this.validateState(state, provider);
     if (!stateData) {
-      throw new OAuthError(OAuthErrorType.INVALID_STATE, 'Invalid or expired OAuth state', provider);
+      throw new OAuthError(
+        OAuthErrorType.INVALID_STATE,
+        'Invalid or expired OAuth state',
+        provider
+      );
     }
 
     try {
       // Exchange code for token
       const tokenResponse = await this.exchangeCodeForToken(provider, code);
-      
+
       // Get user info using token
       const userInfo = await this.getUserInfo(provider, tokenResponse.access_token);
-      
+
       // Cleanup state
       this.stateStorage.delete(state);
-      
-      logger.info(`✅ OAuth callback processed successfully for ${provider}`, { 
-        provider, 
-        userId: userInfo.id,
-        email: userInfo.email 
-      });
-      
-      return userInfo;
 
+      logger.info(`✅ OAuth callback processed successfully for ${provider}`, {
+        provider,
+        userId: userInfo.id,
+        email: userInfo.email,
+      });
+
+      return userInfo;
     } catch (error) {
-      logger.error(`❌ OAuth callback failed for ${provider}`, error instanceof Error ? error : undefined, { provider, state });
-      
+      logger.error(
+        `❌ OAuth callback failed for ${provider}`,
+        error instanceof Error ? error : undefined,
+        { provider, state }
+      );
+
       if (error instanceof OAuthError) {
         throw error;
       }
-      
+
       throw new OAuthError(
-        OAuthErrorType.TOKEN_EXCHANGE_FAILED, 
+        OAuthErrorType.TOKEN_EXCHANGE_FAILED,
         `OAuth process failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
         provider,
         error
@@ -119,18 +139,18 @@ export class OAuthService {
    */
   private async exchangeCodeForToken(provider: string, code: string): Promise<OAuthTokenResponse> {
     const config = getOAuthConfig(provider)!;
-    
+
     const data = new URLSearchParams({
       grant_type: 'authorization_code',
       client_id: config.clientId,
       client_secret: config.clientSecret,
       redirect_uri: config.redirectUri,
-      code: code
+      code: code,
     });
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'Accept': 'application/json'
+      Accept: 'application/json',
     };
 
     // GitHub requires User-Agent header
@@ -140,16 +160,18 @@ export class OAuthService {
 
     try {
       const response = await axios.post(config.tokenUrl, data.toString(), { headers });
-      
+
       if (!response.data.access_token) {
         throw new Error('No access token in response');
       }
 
       logger.info(`🔑 Token exchange successful for ${provider}`);
       return response.data;
-
     } catch (error) {
-      logger.error(`❌ Token exchange failed for ${provider}`, error instanceof Error ? error : undefined);
+      logger.error(
+        `❌ Token exchange failed for ${provider}`,
+        error instanceof Error ? error : undefined
+      );
       throw new OAuthError(
         OAuthErrorType.TOKEN_EXCHANGE_FAILED,
         `Failed to exchange code for token: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -164,10 +186,10 @@ export class OAuthService {
    */
   private async getUserInfo(provider: string, accessToken: string): Promise<OAuthUserInfo> {
     const config = getOAuthConfig(provider)!;
-    
+
     const headers: Record<string, string> = {
-      'Authorization': `Bearer ${accessToken}`,
-      'Accept': 'application/json'
+      Authorization: `Bearer ${accessToken}`,
+      Accept: 'application/json',
     };
 
     // Provider-specific headers
@@ -185,17 +207,19 @@ export class OAuthService {
 
       // Normalize user data based on provider
       const userInfo = this.normalizeUserData(provider, userData);
-      
-      logger.info(`👤 User info retrieved for ${provider}`, { 
-        provider, 
-        userId: userInfo.id, 
-        email: userInfo.email 
-      });
-      
-      return userInfo;
 
+      logger.info(`👤 User info retrieved for ${provider}`, {
+        provider,
+        userId: userInfo.id,
+        email: userInfo.email,
+      });
+
+      return userInfo;
     } catch (error) {
-      logger.error(`❌ Failed to get user info from ${provider}`, error instanceof Error ? error : undefined);
+      logger.error(
+        `❌ Failed to get user info from ${provider}`,
+        error instanceof Error ? error : undefined
+      );
       throw new OAuthError(
         OAuthErrorType.USER_INFO_FAILED,
         `Failed to get user info: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -218,7 +242,7 @@ export class OAuthService {
           email: rawData.email,
           nickname: rawData.username,
           provider: 'discord',
-          raw: rawData
+          raw: rawData,
         };
         if (rawData.avatar) {
           normalized.avatar = `https://cdn.discordapp.com/avatars/${rawData.id}/${rawData.avatar}.png`;
@@ -233,7 +257,7 @@ export class OAuthService {
           nickname: twitchUser?.display_name || twitchUser?.login || rawData.login,
           avatar: twitchUser?.profile_image_url || rawData.profile_image_url,
           provider: 'twitch',
-          raw: rawData
+          raw: rawData,
         };
         break;
       }
@@ -245,7 +269,7 @@ export class OAuthService {
           nickname: rawData.name || rawData.given_name || rawData.email?.split('@')[0],
           avatar: rawData.picture,
           provider: 'google',
-          raw: rawData
+          raw: rawData,
         };
         break;
 
@@ -256,7 +280,7 @@ export class OAuthService {
           nickname: rawData.name || rawData.login,
           avatar: rawData.avatar_url,
           provider: 'github',
-          raw: rawData
+          raw: rawData,
         };
         break;
 
@@ -267,7 +291,7 @@ export class OAuthService {
     // Validate required fields
     if (!normalized.id || !normalized.nickname) {
       throw new OAuthError(
-        OAuthErrorType.USER_INFO_FAILED, 
+        OAuthErrorType.USER_INFO_FAILED,
         'Invalid user data from OAuth provider',
         provider
       );
@@ -282,22 +306,22 @@ export class OAuthService {
   private generateState(provider: string, redirectUrl?: string): string {
     const nonce = crypto.randomBytes(32).toString('hex');
     const state = crypto.randomBytes(16).toString('hex');
-    
+
     const stateData: OAuthState = {
       provider,
       timestamp: Date.now(),
-      nonce
+      nonce,
     };
-    
+
     if (redirectUrl) {
       stateData.redirectUrl = redirectUrl;
     }
-    
+
     this.stateStorage.set(state, stateData);
-    
+
     // Cleanup expired states
     this.cleanupExpiredStates();
-    
+
     return state;
   }
 
@@ -306,22 +330,22 @@ export class OAuthService {
    */
   private validateState(state: string, expectedProvider: string): OAuthState | null {
     const stateData = this.stateStorage.get(state);
-    
+
     if (!stateData) {
       return null;
     }
-    
+
     // Check expiration
     if (Date.now() - stateData.timestamp > this.stateExpirationMs) {
       this.stateStorage.delete(state);
       return null;
     }
-    
+
     // Check provider
     if (stateData.provider !== expectedProvider) {
       return null;
     }
-    
+
     return stateData;
   }
 
@@ -350,7 +374,7 @@ export class OAuthService {
       name: config.name,
       color: config.color,
       icon: config.icon,
-      supported: validateOAuthConfig(provider)
+      supported: validateOAuthConfig(provider),
     };
   }
 
@@ -358,10 +382,12 @@ export class OAuthService {
    * Get all supported providers info
    */
   getAllProvidersInfo() {
-    return Object.keys(OAUTH_PROVIDERS).map(provider => ({
-      provider,
-      ...this.getProviderInfo(provider)
-    })).filter(info => info.supported);
+    return Object.keys(OAUTH_PROVIDERS)
+      .map((provider) => ({
+        provider,
+        ...this.getProviderInfo(provider),
+      }))
+      .filter((info) => info.supported);
   }
 }
 

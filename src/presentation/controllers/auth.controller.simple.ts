@@ -26,20 +26,20 @@ export class AuthController {
         email,
         nickname,
         ip: req.ip,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get('User-Agent'),
       });
 
       const registerUseCase = this.container.getRegisterClassicUseCase();
       const result = await registerUseCase.execute({
         email,
         password,
-        nickname
+        nickname,
       });
 
       logger.info('User registered successfully', {
         userId: result.user.id,
         email: result.user.email,
-        nickname: result.user.nickname
+        nickname: result.user.nickname,
       });
 
       res.status(201).json({
@@ -52,26 +52,26 @@ export class AuthController {
             nickname: result.user.nickname,
             emailVerified: result.user.emailVerified,
             isActive: result.user.isActive,
-            createdAt: result.user.createdAt
+            createdAt: result.user.createdAt,
           },
           tokens: {
             accessToken: result.accessToken,
-            refreshToken: result.refreshToken
-          }
-        }
+            refreshToken: result.refreshToken,
+          },
+        },
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Registration failed', error as Error, { 
+      logger.error('Registration failed', error as Error, {
         email: req.validatedBody?.email || req.body?.email,
-        ip: req.ip 
+        ip: req.ip,
       });
 
       if (errorMessage.includes('already exists')) {
         res.status(409).json({
           success: false,
           error: 'USER_EXISTS',
-          message: 'User with this email already exists'
+          message: 'User with this email already exists',
         });
         return;
       }
@@ -80,7 +80,7 @@ export class AuthController {
         res.status(400).json({
           success: false,
           error: 'VALIDATION_ERROR',
-          message: errorMessage
+          message: errorMessage,
         });
         return;
       }
@@ -88,7 +88,7 @@ export class AuthController {
       res.status(500).json({
         success: false,
         error: 'INTERNAL_ERROR',
-        message: 'Registration failed'
+        message: 'Registration failed',
       });
     }
   }
@@ -103,18 +103,18 @@ export class AuthController {
       logger.info('User login attempt', {
         email,
         ip: req.ip,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get('User-Agent'),
       });
 
       const loginUseCase = this.container.getLoginClassicUseCase();
       const result = await loginUseCase.execute({
         email,
-        password
+        password,
       });
 
       logger.info('User logged in successfully', {
         userId: result.user.id,
-        email: result.user.email
+        email: result.user.email,
       });
 
       res.status(200).json({
@@ -127,28 +127,30 @@ export class AuthController {
             nickname: result.user.nickname,
             emailVerified: result.user.emailVerified,
             isActive: result.user.isActive,
-            lastLoginAt: result.user.lastLogin
+            lastLoginAt: result.user.lastLogin,
           },
           tokens: {
             accessToken: result.accessToken,
-            refreshToken: result.refreshToken
-          }
-        }
+            refreshToken: result.refreshToken,
+          },
+        },
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('Login failed', error instanceof Error ? error : undefined, {
         email: req.validatedBody?.email || req.body?.email,
-        ip: req.ip
+        ip: req.ip,
       });
 
-      if (errorMessage.includes('Invalid credentials') || 
-          errorMessage.includes('User not found') ||
-          errorMessage.includes('Invalid password')) {
+      if (
+        errorMessage.includes('Invalid credentials') ||
+        errorMessage.includes('User not found') ||
+        errorMessage.includes('Invalid password')
+      ) {
         res.status(401).json({
           success: false,
           error: 'INVALID_CREDENTIALS',
-          message: 'Invalid email or password'
+          message: 'Invalid email or password',
         });
         return;
       }
@@ -157,7 +159,7 @@ export class AuthController {
         res.status(403).json({
           success: false,
           error: 'ACCOUNT_DISABLED',
-          message: 'Account is disabled'
+          message: 'Account is disabled',
         });
         return;
       }
@@ -165,7 +167,7 @@ export class AuthController {
       res.status(500).json({
         success: false,
         error: 'INTERNAL_ERROR',
-        message: 'Login failed'
+        message: 'Login failed',
       });
     }
   }
@@ -179,16 +181,16 @@ export class AuthController {
 
       logger.info('Token refresh attempt', {
         ip: req.ip,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get('User-Agent'),
       });
 
       const refreshUseCase = this.container.getRefreshTokenUseCase();
       const result = await refreshUseCase.execute({
-        refreshToken
+        refreshToken,
       });
 
       logger.info('Token refreshed successfully', {
-        userId: result.user.id
+        userId: result.user.id,
       });
 
       res.status(200).json({
@@ -196,22 +198,24 @@ export class AuthController {
         message: 'Token refreshed successfully',
         data: {
           accessToken: result.accessToken,
-          refreshToken: result.refreshToken
-        }
+          refreshToken: result.refreshToken,
+        },
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('Token refresh failed', error instanceof Error ? error : undefined, {
-        ip: req.ip
+        ip: req.ip,
       });
 
-      if (errorMessage.includes('Invalid') || 
-          errorMessage.includes('expired') ||
-          errorMessage.includes('not found')) {
+      if (
+        errorMessage.includes('Invalid') ||
+        errorMessage.includes('expired') ||
+        errorMessage.includes('not found')
+      ) {
         res.status(401).json({
           success: false,
           error: 'INVALID_REFRESH_TOKEN',
-          message: 'Invalid or expired refresh token'
+          message: 'Invalid or expired refresh token',
         });
         return;
       }
@@ -219,7 +223,7 @@ export class AuthController {
       res.status(500).json({
         success: false,
         error: 'INTERNAL_ERROR',
-        message: 'Token refresh failed'
+        message: 'Token refresh failed',
       });
     }
   }
@@ -234,19 +238,19 @@ export class AuthController {
         res.status(401).json({
           success: false,
           error: 'UNAUTHORIZED',
-          message: 'Authentication required'
+          message: 'Authentication required',
         });
         return;
       }
 
       logger.info('User logout attempt', {
         userId,
-        ip: req.ip
+        ip: req.ip,
       });
 
       const logoutUseCase = this.container.getLogoutUseCase();
       const refreshToken = req.body?.refreshToken;
-      
+
       if (refreshToken) {
         await logoutUseCase.execute(refreshToken);
       } else {
@@ -254,23 +258,23 @@ export class AuthController {
       }
 
       logger.info('User logged out successfully', {
-        userId
+        userId,
       });
 
       res.status(200).json({
         success: true,
-        message: 'Logout successful'
+        message: 'Logout successful',
       });
     } catch (error) {
       logger.error('Logout failed', error instanceof Error ? error : undefined, {
         userId: req.user?.id,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(500).json({
         success: false,
         error: 'INTERNAL_ERROR',
-        message: 'Logout failed'
+        message: 'Logout failed',
       });
     }
   }
@@ -287,18 +291,18 @@ export class AuthController {
         provider,
         redirectUri,
         ip: req.ip,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get('User-Agent'),
       });
 
       const startOAuthUseCase = this.container.getStartOAuthUseCase();
       const result = await startOAuthUseCase.execute({
         provider: provider as 'discord' | 'twitch' | 'google' | 'github',
-        redirectUri
+        redirectUri,
       });
 
       logger.info('OAuth URL generated', {
         provider,
-        state: result.state
+        state: result.state,
       });
 
       res.status(200).json({
@@ -307,21 +311,21 @@ export class AuthController {
         data: {
           authUrl: result.authUrl,
           state: result.state,
-          provider
-        }
+          provider,
+        },
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('OAuth start failed', error instanceof Error ? error : undefined, {
         provider: req.params.provider,
-        ip: req.ip
+        ip: req.ip,
       });
 
       if (errorMessage.includes('Unsupported')) {
         res.status(400).json({
           success: false,
           error: 'UNSUPPORTED_PROVIDER',
-          message: 'OAuth provider not supported'
+          message: 'OAuth provider not supported',
         });
         return;
       }
@@ -329,7 +333,7 @@ export class AuthController {
       res.status(500).json({
         success: false,
         error: 'INTERNAL_ERROR',
-        message: 'OAuth initialization failed'
+        message: 'OAuth initialization failed',
       });
     }
   }
@@ -346,14 +350,14 @@ export class AuthController {
         provider,
         state,
         ip: req.ip,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get('User-Agent'),
       });
 
       const completeOAuthUseCase = this.container.getCompleteOAuthUseCase();
       const result = await completeOAuthUseCase.execute({
         provider: provider as 'discord' | 'twitch' | 'google' | 'github',
         code: code as string,
-        state: state as string
+        state: state as string,
       });
 
       // Note: We'll need to determine if this is a new user based on the result
@@ -362,7 +366,7 @@ export class AuthController {
 
       logger.info('OAuth authentication completed', {
         userId: result.user.id,
-        isNewUser
+        isNewUser,
       });
 
       res.status(200).json({
@@ -375,28 +379,28 @@ export class AuthController {
             nickname: result.user.nickname,
             emailVerified: result.user.emailVerified,
             isActive: result.user.isActive,
-            createdAt: result.user.createdAt
+            createdAt: result.user.createdAt,
           },
           tokens: {
             accessToken: result.accessToken,
-            refreshToken: result.refreshToken
+            refreshToken: result.refreshToken,
           },
-          isNewUser
-        }
+          isNewUser,
+        },
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('OAuth callback failed', error instanceof Error ? error : undefined, {
         provider: req.params.provider,
         state: req.query.state,
-        ip: req.ip
+        ip: req.ip,
       });
 
       if (errorMessage.includes('Invalid state') || errorMessage.includes('CSRF')) {
         res.status(400).json({
           success: false,
           error: 'INVALID_STATE',
-          message: 'Invalid OAuth state parameter'
+          message: 'Invalid OAuth state parameter',
         });
         return;
       }
@@ -405,7 +409,7 @@ export class AuthController {
         res.status(400).json({
           success: false,
           error: 'INVALID_AUTHORIZATION_CODE',
-          message: 'Invalid authorization code'
+          message: 'Invalid authorization code',
         });
         return;
       }
@@ -413,7 +417,7 @@ export class AuthController {
       res.status(500).json({
         success: false,
         error: 'INTERNAL_ERROR',
-        message: 'OAuth authentication failed'
+        message: 'OAuth authentication failed',
       });
     }
   }

@@ -22,28 +22,28 @@ export const validateBody = (schema: Joi.ObjectSchema) => {
     const { error, value } = schema.validate(req.body, {
       abortEarly: false,
       stripUnknown: true,
-      allowUnknown: false
+      allowUnknown: false,
     });
 
     if (error) {
-      const validationErrors: ValidationError[] = error.details.map(detail => ({
+      const validationErrors: ValidationError[] = error.details.map((detail) => ({
         field: detail.path.join('.'),
         message: detail.message,
-        value: detail.context?.value
+        value: detail.context?.value,
       }));
 
       logger.warn('Validation failed for request body', {
         path: req.path,
         method: req.method,
         errors: validationErrors,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(400).json({
         success: false,
         error: 'VALIDATION_ERROR',
         message: 'Request validation failed',
-        details: validationErrors
+        details: validationErrors,
       });
       return;
     }
@@ -62,28 +62,28 @@ export const validateParams = (schema: Joi.ObjectSchema) => {
     const { error, value } = schema.validate(req.params, {
       abortEarly: false,
       stripUnknown: true,
-      allowUnknown: false
+      allowUnknown: false,
     });
 
     if (error) {
-      const validationErrors: ValidationError[] = error.details.map(detail => ({
+      const validationErrors: ValidationError[] = error.details.map((detail) => ({
         field: detail.path.join('.'),
         message: detail.message,
-        value: detail.context?.value
+        value: detail.context?.value,
       }));
 
       logger.warn('Validation failed for request parameters', {
         path: req.path,
         method: req.method,
         errors: validationErrors,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(400).json({
         success: false,
         error: 'VALIDATION_ERROR',
         message: 'Parameter validation failed',
-        details: validationErrors
+        details: validationErrors,
       });
       return;
     }
@@ -101,28 +101,28 @@ export const validateQuery = (schema: Joi.ObjectSchema) => {
     const { error, value } = schema.validate(req.query, {
       abortEarly: false,
       stripUnknown: true,
-      allowUnknown: false
+      allowUnknown: false,
     });
 
     if (error) {
-      const validationErrors: ValidationError[] = error.details.map(detail => ({
+      const validationErrors: ValidationError[] = error.details.map((detail) => ({
         field: detail.path.join('.'),
         message: detail.message,
-        value: detail.context?.value
+        value: detail.context?.value,
       }));
 
       logger.warn('Validation failed for request query', {
         path: req.path,
         method: req.method,
         errors: validationErrors,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(400).json({
         success: false,
         error: 'VALIDATION_ERROR',
         message: 'Query validation failed',
-        details: validationErrors
+        details: validationErrors,
       });
       return;
     }

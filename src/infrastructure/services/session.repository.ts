@@ -25,9 +25,11 @@ export class SessionRepository implements ISessionRepository {
     await this.repository.save(session);
   }
 
-  async findByRefreshToken(refreshToken: string): Promise<{ userId: string; expiresAt: Date } | null> {
+  async findByRefreshToken(
+    refreshToken: string
+  ): Promise<{ userId: string; expiresAt: Date } | null> {
     const session = await this.repository.findOne({
-      where: { refreshToken }
+      where: { refreshToken },
     });
 
     if (!session) {
@@ -36,7 +38,7 @@ export class SessionRepository implements ISessionRepository {
 
     return {
       userId: session.userId,
-      expiresAt: session.expiresAt
+      expiresAt: session.expiresAt,
     };
   }
 

@@ -15,7 +15,6 @@ export interface TokenPair {
 }
 
 export class AuthService {
-  
   /**
    * Generate JWT token pair for user
    */
@@ -24,13 +23,13 @@ export class AuthService {
 
     const accessToken = tokenService.generateAccessToken(user.id);
     const refreshToken = tokenService.generateRefreshToken();
-    
+
     logger.info('✅ Tokens generated successfully', { userId: user.id });
 
     return {
       accessToken,
       refreshToken,
-      expiresIn: 3600 // 1 hour in seconds
+      expiresIn: 3600, // 1 hour in seconds
     };
   }
 
@@ -55,11 +54,11 @@ export class AuthService {
     logger.info('🔄 Refreshing tokens');
 
     const payload = tokenService.verifyRefreshToken(refreshToken);
-    
+
     if (!payload) {
       throw new Error('Invalid refresh token');
     }
-    
+
     // Generate new tokens
     const newAccessToken = tokenService.generateAccessToken(payload.userId || 'unknown');
     const newRefreshToken = tokenService.generateRefreshToken();
@@ -69,7 +68,7 @@ export class AuthService {
     return {
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
-      expiresIn: 3600
+      expiresIn: 3600,
     };
   }
 

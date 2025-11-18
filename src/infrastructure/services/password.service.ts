@@ -6,10 +6,12 @@ export class PasswordService implements IPasswordService {
 
   constructor() {
     this.saltRounds = parseInt(process.env.BCRYPT_ROUNDS || '12');
-    
+
     // Validate salt rounds
     if (this.saltRounds < 10 || this.saltRounds > 15) {
-      throw new Error('BCRYPT_ROUNDS must be between 10 and 15 for security and performance balance');
+      throw new Error(
+        'BCRYPT_ROUNDS must be between 10 and 15 for security and performance balance'
+      );
     }
   }
 

@@ -15,7 +15,11 @@ export interface AuthenticatedUser {
 /**
  * Middleware to authenticate JWT tokens
  */
-export const authenticateToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const authenticateToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
   const securityConfig = getSecurityConfig();
@@ -24,33 +28,33 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     logger.warn('Missing authorization token', {
       path: req.path,
       method: req.method,
-      ip: req.ip
+      ip: req.ip,
     });
 
     res.status(401).json({
       success: false,
       error: 'UNAUTHORIZED',
-      message: 'Access token is required'
+      message: 'Access token is required',
     });
     return;
   }
 
   try {
     const decoded = jwt.verify(token, securityConfig.jwt.accessTokenSecret) as any;
-    
+
     // Verify token type (should be access token)
     if (decoded.type !== 'access') {
       logger.warn('Invalid token type provided', {
         path: req.path,
         method: req.method,
         tokenType: decoded.type,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(401).json({
         success: false,
         error: 'INVALID_TOKEN',
-        message: 'Invalid token type'
+        message: 'Invalid token type',
       });
       return;
     }
@@ -64,13 +68,13 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
         path: req.path,
         method: req.method,
         userId: decoded.userId,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(401).json({
         success: false,
         error: 'INVALID_TOKEN',
-        message: 'Invalid access token'
+        message: 'Invalid access token',
       });
       return;
     }
@@ -80,7 +84,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
       id: user.id,
       email: user.email?.toString() || '',
       nickname: user.nickname.toString(),
-      isActive: user.isActive
+      isActive: user.isActive,
     };
 
     next();
@@ -89,14 +93,14 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
       path: req.path,
       method: req.method,
       error: error instanceof Error ? error.message : 'Unknown error',
-      ip: req.ip
+      ip: req.ip,
     });
 
     if (error instanceof jwt.TokenExpiredError) {
       res.status(401).json({
         success: false,
         error: 'TOKEN_EXPIRED',
-        message: 'Access token has expired'
+        message: 'Access token has expired',
       });
       return;
     }
@@ -105,7 +109,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
       res.status(401).json({
         success: false,
         error: 'INVALID_TOKEN',
-        message: 'Invalid access token'
+        message: 'Invalid access token',
       });
       return;
     }
@@ -113,7 +117,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     res.status(500).json({
       success: false,
       error: 'INTERNAL_ERROR',
-      message: 'Authentication failed'
+      message: 'Authentication failed',
     });
   }
 };
@@ -133,13 +137,13 @@ export const optionalAuth = (req: Request, _res: Response, next: NextFunction): 
 
   try {
     const decoded = jwt.verify(token, securityConfig.jwt.accessTokenSecret) as any;
-    
+
     if (decoded.type === 'access') {
       (req as any).user = {
         id: decoded.userId,
         email: decoded.email,
         nickname: decoded.nickname,
-        isActive: decoded.isActive || true
+        isActive: decoded.isActive || true,
       };
     }
 
@@ -150,9 +154,9 @@ export const optionalAuth = (req: Request, _res: Response, next: NextFunction): 
       path: req.path,
       method: req.method,
       error: error instanceof Error ? error.message : 'Unknown error',
-      ip: req.ip
+      ip: req.ip,
     });
-    
+
     next();
   }
 };

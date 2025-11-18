@@ -21,12 +21,7 @@ export class User {
   }
 
   // Factory Methods
-  static createWithEmail(
-    id: string,
-    email: Email,
-    nickname: Nickname,
-    password: Password
-  ): User {
+  static createWithEmail(id: string, email: Email, nickname: Nickname, password: Password): User {
     return new User(
       id,
       email,
@@ -101,7 +96,7 @@ export class User {
 
     // Business Rule: No duplicate providers
     const existingProvider = this._linkedAccounts.find(
-      acc => acc.getProvider() === linkedAccount.getProvider()
+      (acc) => acc.getProvider() === linkedAccount.getProvider()
     );
     if (existingProvider) {
       throw new Error(`${linkedAccount.getProvider()} account already linked`);
@@ -117,9 +112,7 @@ export class User {
       throw new Error('Cannot unlink last provider without verified email or password');
     }
 
-    this._linkedAccounts = this._linkedAccounts.filter(
-      acc => acc.getProvider() !== provider
-    );
+    this._linkedAccounts = this._linkedAccounts.filter((acc) => acc.getProvider() !== provider);
     this._updatedAt = new Date();
   }
 
@@ -149,29 +142,51 @@ export class User {
     const isLastProvider = this._linkedAccounts.length === 1;
     const hasVerifiedEmail = this._emailVerified && Boolean(this._email);
     const hasPassword = this._passwordHash !== null;
-    
+
     if (!isLastProvider) return true;
     if (this._linkedAccounts[0]?.getProvider() !== provider) return true;
     return hasVerifiedEmail || hasPassword;
   }
 
   isProviderLinked(provider: string): boolean {
-    return this._linkedAccounts.some(acc => acc.getProvider() === provider);
+    return this._linkedAccounts.some((acc) => acc.getProvider() === provider);
   }
 
   // Getters
-  get id(): string { return this._id; }
-  get email(): Email | null { return this._email; }
-  get nickname(): Nickname { return this._nickname; }
-  get emailVerified(): boolean { return this._emailVerified; }
-  get isActive(): boolean { return this._isActive; }
-  get createdAt(): Date { return this._createdAt; }
-  get updatedAt(): Date { return this._updatedAt; }
-  get lastLogin(): Date | null { return this._lastLogin; }
-  get loginCount(): number { return this._loginCount; }
-  get linkedAccounts(): readonly LinkedAccount[] { return [...this._linkedAccounts]; }
-  get hasPassword(): boolean { return this._passwordHash !== null; }
-  get linkedProviders(): string[] { 
-    return this._linkedAccounts.map(acc => acc.getProvider()); 
+  get id(): string {
+    return this._id;
+  }
+  get email(): Email | null {
+    return this._email;
+  }
+  get nickname(): Nickname {
+    return this._nickname;
+  }
+  get emailVerified(): boolean {
+    return this._emailVerified;
+  }
+  get isActive(): boolean {
+    return this._isActive;
+  }
+  get createdAt(): Date {
+    return this._createdAt;
+  }
+  get updatedAt(): Date {
+    return this._updatedAt;
+  }
+  get lastLogin(): Date | null {
+    return this._lastLogin;
+  }
+  get loginCount(): number {
+    return this._loginCount;
+  }
+  get linkedAccounts(): readonly LinkedAccount[] {
+    return [...this._linkedAccounts];
+  }
+  get hasPassword(): boolean {
+    return this._passwordHash !== null;
+  }
+  get linkedProviders(): string[] {
+    return this._linkedAccounts.map((acc) => acc.getProvider());
   }
 }

@@ -1,4 +1,8 @@
-import { IUserRepository, ITokenService, ISessionRepository } from '../interfaces/repositories.interface';
+import {
+  IUserRepository,
+  ITokenService,
+  ISessionRepository,
+} from '../interfaces/repositories.interface';
 import { RefreshTokenDto, AuthResponseDto, UserDto } from '../dto/auth.dto';
 
 export class RefreshTokenUseCase {
@@ -51,7 +55,7 @@ export class RefreshTokenUseCase {
     return {
       accessToken,
       refreshToken: newRefreshToken,
-      user: this.mapUserToDto(user)
+      user: this.mapUserToDto(user),
     };
   }
 
@@ -65,7 +69,7 @@ export class RefreshTokenUseCase {
       linkedProviders: user.linkedProviders,
       createdAt: user.createdAt,
       lastLogin: user.lastLogin,
-      loginCount: user.loginCount
+      loginCount: user.loginCount,
     };
   }
 }

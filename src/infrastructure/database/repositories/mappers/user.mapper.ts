@@ -7,7 +7,7 @@ export class UserMapper {
   static toDomain(entity: UserEntity): User {
     // Create user using factory method based on whether it has email or is provider-only
     let user: User;
-    
+
     if (entity.email && entity.passwordHash) {
       // Classic user with email and password
       // Use createForExistingUser to bypass validation for stored passwords
@@ -29,7 +29,7 @@ export class UserMapper {
         firstLinkedAccount,
         entity.email ? Email.create(entity.email) : undefined
       );
-      
+
       // Add remaining linked accounts
       for (let i = 1; i < entity.linkedAccounts.length; i++) {
         const linkedAccount = LinkedAccountMapper.toDomain(entity.linkedAccounts[i]);
@@ -59,13 +59,13 @@ export class UserMapper {
     (user as any)._updatedAt = entity.updatedAt;
     (user as any)._lastLogin = entity.lastLogin;
     (user as any)._loginCount = entity.loginCount;
-    
+
     return user;
   }
 
   static toEntity(user: User): UserEntity {
     const entity = new UserEntity();
-    
+
     entity.id = user.id;
     entity.email = user.email?.toString() || null;
     entity.nickname = user.nickname.toString();
@@ -76,7 +76,7 @@ export class UserMapper {
     entity.loginCount = user.loginCount;
     entity.createdAt = user.createdAt;
     entity.updatedAt = user.updatedAt;
-    
+
     return entity;
   }
 }

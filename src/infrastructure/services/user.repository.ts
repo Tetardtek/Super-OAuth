@@ -15,7 +15,7 @@ export class UserRepository implements IUserRepository {
   async findById(id: string): Promise<User | null> {
     const entity = await this.repository.findOne({
       where: { id },
-      relations: ['linkedAccounts']
+      relations: ['linkedAccounts'],
     });
 
     if (!entity) {
@@ -28,7 +28,7 @@ export class UserRepository implements IUserRepository {
   async findByEmail(email: string): Promise<User | null> {
     const entity = await this.repository.findOne({
       where: { email },
-      relations: ['linkedAccounts']
+      relations: ['linkedAccounts'],
     });
 
     if (!entity) {
@@ -84,9 +84,9 @@ export class UserRepository implements IUserRepository {
       updatedAt: new Date(),
       lastLogin: null,
       loginCount: 0,
-      linkedAccounts: []
+      linkedAccounts: [],
     } as any;
-    
+
     return mockUser;
   }
 
@@ -110,7 +110,12 @@ export class UserRepository implements IUserRepository {
   /**
    * Update OAuth information
    */
-  async updateOAuthInfo(_userId: string, _provider: string, _providerId: string, _updateData: any): Promise<void> {
+  async updateOAuthInfo(
+    _userId: string,
+    _provider: string,
+    _providerId: string,
+    _updateData: any
+  ): Promise<void> {
     // This would need to be implemented based on your database schema
     // For now, empty implementation as placeholder
   }
@@ -128,7 +133,7 @@ export class UserRepository implements IUserRepository {
    */
   async updateLastLogin(userId: string): Promise<void> {
     await this.repository.update(userId, {
-      lastLogin: new Date()
+      lastLogin: new Date(),
     });
   }
 }

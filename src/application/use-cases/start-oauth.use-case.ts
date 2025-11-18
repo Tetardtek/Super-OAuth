@@ -11,9 +11,7 @@ export interface OAuthUrlResponseDto {
 }
 
 export class StartOAuthUseCase {
-  constructor(
-    private readonly oauthService: IOAuthService
-  ) {}
+  constructor(private readonly oauthService: IOAuthService) {}
 
   async execute(dto: StartOAuthDto): Promise<OAuthUrlResponseDto> {
     // 1. Validate provider
@@ -30,7 +28,7 @@ export class StartOAuthUseCase {
 
     return {
       authUrl,
-      state
+      state,
     };
   }
 

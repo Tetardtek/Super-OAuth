@@ -31,7 +31,7 @@ export class LinkedAccount {
 
   constructor(data: LinkedAccountData) {
     this.validateData(data);
-    
+
     this.id = data.id;
     this.userId = data.userId;
     this.provider = data.provider;

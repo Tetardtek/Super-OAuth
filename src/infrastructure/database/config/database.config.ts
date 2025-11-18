@@ -12,7 +12,7 @@ export class DatabaseConnection {
   static getInstance(): DataSource {
     if (!DatabaseConnection.instance) {
       const config = getDatabaseConfig();
-      
+
       DatabaseConnection.instance = new DataSource({
         type: 'mysql',
         host: config.host,
@@ -33,18 +33,18 @@ export class DatabaseConnection {
         timezone: 'Z',
       });
     }
-    
+
     return DatabaseConnection.instance;
   }
 
   static async initialize(): Promise<DataSource> {
     const dataSource = this.getInstance();
-    
+
     if (!dataSource.isInitialized) {
       await dataSource.initialize();
       logger.info('Database connection established');
     }
-    
+
     return dataSource;
   }
 

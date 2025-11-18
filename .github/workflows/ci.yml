@@ -38,14 +38,6 @@ jobs:
         run: npm run test:coverage
         continue-on-error: true
 
-      - name: Upload backend coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./coverage/lcov.info
-          flags: backend
-          name: backend-coverage
-        continue-on-error: true
-
   # Job 2: Tests Frontend (Vitest)
   test-frontend:
     name: Frontend Tests
@@ -75,14 +67,6 @@ jobs:
 
       - name: Generate frontend coverage report
         run: npm run test:frontend:coverage
-        continue-on-error: true
-
-      - name: Upload frontend coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          files: ./coverage/lcov.info
-          flags: frontend
-          name: frontend-coverage
         continue-on-error: true
 
   # Job 3: Code Quality (Linting)
@@ -125,7 +109,7 @@ jobs:
         run: npm ci
 
       - name: Check Prettier formatting
-        run: npx prettier --check "src/**/*.ts"
+        run: npm run format:check
 
   # Job 5: TypeScript Type Checking
   typecheck:

@@ -31,54 +31,58 @@ export const OAUTH_PROVIDERS: OAuthProviders = {
   discord: {
     clientId: process.env.DISCORD_CLIENT_ID || '',
     clientSecret: process.env.DISCORD_CLIENT_SECRET || '',
-    redirectUri: process.env.DISCORD_REDIRECT_URI || `${process.env.APP_URL}/auth/oauth/discord/callback`,
+    redirectUri:
+      process.env.DISCORD_REDIRECT_URI || `${process.env.APP_URL}/auth/oauth/discord/callback`,
     scope: ['identify', 'email'],
     authUrl: 'https://discord.com/api/oauth2/authorize',
     tokenUrl: 'https://discord.com/api/oauth2/token',
     userInfoUrl: 'https://discord.com/api/v10/users/@me',
     name: 'Discord',
     color: '#5865F2',
-    icon: '🎮'
+    icon: '🎮',
   },
 
   twitch: {
     clientId: process.env.TWITCH_CLIENT_ID || '',
     clientSecret: process.env.TWITCH_CLIENT_SECRET || '',
-    redirectUri: process.env.TWITCH_REDIRECT_URI || `${process.env.APP_URL}/auth/oauth/twitch/callback`,
+    redirectUri:
+      process.env.TWITCH_REDIRECT_URI || `${process.env.APP_URL}/auth/oauth/twitch/callback`,
     scope: ['user:read:email'],
     authUrl: 'https://id.twitch.tv/oauth2/authorize',
     tokenUrl: 'https://id.twitch.tv/oauth2/token',
     userInfoUrl: 'https://api.twitch.tv/helix/users',
     name: 'Twitch',
     color: '#9146FF',
-    icon: '🟣'
+    icon: '🟣',
   },
 
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID || '',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    redirectUri: process.env.GOOGLE_REDIRECT_URI || `${process.env.APP_URL}/auth/oauth/google/callback`,
+    redirectUri:
+      process.env.GOOGLE_REDIRECT_URI || `${process.env.APP_URL}/auth/oauth/google/callback`,
     scope: ['openid', 'profile', 'email'],
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
     userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
     name: 'Google',
     color: '#4285F4',
-    icon: '🔍'
+    icon: '🔍',
   },
 
   github: {
     clientId: process.env.GITHUB_CLIENT_ID || '',
     clientSecret: process.env.GITHUB_CLIENT_SECRET || '',
-    redirectUri: process.env.GITHUB_REDIRECT_URI || `${process.env.APP_URL}/auth/oauth/github/callback`,
+    redirectUri:
+      process.env.GITHUB_REDIRECT_URI || `${process.env.APP_URL}/auth/oauth/github/callback`,
     scope: ['user:email'],
     authUrl: 'https://github.com/login/oauth/authorize',
     tokenUrl: 'https://github.com/login/oauth/access_token',
     userInfoUrl: 'https://api.github.com/user',
     name: 'GitHub',
     color: '#24292F',
-    icon: '🐙'
-  }
+    icon: '🐙',
+  },
 };
 
 /**
@@ -163,7 +167,7 @@ export enum OAuthErrorType {
   INVALID_CODE = 'INVALID_CODE',
   TOKEN_EXCHANGE_FAILED = 'TOKEN_EXCHANGE_FAILED',
   USER_INFO_FAILED = 'USER_INFO_FAILED',
-  ACCOUNT_LINK_FAILED = 'ACCOUNT_LINK_FAILED'
+  ACCOUNT_LINK_FAILED = 'ACCOUNT_LINK_FAILED',
 }
 
 export class OAuthError extends Error {

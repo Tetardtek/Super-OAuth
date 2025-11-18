@@ -20,34 +20,34 @@ export class UserRepository implements IUserRepository {
   async findById(id: string): Promise<User | null> {
     const userEntity = await this.repository.findOne({
       where: { id },
-      relations: ['linkedAccounts', 'sessions']
+      relations: ['linkedAccounts', 'sessions'],
     });
-    
+
     return userEntity ? UserMapper.toDomain(userEntity) : null;
   }
 
   async findByEmail(email: string): Promise<User | null> {
     const userEntity = await this.repository.findOne({
       where: { email },
-      relations: ['linkedAccounts', 'sessions']
+      relations: ['linkedAccounts', 'sessions'],
     });
-    
+
     return userEntity ? UserMapper.toDomain(userEntity) : null;
   }
 
   async findByNickname(nickname: string): Promise<User | null> {
     const userEntity = await this.repository.findOne({
       where: { nickname },
-      relations: ['linkedAccounts', 'sessions']
+      relations: ['linkedAccounts', 'sessions'],
     });
-    
+
     return userEntity ? UserMapper.toDomain(userEntity) : null;
   }
 
   async findByEmailOrNickname(emailOrNickname: string): Promise<User | null> {
     // Try to determine if it's an email or nickname
     const isEmail = emailOrNickname.includes('@');
-    
+
     if (isEmail) {
       return this.findByEmail(emailOrNickname);
     } else {

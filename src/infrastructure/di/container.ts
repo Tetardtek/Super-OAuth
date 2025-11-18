@@ -1,11 +1,11 @@
 // Dependency Injection Container
-import { 
-  RegisterClassicUseCase, 
-  LoginClassicUseCase, 
-  RefreshTokenUseCase, 
+import {
+  RegisterClassicUseCase,
+  LoginClassicUseCase,
+  RefreshTokenUseCase,
   LogoutUseCase,
   StartOAuthUseCase,
-  CompleteOAuthUseCase
+  CompleteOAuthUseCase,
 } from '../../application/use-cases';
 
 import {
@@ -13,14 +13,14 @@ import {
   SessionRepository,
   UserRepository,
   OAuthService,
-  PasswordService
+  PasswordService,
 } from '../services';
 
 import {
   ITokenService,
   ISessionRepository,
   IUserRepository,
-  IOAuthService
+  IOAuthService,
 } from '../../application/interfaces/repositories.interface';
 
 export class DIContainer {
@@ -47,37 +47,51 @@ export class DIContainer {
     this.services.set('PasswordService', new PasswordService());
 
     // Use Cases
-    this.services.set('RegisterClassicUseCase', new RegisterClassicUseCase(
-      this.get<IUserRepository>('UserRepository'),
-      this.get<ITokenService>('TokenService')
-    ));
+    this.services.set(
+      'RegisterClassicUseCase',
+      new RegisterClassicUseCase(
+        this.get<IUserRepository>('UserRepository'),
+        this.get<ITokenService>('TokenService')
+      )
+    );
 
-    this.services.set('LoginClassicUseCase', new LoginClassicUseCase(
-      this.get<IUserRepository>('UserRepository'),
-      this.get<ITokenService>('TokenService'),
-      this.get<ISessionRepository>('SessionRepository')
-    ));
+    this.services.set(
+      'LoginClassicUseCase',
+      new LoginClassicUseCase(
+        this.get<IUserRepository>('UserRepository'),
+        this.get<ITokenService>('TokenService'),
+        this.get<ISessionRepository>('SessionRepository')
+      )
+    );
 
-    this.services.set('RefreshTokenUseCase', new RefreshTokenUseCase(
-      this.get<IUserRepository>('UserRepository'),
-      this.get<ITokenService>('TokenService'),
-      this.get<ISessionRepository>('SessionRepository')
-    ));
+    this.services.set(
+      'RefreshTokenUseCase',
+      new RefreshTokenUseCase(
+        this.get<IUserRepository>('UserRepository'),
+        this.get<ITokenService>('TokenService'),
+        this.get<ISessionRepository>('SessionRepository')
+      )
+    );
 
-    this.services.set('LogoutUseCase', new LogoutUseCase(
-      this.get<ISessionRepository>('SessionRepository')
-    ));
+    this.services.set(
+      'LogoutUseCase',
+      new LogoutUseCase(this.get<ISessionRepository>('SessionRepository'))
+    );
 
-    this.services.set('StartOAuthUseCase', new StartOAuthUseCase(
-      this.get<IOAuthService>('OAuthService')
-    ));
+    this.services.set(
+      'StartOAuthUseCase',
+      new StartOAuthUseCase(this.get<IOAuthService>('OAuthService'))
+    );
 
-    this.services.set('CompleteOAuthUseCase', new CompleteOAuthUseCase(
-      this.get<IUserRepository>('UserRepository'),
-      this.get<ITokenService>('TokenService'),
-      this.get<ISessionRepository>('SessionRepository'),
-      this.get<IOAuthService>('OAuthService')
-    ));
+    this.services.set(
+      'CompleteOAuthUseCase',
+      new CompleteOAuthUseCase(
+        this.get<IUserRepository>('UserRepository'),
+        this.get<ITokenService>('TokenService'),
+        this.get<ISessionRepository>('SessionRepository'),
+        this.get<IOAuthService>('OAuthService')
+      )
+    );
   }
 
   get<T>(serviceName: string): T {

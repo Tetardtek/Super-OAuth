@@ -83,7 +83,9 @@ export class EnvironmentValidator {
 
       // Check if required variable is missing
       if (envVar.required && !value) {
-        errors.push(`Missing required environment variable: ${envVar.name} - ${envVar.description}`);
+        errors.push(
+          `Missing required environment variable: ${envVar.name} - ${envVar.description}`
+        );
         continue;
       }
 
@@ -102,13 +104,13 @@ export class EnvironmentValidator {
 
     // Log warnings
     if (warnings.length > 0) {
-      warnings.forEach(warning => logger.warn(warning));
+      warnings.forEach((warning) => logger.warn(warning));
     }
 
     // Handle errors
     if (errors.length > 0) {
       logger.error('Environment validation failed');
-      errors.forEach(error => logger.error(error));
+      errors.forEach((error) => logger.error(error));
       process.exit(1);
     }
 
@@ -116,14 +118,12 @@ export class EnvironmentValidator {
   }
 
   static getRequiredVariables(): string[] {
-    return ENVIRONMENT_VARIABLES
-      .filter(envVar => envVar.required)
-      .map(envVar => envVar.name);
+    return ENVIRONMENT_VARIABLES.filter((envVar) => envVar.required).map((envVar) => envVar.name);
   }
 
   static generateExampleEnv(): string {
     let content = '# SuperOAuth Environment Configuration\n\n';
-    
+
     for (const envVar of ENVIRONMENT_VARIABLES) {
       content += `# ${envVar.description}\n`;
       if (envVar.required) {

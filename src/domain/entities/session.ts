@@ -31,7 +31,7 @@ export class Session {
 
   constructor(data: SessionData) {
     this.validateData(data);
-    
+
     this.id = data.id;
     this.userId = data.userId;
     this.token = data.token;
@@ -64,7 +64,9 @@ export class Session {
   }
 
   // Factory methods
-  static create(data: Omit<SessionData, 'id' | 'createdAt' | 'updatedAt' | 'lastActivity' | 'isActive'>): Session {
+  static create(
+    data: Omit<SessionData, 'id' | 'createdAt' | 'updatedAt' | 'lastActivity' | 'isActive'>
+  ): Session {
     return new Session({
       ...data,
       id: SessionId.generate(),

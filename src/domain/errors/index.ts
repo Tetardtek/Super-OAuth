@@ -1,8 +1,4 @@
-export { 
-  DomainError,
-  ValidationError,
-  BusinessRuleError
-} from './domain-error';
+export { DomainError, ValidationError, BusinessRuleError } from './domain-error';
 export {
   UserNotFoundError,
   UserAlreadyExistsError,

@@ -17,20 +17,24 @@ interface AuthenticatedRequest extends Request {
 /**
  * Middleware to authenticate JWT tokens
  */
-export const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+export const authMiddleware = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       res.status(401).json(ApiResponse.unauthorized('Authentication token required'));
       return;
     }
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    
+
     // Verify the token
     const payload = await authService.verifyAccessToken(token);
-    
+
     if (!payload) {
       res.status(401).json(ApiResponse.unauthorized('Invalid or expired token'));
       return;
@@ -38,7 +42,7 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
 
     // Get user details
     const user = await userService.findById(payload.userId);
-    
+
     if (!user) {
       res.status(401).json(ApiResponse.unauthorized('User not found'));
       return;
@@ -51,9 +55,8 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
 
     // Add user to request object
     req.user = user;
-    
-    next();
 
+    next();
   } catch (error) {
     logger.error('🔐 Authentication middleware error', error instanceof Error ? error : undefined);
     res.status(401).json(ApiResponse.unauthorized('Authentication failed'));
@@ -64,14 +67,18 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
  * Optional authentication middleware
  * Populates req.user if token is valid, but doesn't block if invalid
  */
-export const optionalAuthMiddleware = async (req: AuthenticatedRequest, _res: Response, next: NextFunction): Promise<void> => {
+export const optionalAuthMiddleware = async (
+  req: AuthenticatedRequest,
+  _res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       const payload = await authService.verifyAccessToken(token);
-      
+
       if (payload) {
         const user = await userService.findById(payload.userId);
         if (user && user.isActive) {
@@ -79,12 +86,13 @@ export const optionalAuthMiddleware = async (req: AuthenticatedRequest, _res: Re
         }
       }
     }
-    
-    next();
 
+    next();
   } catch (error) {
     // Log error but continue without authentication
-    logger.warn('🔐 Optional auth middleware error', { error: error instanceof Error ? error.message : 'Unknown error' });
+    logger.warn('🔐 Optional auth middleware error', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
     next();
   }
 };

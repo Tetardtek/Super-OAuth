@@ -21,13 +21,13 @@ export class SessionMapper {
 
   static toEntity(session: Session): SessionEntity {
     const entity = new SessionEntity();
-    
+
     // Set primary key if exists
     const id = session.getId();
     if (id) {
       entity.id = id.getValue();
     }
-    
+
     entity.userId = session.getUserId().getValue();
     entity.token = session.getToken();
     entity.refreshToken = session.getRefreshToken() || null;
@@ -38,7 +38,7 @@ export class SessionMapper {
     entity.lastActivity = session.getLastActivity();
     entity.createdAt = session.getCreatedAt();
     entity.updatedAt = session.getUpdatedAt();
-    
+
     return entity;
   }
 }

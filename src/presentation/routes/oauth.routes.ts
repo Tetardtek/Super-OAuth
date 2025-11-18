@@ -23,7 +23,11 @@ router.get('/providers', asyncHandler(oauthController.getProviders.bind(oauthCon
  * @desc    Get user's linked OAuth accounts
  * @access  Private
  */
-router.get('/linked', authMiddleware, asyncHandler(oauthController.getLinkedAccounts.bind(oauthController)));
+router.get(
+  '/linked',
+  authMiddleware,
+  asyncHandler(oauthController.getLinkedAccounts.bind(oauthController))
+);
 
 /**
  * @route   GET /auth/oauth/:provider
@@ -37,13 +41,20 @@ router.get('/:provider', asyncHandler(oauthController.startOAuth.bind(oauthContr
  * @desc    Handle OAuth provider callback
  * @access  Public
  */
-router.get('/:provider/callback', asyncHandler(oauthController.handleOAuthCallback.bind(oauthController)));
+router.get(
+  '/:provider/callback',
+  asyncHandler(oauthController.handleOAuthCallback.bind(oauthController))
+);
 
 /**
  * @route   DELETE /auth/oauth/:provider/unlink
  * @desc    Unlink OAuth provider from user account
  * @access  Private
  */
-router.delete('/:provider/unlink', authMiddleware, asyncHandler(oauthController.unlinkOAuthProvider.bind(oauthController)));
+router.delete(
+  '/:provider/unlink',
+  authMiddleware,
+  asyncHandler(oauthController.unlinkOAuthProvider.bind(oauthController))
+);
 
 export default router;

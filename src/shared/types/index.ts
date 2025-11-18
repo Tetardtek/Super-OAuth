@@ -1,13 +1,20 @@
-export { Provider, AuthMethod, DeviceType, ApiResponse, PaginationOptions, PaginationResult } from './common.types';
-export { 
-  AuthTokens, 
-  UserProfile, 
-  RegisterClassicRequest, 
+export {
+  Provider,
+  AuthMethod,
+  DeviceType,
+  ApiResponse,
+  PaginationOptions,
+  PaginationResult,
+} from './common.types';
+export {
+  AuthTokens,
+  UserProfile,
+  RegisterClassicRequest,
   RegisterClassicResponse,
   LoginClassicRequest,
   LoginClassicResponse,
   OAuthConnectRequest,
   OAuthConnectResponse,
   OAuthCallbackRequest,
-  OAuthCallbackResponse
+  OAuthCallbackResponse,
 } from './auth.types';

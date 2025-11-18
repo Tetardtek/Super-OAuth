@@ -1,6 +1,11 @@
 import { User, LinkedAccount } from '../../domain/entities';
 import { Nickname, UserId, Email } from '../../domain/value-objects';
-import { IUserRepository, ITokenService, ISessionRepository, IOAuthService } from '../interfaces/repositories.interface';
+import {
+  IUserRepository,
+  ITokenService,
+  ISessionRepository,
+  IOAuthService,
+} from '../interfaces/repositories.interface';
 import { AuthResponseDto, UserDto } from '../dto/auth.dto';
 
 export interface CompleteOAuthDto {
@@ -41,7 +46,7 @@ export class CompleteOAuthUseCase {
       // Check if user exists with same email
       if (oauthResult.userInfo.email) {
         const existingEmailUser = await this.userRepository.findByEmail(oauthResult.userInfo.email);
-        
+
         if (existingEmailUser) {
           // Link this provider to existing user
           const linkedAccount = LinkedAccount.create({
@@ -53,8 +58,8 @@ export class CompleteOAuthUseCase {
             avatarUrl: undefined,
             metadata: {
               accessToken: oauthResult.accessToken,
-              refreshToken: oauthResult.refreshToken
-            }
+              refreshToken: oauthResult.refreshToken,
+            },
           });
 
           existingEmailUser.linkAccount(linkedAccount);
@@ -67,7 +72,9 @@ export class CompleteOAuthUseCase {
         // Create new user
         const userId = UserId.generate();
         const nickname = Nickname.create(oauthResult.userInfo.nickname);
-        const email = oauthResult.userInfo.email ? Email.create(oauthResult.userInfo.email) : undefined;
+        const email = oauthResult.userInfo.email
+          ? Email.create(oauthResult.userInfo.email)
+          : undefined;
 
         const linkedAccount = LinkedAccount.create({
           userId: userId,
@@ -78,16 +85,11 @@ export class CompleteOAuthUseCase {
           avatarUrl: undefined,
           metadata: {
             accessToken: oauthResult.accessToken,
-            refreshToken: oauthResult.refreshToken
-          }
+            refreshToken: oauthResult.refreshToken,
+          },
         });
 
-        user = User.createWithProvider(
-          userId.toString(),
-          nickname,
-          linkedAccount,
-          email
-        );
+        user = User.createWithProvider(userId.toString(), nickname, linkedAccount, email);
 
         user.recordLogin();
         await this.userRepository.save(user);
@@ -107,7 +109,7 @@ export class CompleteOAuthUseCase {
     return {
       accessToken,
       refreshToken,
-      user: this.mapUserToDto(user)
+      user: this.mapUserToDto(user),
     };
   }
 
@@ -121,7 +123,7 @@ export class CompleteOAuthUseCase {
       linkedProviders: user.linkedProviders,
       createdAt: user.createdAt,
       lastLogin: user.lastLogin,
-      loginCount: user.loginCount
+      loginCount: user.loginCount,
     };
   }
 }

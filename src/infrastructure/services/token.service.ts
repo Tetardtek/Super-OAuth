@@ -15,8 +15,10 @@ export class TokenService implements ITokenService {
 
     // Validate secrets in production
     if (process.env.NODE_ENV === 'production') {
-      if (this.accessTokenSecret === 'default-access-secret' || 
-          this.refreshTokenSecret === 'default-refresh-secret') {
+      if (
+        this.accessTokenSecret === 'default-access-secret' ||
+        this.refreshTokenSecret === 'default-refresh-secret'
+      ) {
         throw new Error('JWT secrets must be properly configured in production');
       }
     }
@@ -26,13 +28,13 @@ export class TokenService implements ITokenService {
     const payload = {
       userId,
       type: 'access',
-      iat: Math.floor(Date.now() / 1000)
+      iat: Math.floor(Date.now() / 1000),
     };
 
     const options: SignOptions = {
       expiresIn: this.accessTokenExpiration as any,
       issuer: 'superoauth',
-      audience: 'superoauth-users'
+      audience: 'superoauth-users',
     };
 
     return jwt.sign(payload, this.accessTokenSecret, options);
@@ -42,13 +44,13 @@ export class TokenService implements ITokenService {
     const payload = {
       type: 'refresh',
       jti: this.generateJti(), // Unique identifier for the token
-      iat: Math.floor(Date.now() / 1000)
+      iat: Math.floor(Date.now() / 1000),
     };
 
     const options: SignOptions = {
       expiresIn: this.refreshTokenExpiration as any,
       issuer: 'superoauth',
-      audience: 'superoauth-refresh'
+      audience: 'superoauth-refresh',
     };
 
     return jwt.sign(payload, this.refreshTokenSecret, options);
@@ -58,7 +60,7 @@ export class TokenService implements ITokenService {
     try {
       const decoded = jwt.verify(token, this.accessTokenSecret, {
         issuer: 'superoauth',
-        audience: 'superoauth-users'
+        audience: 'superoauth-users',
       }) as any;
 
       if (decoded.type !== 'access' || !decoded.userId) {
@@ -75,7 +77,7 @@ export class TokenService implements ITokenService {
     try {
       const decoded = jwt.verify(token, this.refreshTokenSecret, {
         issuer: 'superoauth',
-        audience: 'superoauth-refresh'
+        audience: 'superoauth-refresh',
       });
 
       return decoded;
@@ -87,7 +89,7 @@ export class TokenService implements ITokenService {
   getTokenExpiration(): { accessToken: number; refreshToken: number } {
     return {
       accessToken: this.parseExpiration(this.accessTokenExpiration),
-      refreshToken: this.parseExpiration(this.refreshTokenExpiration)
+      refreshToken: this.parseExpiration(this.refreshTokenExpiration),
     };
   }
 
@@ -102,10 +104,10 @@ export class TokenService implements ITokenService {
     const unit = match[2];
 
     const multipliers = {
-      s: 1000,           // seconds
-      m: 60 * 1000,      // minutes
+      s: 1000, // seconds
+      m: 60 * 1000, // minutes
       h: 60 * 60 * 1000, // hours
-      d: 24 * 60 * 60 * 1000 // days
+      d: 24 * 60 * 60 * 1000, // days
     };
 
     return value * multipliers[unit as keyof typeof multipliers];

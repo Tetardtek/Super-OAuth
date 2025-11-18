@@ -62,12 +62,7 @@ export class RegisterClassicUseCase {
     // 3. Create new user entity
     // The User entity encapsulates all business logic related to users
     const userId = UserId.generate();
-    const user = User.createWithEmail(
-      userId.toString(),
-      email,
-      nickname,
-      password
-    );
+    const user = User.createWithEmail(userId.toString(), email, nickname, password);
 
     // 4. Save user to repository (persistence layer)
     // Repository abstracts database operations
@@ -84,7 +79,7 @@ export class RegisterClassicUseCase {
     return {
       accessToken,
       refreshToken,
-      user: this.mapUserToDto(savedUser)
+      user: this.mapUserToDto(savedUser),
     };
   }
 
@@ -107,7 +102,7 @@ export class RegisterClassicUseCase {
       linkedProviders: user.linkedProviders,
       createdAt: user.createdAt,
       lastLogin: user.lastLogin,
-      loginCount: user.loginCount
+      loginCount: user.loginCount,
     };
   }
 }

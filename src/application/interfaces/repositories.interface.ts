@@ -31,7 +31,11 @@ export interface IPasswordService {
 
 export interface IOAuthService {
   getAuthUrl(provider: string, state: string): string;
-  exchangeCodeForTokens(provider: string, code: string, state: string): Promise<{
+  exchangeCodeForTokens(
+    provider: string,
+    code: string,
+    state: string
+  ): Promise<{
     accessToken: string;
     refreshToken?: string;
     userInfo: {

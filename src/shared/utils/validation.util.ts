@@ -19,7 +19,8 @@ export class ValidationUtil {
     .messages({
       'string.min': 'Password must be at least 8 characters long',
       'string.max': 'Password must not exceed 128 characters',
-      'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character',
+      'string.pattern.base':
+        'Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character',
       'any.required': 'Password is required',
     });
 
@@ -28,20 +29,35 @@ export class ValidationUtil {
     .max(32)
     .pattern(/^[a-zA-Z0-9_-]+$/)
     .custom((value, helpers) => {
-      if (value.startsWith('_') || value.startsWith('-') || 
-          value.endsWith('_') || value.endsWith('-')) {
+      if (
+        value.startsWith('_') ||
+        value.startsWith('-') ||
+        value.endsWith('_') ||
+        value.endsWith('-')
+      ) {
         return helpers.error('nickname.invalidFormat');
       }
-      
+
       const reservedNames = [
-        'admin', 'root', 'api', 'www', 'mail', 'support', 'help',
-        'oauth', 'auth', 'login', 'signup', 'register', 'system'
+        'admin',
+        'root',
+        'api',
+        'www',
+        'mail',
+        'support',
+        'help',
+        'oauth',
+        'auth',
+        'login',
+        'signup',
+        'register',
+        'system',
       ];
-      
+
       if (reservedNames.includes(value.toLowerCase())) {
         return helpers.error('nickname.reserved');
       }
-      
+
       return value;
     })
     .required()
@@ -54,13 +70,10 @@ export class ValidationUtil {
       'any.required': 'Nickname is required',
     });
 
-  static readonly uuidSchema = Joi.string()
-    .uuid({ version: 'uuidv4' })
-    .required()
-    .messages({
-      'string.guid': 'Invalid UUID format',
-      'any.required': 'UUID is required',
-    });
+  static readonly uuidSchema = Joi.string().uuid({ version: 'uuidv4' }).required().messages({
+    'string.guid': 'Invalid UUID format',
+    'any.required': 'UUID is required',
+  });
 
   static validateEmail(email: string): { isValid: boolean; error?: string } {
     const { error } = this.emailSchema.validate(email);
@@ -109,7 +122,8 @@ export class ValidationUtil {
   }
 
   static isValidIP(ip: string): boolean {
-    const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    const ipv4Regex =
+      /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
     const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
     return ipv4Regex.test(ip) || ipv6Regex.test(ip);
   }

@@ -24,7 +24,7 @@ export class ApiResponse {
     return {
       success: true,
       data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -37,9 +37,9 @@ export class ApiResponse {
       error: {
         message,
         code,
-        details
+        details,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -52,9 +52,9 @@ export class ApiResponse {
       error: {
         message: 'Validation failed',
         code: 'VALIDATION_ERROR',
-        details: errors
+        details: errors,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -66,9 +66,9 @@ export class ApiResponse {
       success: false,
       error: {
         message,
-        code: 'UNAUTHORIZED'
+        code: 'UNAUTHORIZED',
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -80,9 +80,9 @@ export class ApiResponse {
       success: false,
       error: {
         message,
-        code: 'FORBIDDEN'
+        code: 'FORBIDDEN',
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -94,9 +94,9 @@ export class ApiResponse {
       success: false,
       error: {
         message,
-        code: 'NOT_FOUND'
+        code: 'NOT_FOUND',
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }

@@ -19,7 +19,6 @@ export interface LinkedOAuthAccount {
 }
 
 export class UserService {
-  
   /**
    * Find user by ID
    */
@@ -45,10 +44,10 @@ export class UserService {
    * Create user from OAuth information
    */
   async createFromOAuth(oauthUserInfo: OAuthUserInfo): Promise<User> {
-    logger.info('👤 Creating new user from OAuth', { 
-      provider: oauthUserInfo.provider, 
+    logger.info('👤 Creating new user from OAuth', {
+      provider: oauthUserInfo.provider,
       email: oauthUserInfo.email,
-      nickname: oauthUserInfo.nickname 
+      nickname: oauthUserInfo.nickname,
     });
 
     const userData = {
@@ -57,23 +56,25 @@ export class UserService {
       avatar: oauthUserInfo.avatar,
       isVerified: !!oauthUserInfo.email, // Email verified by OAuth provider
       authProvider: oauthUserInfo.provider,
-      linkedAccounts: [{
-        provider: oauthUserInfo.provider,
-        providerId: oauthUserInfo.id,
-        email: oauthUserInfo.email,
-        nickname: oauthUserInfo.nickname,
-        avatar: oauthUserInfo.avatar,
-        linkedAt: new Date(),
-        raw: oauthUserInfo.raw
-      }]
+      linkedAccounts: [
+        {
+          provider: oauthUserInfo.provider,
+          providerId: oauthUserInfo.id,
+          email: oauthUserInfo.email,
+          nickname: oauthUserInfo.nickname,
+          avatar: oauthUserInfo.avatar,
+          linkedAt: new Date(),
+          raw: oauthUserInfo.raw,
+        },
+      ],
     };
 
     const user = await userRepository.create(userData as any);
-    
-    logger.info('✅ User created successfully from OAuth', { 
-      userId: user.id, 
+
+    logger.info('✅ User created successfully from OAuth', {
+      userId: user.id,
       provider: oauthUserInfo.provider,
-      email: user.email 
+      email: user.email,
     });
 
     return user;
@@ -82,11 +83,15 @@ export class UserService {
   /**
    * Link OAuth account to existing user
    */
-  async linkOAuthAccount(userId: string, provider: string, oauthUserInfo: OAuthUserInfo): Promise<void> {
-    logger.info('🔗 Linking OAuth account to user', { 
-      userId, 
-      provider, 
-      providerId: oauthUserInfo.id 
+  async linkOAuthAccount(
+    userId: string,
+    provider: string,
+    oauthUserInfo: OAuthUserInfo
+  ): Promise<void> {
+    logger.info('🔗 Linking OAuth account to user', {
+      userId,
+      provider,
+      providerId: oauthUserInfo.id,
     });
 
     const oauthData = {
@@ -96,26 +101,30 @@ export class UserService {
       nickname: oauthUserInfo.nickname,
       avatar: oauthUserInfo.avatar,
       linkedAt: new Date(),
-      raw: oauthUserInfo.raw
+      raw: oauthUserInfo.raw,
     };
 
     await userRepository.linkOAuthAccount(userId, oauthData);
 
-    logger.info('✅ OAuth account linked successfully', { 
-      userId, 
-      provider, 
-      providerId: oauthUserInfo.id 
+    logger.info('✅ OAuth account linked successfully', {
+      userId,
+      provider,
+      providerId: oauthUserInfo.id,
     });
   }
 
   /**
    * Update OAuth information for existing user
    */
-  async updateOAuthInfo(userId: string, provider: string, oauthUserInfo: OAuthUserInfo): Promise<void> {
-    logger.info('🔄 Updating OAuth info for user', { 
-      userId, 
-      provider, 
-      providerId: oauthUserInfo.id 
+  async updateOAuthInfo(
+    userId: string,
+    provider: string,
+    oauthUserInfo: OAuthUserInfo
+  ): Promise<void> {
+    logger.info('🔄 Updating OAuth info for user', {
+      userId,
+      provider,
+      providerId: oauthUserInfo.id,
     });
 
     const updateData = {
@@ -123,15 +132,15 @@ export class UserService {
       nickname: oauthUserInfo.nickname,
       avatar: oauthUserInfo.avatar,
       lastLoginAt: new Date(),
-      raw: oauthUserInfo.raw
+      raw: oauthUserInfo.raw,
     };
 
     await userRepository.updateOAuthInfo(userId, provider, oauthUserInfo.id, updateData);
 
-    logger.info('✅ OAuth info updated successfully', { 
-      userId, 
-      provider, 
-      providerId: oauthUserInfo.id 
+    logger.info('✅ OAuth info updated successfully', {
+      userId,
+      provider,
+      providerId: oauthUserInfo.id,
     });
   }
 
@@ -145,7 +154,7 @@ export class UserService {
     // User must have either a password or other OAuth providers
     const hasPassword = !!(user as any).password;
     const otherProviders = (user.linkedAccounts || []).filter((p: any) => p.provider !== provider);
-    
+
     return hasPassword || otherProviders.length > 0;
   }
 
@@ -173,7 +182,7 @@ export class UserService {
       email: provider.email,
       nickname: provider.nickname,
       avatar: provider.avatar,
-      linkedAt: provider.linkedAt
+      linkedAt: provider.linkedAt,
     }));
   }
 

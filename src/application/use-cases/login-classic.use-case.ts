@@ -1,6 +1,10 @@
 import { User } from '../../domain/entities';
 import { Email, Password } from '../../domain/value-objects';
-import { IUserRepository, ITokenService, ISessionRepository } from '../interfaces/repositories.interface';
+import {
+  IUserRepository,
+  ITokenService,
+  ISessionRepository,
+} from '../interfaces/repositories.interface';
 import { LoginClassicDto, AuthResponseDto, UserDto } from '../dto/auth.dto';
 
 /**
@@ -104,7 +108,7 @@ export class LoginClassicUseCase {
     return {
       accessToken,
       refreshToken,
-      user: this.mapUserToDto(user)
+      user: this.mapUserToDto(user),
     };
   }
 
@@ -129,7 +133,7 @@ export class LoginClassicUseCase {
       linkedProviders: user.linkedProviders,
       createdAt: user.createdAt,
       lastLogin: user.lastLogin,
-      loginCount: user.loginCount
+      loginCount: user.loginCount,
     };
   }
 }

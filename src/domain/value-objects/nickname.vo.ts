@@ -21,15 +21,30 @@ export class Nickname {
     }
 
     // Cannot start or end with special characters
-    if (nickname.startsWith('_') || nickname.startsWith('-') || 
-        nickname.endsWith('_') || nickname.endsWith('-')) {
+    if (
+      nickname.startsWith('_') ||
+      nickname.startsWith('-') ||
+      nickname.endsWith('_') ||
+      nickname.endsWith('-')
+    ) {
       throw new Error('Nickname cannot start or end with special characters');
     }
 
     // Reserved nicknames
     const reservedNames = [
-      'admin', 'root', 'api', 'www', 'mail', 'support', 'help',
-      'oauth', 'auth', 'login', 'signup', 'register', 'system'
+      'admin',
+      'root',
+      'api',
+      'www',
+      'mail',
+      'support',
+      'help',
+      'oauth',
+      'auth',
+      'login',
+      'signup',
+      'register',
+      'system',
     ];
 
     if (reservedNames.includes(nickname.toLowerCase())) {

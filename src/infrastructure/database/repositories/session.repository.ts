@@ -15,7 +15,7 @@ export class SessionRepository implements ISessionRepository {
 
   async findById(id: SessionId): Promise<Session | null> {
     const entity = await this.repository.findOne({
-      where: { id: id.getValue() }
+      where: { id: id.getValue() },
     });
 
     return entity ? SessionMapper.toDomain(entity) : null;
@@ -23,7 +23,7 @@ export class SessionRepository implements ISessionRepository {
 
   async findByToken(token: string): Promise<Session | null> {
     const entity = await this.repository.findOne({
-      where: { token }
+      where: { token },
     });
 
     return entity ? SessionMapper.toDomain(entity) : null;
@@ -32,25 +32,25 @@ export class SessionRepository implements ISessionRepository {
   async findByUserId(userId: UserId): Promise<Session[]> {
     const entities = await this.repository.find({
       where: { userId: userId.getValue() },
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
 
-    return entities.map(entity => SessionMapper.toDomain(entity));
+    return entities.map((entity) => SessionMapper.toDomain(entity));
   }
 
   async findActiveByUserId(userId: UserId): Promise<Session[]> {
     const entities = await this.repository.find({
-      where: { 
+      where: {
         userId: userId.getValue(),
-        isActive: true
+        isActive: true,
       },
-      order: { lastActivity: 'DESC' }
+      order: { lastActivity: 'DESC' },
     });
 
     // Filter out expired sessions in domain logic
     return entities
-      .map(entity => SessionMapper.toDomain(entity))
-      .filter(session => !session.isExpired());
+      .map((entity) => SessionMapper.toDomain(entity))
+      .filter((session) => !session.isExpired());
   }
 
   async save(session: Session): Promise<Session> {
@@ -69,7 +69,7 @@ export class SessionRepository implements ISessionRepository {
 
   async deleteExpired(): Promise<number> {
     const result = await this.repository.delete({
-      expiresAt: LessThan(new Date())
+      expiresAt: LessThan(new Date()),
     });
 
     return result.affected || 0;
@@ -77,7 +77,7 @@ export class SessionRepository implements ISessionRepository {
 
   async deleteInactive(): Promise<number> {
     const result = await this.repository.delete({
-      isActive: false
+      isActive: false,
     });
 
     return result.affected || 0;
@@ -85,22 +85,21 @@ export class SessionRepository implements ISessionRepository {
 
   async countByUserId(userId: UserId): Promise<number> {
     return await this.repository.count({
-      where: { userId: userId.getValue() }
+      where: { userId: userId.getValue() },
     });
   }
 
   async countActiveByUserId(userId: UserId): Promise<number> {
     const entities = await this.repository.find({
-      where: { 
+      where: {
         userId: userId.getValue(),
-        isActive: true
-      }
+        isActive: true,
+      },
     });
 
     // Count non-expired sessions
     return entities
-      .map(entity => SessionMapper.toDomain(entity))
-      .filter(session => !session.isExpired())
-      .length;
+      .map((entity) => SessionMapper.toDomain(entity))
+      .filter((session) => !session.isExpired()).length;
   }
 }
