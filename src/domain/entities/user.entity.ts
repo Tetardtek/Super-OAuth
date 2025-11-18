@@ -196,4 +196,12 @@ export class User {
   get linkedProviders(): string[] {
     return this._linkedAccounts.map((acc) => acc.getProvider());
   }
+
+  /**
+   * Get password hash (for persistence layer only)
+   * @internal
+   */
+  getPasswordHash(): string | null {
+    return this._passwordHash;
+  }
 }
