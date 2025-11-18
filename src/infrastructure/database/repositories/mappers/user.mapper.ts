@@ -12,14 +12,14 @@ export class UserMapper {
     // Use the reconstruct factory method to create User from database entity
     const user = User.reconstruct(
       entity.id,
-      entity.email,
+      entity.email ?? null,
       entity.nickname,
-      entity.passwordHash,
+      entity.passwordHash ?? null,
       entity.emailVerified,
       entity.isActive,
       entity.createdAt,
       entity.updatedAt,
-      entity.lastLogin,
+      entity.lastLogin ?? null,
       entity.loginCount,
       linkedAccounts
     );

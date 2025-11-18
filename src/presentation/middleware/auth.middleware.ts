@@ -7,7 +7,7 @@ import { IUserRepository } from '../../application/interfaces/repositories.inter
 
 export interface AuthenticatedUser {
   id: string;
-  email?: string;
+  email?: string | undefined;
   nickname: string;
   isActive: boolean;
 }

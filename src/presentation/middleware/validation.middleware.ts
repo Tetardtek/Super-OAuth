@@ -9,9 +9,9 @@ export interface ValidationError {
 }
 
 export interface ValidatedRequest<T = Record<string, unknown>> extends Request {
-  validatedBody: T;
-  validatedParams?: Record<string, unknown>;
-  validatedQuery?: Record<string, unknown>;
+  validatedBody?: T | undefined;
+  validatedParams?: Record<string, unknown> | undefined;
+  validatedQuery?: Record<string, unknown> | undefined;
 }
 
 /**

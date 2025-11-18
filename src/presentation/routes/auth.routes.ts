@@ -47,6 +47,7 @@ router.post('/refresh', validateBody(authValidators.refreshToken), refreshTokenH
  * @desc Logout user
  * @access Private
  */
+// @ts-expect-error - Type mismatch with exactOptionalPropertyTypes but functionally correct
 router.post('/logout', authenticateToken, logoutHandler);
 
 /**

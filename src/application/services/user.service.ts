@@ -12,9 +12,9 @@ import { OAuthUserInfo } from '../../infrastructure/oauth/oauth-config';
 export interface LinkedOAuthAccount {
   provider: string;
   providerId: string;
-  email?: string;
-  nickname?: string;
-  avatar?: string;
+  email?: string | undefined;
+  nickname?: string | undefined;
+  avatar?: string | undefined;
   linkedAt: Date;
 }
 

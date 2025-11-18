@@ -1,4 +1,4 @@
-import jwt, { SignOptions, JwtPayload } from 'jsonwebtoken';
+import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 import { ITokenService } from '../../application/interfaces/repositories.interface';
 
 interface AccessTokenPayload extends JwtPayload {
@@ -41,11 +41,12 @@ export class TokenService implements ITokenService {
       iat: Math.floor(Date.now() / 1000),
     };
 
-    const options: SignOptions = {
+    // Type assertion needed because StringValue from 'ms' package is a branded type
+    const options = {
       expiresIn: this.accessTokenExpiration,
       issuer: 'superoauth',
       audience: 'superoauth-users',
-    };
+    } as SignOptions;
 
     return jwt.sign(payload, this.accessTokenSecret, options);
   }
@@ -57,11 +58,12 @@ export class TokenService implements ITokenService {
       iat: Math.floor(Date.now() / 1000),
     };
 
-    const options: SignOptions = {
+    // Type assertion needed because StringValue from 'ms' package is a branded type
+    const options = {
       expiresIn: this.refreshTokenExpiration,
       issuer: 'superoauth',
       audience: 'superoauth-refresh',
-    };
+    } as SignOptions;
 
     return jwt.sign(payload, this.refreshTokenSecret, options);
   }

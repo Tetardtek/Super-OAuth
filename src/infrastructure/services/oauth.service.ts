@@ -20,12 +20,12 @@ interface OAuthProvider {
 
 interface OAuthTokenResponse {
   access_token: string;
-  refresh_token?: string;
-  token_type?: string;
-  expires_in?: number;
-  scope?: string;
-  error?: string;
-  error_description?: string;
+  refresh_token?: string | undefined;
+  token_type?: string | undefined;
+  expires_in?: number | undefined;
+  scope?: string | undefined;
+  error?: string | undefined;
+  error_description?: string | undefined;
 }
 
 export class OAuthService implements IOAuthService {
@@ -131,7 +131,7 @@ export class OAuthService implements IOAuthService {
 
     return {
       accessToken: tokenResponse.access_token,
-      refreshToken: tokenResponse.refresh_token,
+      ...(tokenResponse.refresh_token && { refreshToken: tokenResponse.refresh_token }),
       userInfo: {
         id: userInfo.id,
         ...(userInfo.email && { email: userInfo.email }),

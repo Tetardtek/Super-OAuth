@@ -6,37 +6,37 @@ import { DatabaseConnection } from '../database/config/database.config';
 import { UserMapper } from '../database/repositories/mappers/user.mapper';
 
 interface CreateUserData {
-  email?: string | null;
+  email?: string | null | undefined;
   nickname: string;
-  avatar?: string;
-  isVerified?: boolean;
-  authProvider?: string;
+  avatar?: string | undefined;
+  isVerified?: boolean | undefined;
+  authProvider?: string | undefined;
   linkedAccounts?: Array<{
     provider: string;
     providerId: string;
-    email?: string;
-    nickname?: string;
-    avatar?: string;
+    email?: string | undefined;
+    nickname?: string | undefined;
+    avatar?: string | undefined;
     linkedAt: Date;
     raw?: unknown;
-  }>;
+  }> | undefined;
 }
 
 interface OAuthAccountData {
   provider: string;
   providerId: string;
-  email?: string;
-  nickname?: string;
-  avatar?: string;
+  email?: string | undefined;
+  nickname?: string | undefined;
+  avatar?: string | undefined;
   linkedAt: Date;
   raw?: unknown;
 }
 
 interface OAuthUpdateData {
-  email?: string;
-  nickname?: string;
-  avatar?: string;
-  lastLoginAt?: Date;
+  email?: string | undefined;
+  nickname?: string | undefined;
+  avatar?: string | undefined;
+  lastLoginAt?: Date | undefined;
   raw?: unknown;
 }
 

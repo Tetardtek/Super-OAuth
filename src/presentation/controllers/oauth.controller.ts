@@ -14,8 +14,8 @@ import { OAuthError, OAuthErrorType } from '../../infrastructure/oauth/oauth-con
 
 // Extended Request interfaces
 interface ExtendedRequest extends Request {
-  user?: { id: string; email?: string };
-  session: Record<string, unknown>;
+  user?: { id: string; email?: string } | undefined;
+  session?: Record<string, unknown> | undefined;
 }
 
 export class OAuthController {
@@ -37,7 +37,7 @@ export class OAuthController {
       );
 
       // Store state in session for additional security
-      req.session.oauthState = state;
+      req.session!.oauthState = state;
 
       logger.info(`✅ OAuth URL generated for ${provider}`, { provider });
 
@@ -105,10 +105,10 @@ export class OAuthController {
       }
 
       // Validate state matches session
-      if (req.session.oauthState !== state) {
+      if (req.session!.oauthState !== state) {
         logger.warn(`⚠️ OAuth state mismatch for ${provider}`, {
           provider,
-          sessionState: req.session.oauthState,
+          sessionState: req.session!.oauthState,
           receivedState: state,
         });
         res.redirect(
@@ -170,7 +170,7 @@ export class OAuthController {
       const tokens = await authService.generateTokens(user);
 
       // Clear OAuth state from session
-      delete req.session.oauthState;
+      delete req.session!.oauthState;
 
       logger.info(`✅ OAuth authentication successful for ${provider}`, {
         userId: user.id,
@@ -180,8 +180,8 @@ export class OAuthController {
 
       // Redirect to frontend with tokens
       const redirectUrl =
-        req.session.oauthRedirectUrl || `${process.env.FRONTEND_URL}/auth/success`;
-      delete req.session.oauthRedirectUrl;
+        req.session!.oauthRedirectUrl || `${process.env.FRONTEND_URL}/auth/success`;
+      delete req.session!.oauthRedirectUrl;
 
       const urlWithTokens = `${redirectUrl}?token=${tokens.accessToken}&refresh=${tokens.refreshToken}&provider=${provider}`;
       res.redirect(urlWithTokens);

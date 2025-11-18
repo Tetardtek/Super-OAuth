@@ -33,7 +33,7 @@ export class AuthController {
    */
   async register(req: ValidatedRequest, res: Response): Promise<void> {
     try {
-      const { email, password, nickname } = req.validatedBody;
+      const { email, password, nickname } = req.validatedBody!;
 
       logger.info('User registration attempt', {
         email,
@@ -43,9 +43,9 @@ export class AuthController {
       });
 
       const result = await this.registerUseCase.execute({
-        email,
-        password,
-        nickname,
+        email: email as string,
+        password: password as string,
+        nickname: nickname as string,
       });
 
       logger.info('User registered successfully', {
@@ -113,7 +113,7 @@ export class AuthController {
    */
   async login(req: ValidatedRequest, res: Response): Promise<void> {
     try {
-      const { email, password } = req.validatedBody;
+      const { email, password } = req.validatedBody!;
 
       logger.info('User login attempt', {
         email,
@@ -122,8 +122,8 @@ export class AuthController {
       });
 
       const result = await this.loginUseCase.execute({
-        email,
-        password,
+        email: email as string,
+        password: password as string,
       });
 
       logger.info('User logged in successfully', {
@@ -194,7 +194,7 @@ export class AuthController {
    */
   async refreshToken(req: ValidatedRequest, res: Response): Promise<void> {
     try {
-      const { refreshToken } = req.validatedBody;
+      const { refreshToken } = req.validatedBody!;
 
       logger.info('Token refresh attempt', {
         ip: req.ip,
@@ -202,7 +202,7 @@ export class AuthController {
       });
 
       const result = await this.refreshTokenUseCase.execute({
-        refreshToken,
+        refreshToken: refreshToken as string,
       });
 
       logger.info('Token refreshed successfully', {

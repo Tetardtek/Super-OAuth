@@ -199,9 +199,9 @@ export type ProviderRawData = DiscordUser | GoogleUser | GitHubUser | TwitchUser
  */
 export interface OAuthUserInfo {
   id: string;
-  email?: string;
+  email?: string | undefined;
   nickname: string;
-  avatar?: string;
+  avatar?: string | undefined;
   provider: string;
   raw: ProviderRawData; // Original provider response
 }
