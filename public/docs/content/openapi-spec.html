@@ -1,0 +1,302 @@
+<div class="content-section">
+<h2>📋 OpenAPI/Swagger Specification</h2>
+
+<div class="info-box">
+    <p><strong>🎯 Documentation Interactive de l'API SuperOAuth</strong></p>
+    <p>Explorez et testez l'API directement depuis votre navigateur avec Swagger UI.</p>
+</div>
+
+<h3>📚 Accès à la Documentation</h3>
+
+<div class="card">
+    <h4>🔗 Liens Rapides</h4>
+    <ul>
+        <li><strong>Spécification OpenAPI 3.0 :</strong> <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/public/docs/swagger/openapi.yaml" target="_blank">openapi.yaml</a></li>
+        <li><strong>Collection Postman :</strong> <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/public/docs/swagger/postman_collection.json" target="_blank">postman_collection.json</a></li>
+        <li><strong>Swagger UI en ligne :</strong> <a href="https://editor.swagger.io/?url=https://raw.githubusercontent.com/Tetardtek/Super-OAuth/main/public/docs/swagger/openapi.yaml" target="_blank">Ouvrir dans Swagger Editor</a></li>
+    </ul>
+</div>
+
+<h3>🚀 Utilisation Locale de Swagger UI</h3>
+
+<div class="endpoint">
+    <div class="endpoint-header">
+        <span class="method" style="background: #49cc90;">SETUP</span>
+        <span>Installation de Swagger UI</span>
+    </div>
+    <div class="endpoint-body">
+        <div class="code-block"># Option 1: Avec Docker
+docker run -p 8080:8080 \
+  -e SWAGGER_JSON=/swagger/openapi.yaml \
+  -v $(pwd)/public/docs/swagger:/swagger \
+  swaggerapi/swagger-ui
+
+# Option 2: Avec npx
+npx @stoplight/elements-dev-portal public/docs/swagger/openapi.yaml
+
+# Option 3: En ligne avec Swagger Editor
+# Ouvrir: https://editor.swagger.io/
+# Charger depuis GitHub (lien ci-dessus)</div>
+        <p><strong>Accès :</strong> <code>http://localhost:8080</code></p>
+    </div>
+</div>
+
+<h3>📖 Guides de Documentation</h3>
+
+<div class="grid">
+    <div class="card">
+        <h4>🚀 Quick Start</h4>
+        <p>Guide de démarrage rapide en 5 minutes</p>
+        <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/public/docs/swagger/QUICK_START.md" target="_blank" class="button">Lire le guide</a>
+    </div>
+
+    <div class="card">
+        <h4>📘 API Documentation</h4>
+        <p>Référence complète de l'API avec exemples</p>
+        <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/public/docs/swagger/API_DOCUMENTATION.md" target="_blank" class="button">Consulter</a>
+    </div>
+
+    <div class="card">
+        <h4>🔧 SDK Integration</h4>
+        <p>Guides d'intégration: JS, React, Vue, Python</p>
+        <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/public/docs/swagger/SDK_INTEGRATION_GUIDE.md" target="_blank" class="button">Voir les exemples</a>
+    </div>
+
+    <div class="card">
+        <h4>⚠️ Error Codes</h4>
+        <p>23 codes d'erreur documentés avec solutions</p>
+        <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/public/docs/swagger/ERROR_CODES.md" target="_blank" class="button">Référence erreurs</a>
+    </div>
+</div>
+
+<h3>🛠️ Génération de SDK</h3>
+
+<div class="endpoint">
+    <div class="endpoint-header">
+        <span class="method" style="background: #9b59b6;">GENERATE</span>
+        <span>Créer un SDK client depuis OpenAPI</span>
+    </div>
+    <div class="endpoint-body">
+        <p><strong>Avec OpenAPI Generator :</strong></p>
+        <div class="code-block"># Installation
+npm install @openapitools/openapi-generator-cli -g
+
+# Générer un SDK JavaScript/TypeScript
+openapi-generator-cli generate \
+  -i public/docs/swagger/openapi.yaml \
+  -g typescript-axios \
+  -o sdk/typescript
+
+# Générer un SDK Python
+openapi-generator-cli generate \
+  -i public/docs/swagger/openapi.yaml \
+  -g python \
+  -o sdk/python
+
+# Autres langages disponibles:
+# java, csharp, go, ruby, php, swift, kotlin...</div>
+    </div>
+</div>
+
+<h3>📊 Endpoints Disponibles</h3>
+
+<table>
+    <thead>
+        <tr>
+            <th>Méthode</th>
+            <th>Endpoint</th>
+            <th>Description</th>
+            <th>Auth</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><span class="method">POST</span></td>
+            <td><code>/auth/register</code></td>
+            <td>Créer un nouveau compte utilisateur</td>
+            <td>-</td>
+        </tr>
+        <tr>
+            <td><span class="method">POST</span></td>
+            <td><code>/auth/login</code></td>
+            <td>Connexion avec email/password</td>
+            <td>-</td>
+        </tr>
+        <tr>
+            <td><span class="method">POST</span></td>
+            <td><code>/auth/refresh</code></td>
+            <td>Rafraîchir le token d'accès</td>
+            <td>Refresh Token</td>
+        </tr>
+        <tr>
+            <td><span class="method">POST</span></td>
+            <td><code>/auth/logout</code></td>
+            <td>Déconnexion et invalidation</td>
+            <td>Bearer JWT</td>
+        </tr>
+        <tr>
+            <td><span class="method">GET</span></td>
+            <td><code>/auth/me</code></td>
+            <td>Profil utilisateur actuel</td>
+            <td>Bearer JWT</td>
+        </tr>
+        <tr>
+            <td><span class="method">GET</span></td>
+            <td><code>/oauth/providers</code></td>
+            <td>Liste des providers OAuth</td>
+            <td>-</td>
+        </tr>
+        <tr>
+            <td><span class="method">GET</span></td>
+            <td><code>/oauth/{provider}</code></td>
+            <td>Démarrer OAuth flow</td>
+            <td>-</td>
+        </tr>
+        <tr>
+            <td><span class="method">GET</span></td>
+            <td><code>/oauth/{provider}/callback</code></td>
+            <td>Callback OAuth provider</td>
+            <td>-</td>
+        </tr>
+        <tr>
+            <td><span class="method">GET</span></td>
+            <td><code>/oauth/linked</code></td>
+            <td>Comptes OAuth liés</td>
+            <td>Bearer JWT</td>
+        </tr>
+        <tr>
+            <td><span class="method">DELETE</span></td>
+            <td><code>/oauth/{provider}/unlink</code></td>
+            <td>Délier un provider OAuth</td>
+            <td>Bearer JWT</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>🔐 Sécurité</h3>
+
+<div class="card">
+    <h4>Schémas de Sécurité</h4>
+    <ul>
+        <li><strong>Bearer JWT :</strong> Token d'accès (5 minutes de validité)</li>
+        <li><strong>Refresh Token :</strong> Token de rafraîchissement (7 jours)</li>
+        <li><strong>OAuth 2.0 :</strong> 4 providers supportés (Discord, Google, GitHub, Twitch)</li>
+    </ul>
+
+    <div class="code-block">// Exemple d'authentification
+const response = await fetch('/auth/login', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    email: 'user@example.com',
+    password: 'SecurePass123!'
+  })
+});
+
+const { data } = await response.json();
+const accessToken = data.tokens.accessToken;
+
+// Utiliser le token pour les requêtes authentifiées
+const userProfile = await fetch('/auth/me', {
+  headers: {
+    'Authorization': `Bearer ${accessToken}`
+  }
+});</div>
+</div>
+
+<h3>📦 Ressources Additionnelles</h3>
+
+<div class="grid">
+    <div class="card">
+        <h4>📝 Documentation Index</h4>
+        <p>Vue d'ensemble de toute la documentation</p>
+        <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/public/docs/swagger/DOCUMENTATION_INDEX.md" target="_blank" class="button">Voir l'index</a>
+    </div>
+
+    <div class="card">
+        <h4>📊 Documentation Summary</h4>
+        <p>Statistiques et métriques de génération</p>
+        <a href="https://github.com/Tetardtek/Super-OAuth/blob/main/public/docs/swagger/DOCUMENTATION_SUMMARY.md" target="_blank" class="button">Voir le résumé</a>
+    </div>
+</div>
+
+<div class="info-box" style="margin-top: 2rem;">
+    <p><strong>💡 Astuce :</strong> Importez la collection Postman pour tester immédiatement tous les endpoints avec des exemples pré-configurés !</p>
+</div>
+
+</div>
+
+<style>
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.card {
+    background: #2d2d2d;
+    border: 1px solid #404040;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.card h4 {
+    margin-top: 0;
+    color: #61dafb;
+}
+
+.button {
+    display: inline-block;
+    background: #61dafb;
+    color: #1e1e1e;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.button:hover {
+    background: #4fa8c5;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background: #2d2d2d;
+}
+
+table th {
+    background: #1e1e1e;
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 2px solid #404040;
+}
+
+table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #404040;
+}
+
+table tbody tr:hover {
+    background: #363636;
+}
+
+.method {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+</style>
