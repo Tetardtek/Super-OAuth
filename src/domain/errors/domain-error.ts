@@ -4,7 +4,7 @@ export abstract class DomainError extends Error {
 
   constructor(
     message: string,
-    public readonly context?: Record<string, any>,
+    public readonly context?: Record<string, unknown>,
     public readonly cause?: Error
   ) {
     super(message);
@@ -17,7 +17,7 @@ export class ValidationError extends DomainError {
   readonly code = 'VALIDATION_ERROR';
   readonly httpStatus = 400;
 
-  constructor(message: string, context?: Record<string, any>) {
+  constructor(message: string, context?: Record<string, unknown>) {
     super(message, context);
   }
 }
@@ -26,7 +26,7 @@ export class BusinessRuleError extends DomainError {
   readonly code = 'BUSINESS_RULE_ERROR';
   readonly httpStatus = 422;
 
-  constructor(message: string, context?: Record<string, any>) {
+  constructor(message: string, context?: Record<string, unknown>) {
     super(message, context);
   }
 }

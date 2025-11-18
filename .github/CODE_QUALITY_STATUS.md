@@ -7,7 +7,7 @@
 
 | Métrique | Avant | Actuel | Objectif | Progrès |
 |----------|-------|--------|----------|---------|
-| **ESLint Warnings** | 93 | 73 | 0 | 🟡 21% |
+| **ESLint Warnings** | 93 | 67 | 0 | 🟡 28% |
 | **Tests Frontend** | 249/249 ✅ | 249/249 ✅ | 249/249 | 🟢 100% |
 | **TypeScript Errors** | 0 | 5* | 0 | 🟡 Temporaire |
 
@@ -30,22 +30,19 @@
 
 ---
 
-## 🔄 Phase 2 : domain/ - À FAIRE
+## ✅ Phase 2 : domain/ + infrastructure/database/entities - COMPLÉTÉ
 
-**Status**: ⏳ En attente
-**Warnings estimés**: ~10-15
-**Fichiers à traiter**:
+**Status**: ✅ Terminé
+**Warnings éliminés**: 6
+**Fichiers modifiés**:
+- ✅ `domain/errors/domain-error.ts` - `any` → `unknown` dans Record (3 fixes)
+- ✅ `infrastructure/database/entities/user.entity.ts` - Typé relations avec entités (2 fixes)
+- ✅ `infrastructure/database/entities/linked-account.entity.ts` - Typé metadata + relation user (2 fixes)
+- ✅ `infrastructure/database/entities/session.entity.ts` - Typé relation user (1 fix)
+- ✅ `infrastructure/database/entities/session-new.entity.ts` - Typé relation user (1 fix)
+- ✅ `main.ts` - Créé constantes centralisées pour project info
 
-### domain/errors/
-- `domain-error.ts` (3 `any` détectés)
-  - Ligne 7: Constructor parameter
-  - Ligne 20: Static method parameter
-  - Ligne 29: Static method parameter
-
-### domain/entities/
-- `user.entity.ts` (2 `any`)
-- `session.ts` (~2 `any`)
-- `linked-account.ts` (~2 `any`)
+**Résultat**: 0 warning dans domain/, progrès 73→67 warnings (-6)
 
 ---
 
@@ -192,5 +189,5 @@ git push
 
 ---
 
-**Dernière mise à jour**: 2025-11-18 13:20
-**Prochain objectif**: Phase 2 - domain/ (~10-15 warnings)
+**Dernière mise à jour**: 2025-11-18 14:45
+**Prochain objectif**: Phase 3 - application/ (~15-20 warnings)
