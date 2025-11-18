@@ -19,7 +19,9 @@ SuperOAuth est une solution complète d'authentification qui combine l'authentif
 - [📖 Documentation API](#-documentation-api)
 - [🎨 Interface Utilisateur](#-interface-utilisateur)
 - [🔒 Sécurité](#-sécurité)
+- [🧪 Tests](#-tests)
 - [🤖 Pour les Agents IA](#-pour-les-agents-ia)
+- [🚀 CI/CD Pipeline](#-cicd-pipeline)
 - [📝 Changelog](#-changelog)
 
 ## 🚀 Fonctionnalités
@@ -512,6 +514,61 @@ Pour plus de détails, consultez le **[README du dossier CLAUDE](./CLAUDE/README
 - Guide de navigation
 - Checklist avant de commencer
 - Ressources et support
+
+## 🚀 CI/CD Pipeline
+
+SuperOAuth utilise **GitHub Actions** pour l'intégration et le déploiement continus.
+
+### Workflows Automatisés
+
+Le pipeline CI/CD s'exécute automatiquement sur :
+- **Push** vers `main`, `develop`, ou branches `feature/**`
+- **Pull Requests** vers `main` ou `develop`
+
+### Jobs Exécutés
+
+| Job | Description | Durée estimée |
+|-----|-------------|---------------|
+| 🧪 **Backend Tests** | Tests unitaires Jest (30 tests) | ~30s |
+| 🎨 **Frontend Tests** | Tests Vitest (249 tests) | ~10s |
+| 📝 **Linting** | Vérification ESLint | ~15s |
+| 🎨 **Formatting** | Vérification Prettier | ~10s |
+| 🔍 **Type Check** | Vérification TypeScript | ~20s |
+| 🏗️ **Build** | Compilation du projet | ~25s |
+| 📊 **Coverage** | Rapports de couverture (Codecov) | ~15s |
+
+### Statut des Builds
+
+Consultez le statut en temps réel des builds sur :
+- [GitHub Actions](https://github.com/Tetardtek/Super-OAuth/actions)
+- [Codecov Dashboard](https://codecov.io/gh/Tetardtek/Super-OAuth)
+
+### Commandes Locales
+
+Exécutez les mêmes vérifications localement avant de pousser :
+
+```bash
+# Tests complets
+npm run test:all              # Tous les tests (backend + frontend)
+npm run test:all:coverage     # Avec couverture
+
+# Qualité du code
+npm run lint                  # ESLint
+npm run format               # Prettier
+npm run typecheck            # TypeScript
+
+# Build
+npm run build                # Compilation
+```
+
+### Configuration
+
+Les workflows sont définis dans `.github/workflows/ci.yml` et incluent :
+- ✅ Cache npm pour optimisation
+- ✅ Matrix strategy (Node.js 20.x)
+- ✅ Rapports de couverture automatiques
+- ✅ Artifacts de build (rétention 7 jours)
+- ✅ Variables d'environnement pour tests
 
 ## 📝 Changelog
 
