@@ -1,0 +1,472 @@
+{
+  "info": {
+    "_postman_id": "superoauth-api-collection",
+    "name": "SuperOAuth API",
+    "description": "Complete API collection for SuperOAuth authentication system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Check if the server is running"
+          },
+          "response": []
+        },
+        {
+          "name": "API Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1"]
+            },
+            "description": "Get API version and available endpoints"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.environment.set('access_token', jsonData.data.tokens.accessToken);",
+                  "  pm.environment.set('refresh_token', jsonData.data.tokens.refreshToken);",
+                  "  pm.environment.set('user_id', jsonData.data.user.id);",
+                  "  console.log('Tokens saved to environment');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"nickname\": \"john_doe\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            },
+            "description": "Register a new user with email and password"
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.environment.set('access_token', jsonData.data.tokens.accessToken);",
+                  "  pm.environment.set('refresh_token', jsonData.data.tokens.refreshToken);",
+                  "  pm.environment.set('user_id', jsonData.data.user.id);",
+                  "  console.log('Login successful - Tokens saved');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Login with email and password"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.environment.set('access_token', jsonData.data.accessToken);",
+                  "  pm.environment.set('refresh_token', jsonData.data.refreshToken);",
+                  "  console.log('Token refreshed successfully');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "refresh"]
+            },
+            "description": "Get new access token using refresh token"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "me"]
+            },
+            "description": "Get the current authenticated user's profile"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "logout"]
+            },
+            "description": "Logout the current user"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "OAuth",
+      "item": [
+        {
+          "name": "Get OAuth Providers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/oauth/providers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "oauth", "providers"]
+            },
+            "description": "Get list of available OAuth providers"
+          },
+          "response": []
+        },
+        {
+          "name": "Start Discord OAuth",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.environment.set('oauth_state', jsonData.data.state);",
+                  "  pm.environment.set('oauth_auth_url', jsonData.data.authUrl);",
+                  "  console.log('Auth URL generated. Visit: ' + jsonData.data.authUrl);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/oauth/discord",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "oauth", "discord"]
+            },
+            "description": "Start OAuth flow with Discord"
+          },
+          "response": []
+        },
+        {
+          "name": "Start GitHub OAuth",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.environment.set('oauth_state', jsonData.data.state);",
+                  "  pm.environment.set('oauth_auth_url', jsonData.data.authUrl);",
+                  "  console.log('Auth URL generated. Visit: ' + jsonData.data.authUrl);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/oauth/github",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "oauth", "github"]
+            },
+            "description": "Start OAuth flow with GitHub"
+          },
+          "response": []
+        },
+        {
+          "name": "Start Google OAuth",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.environment.set('oauth_state', jsonData.data.state);",
+                  "  pm.environment.set('oauth_auth_url', jsonData.data.authUrl);",
+                  "  console.log('Auth URL generated. Visit: ' + jsonData.data.authUrl);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/oauth/google",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "oauth", "google"]
+            },
+            "description": "Start OAuth flow with Google"
+          },
+          "response": []
+        },
+        {
+          "name": "Start Twitch OAuth",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.environment.set('oauth_state', jsonData.data.state);",
+                  "  pm.environment.set('oauth_auth_url', jsonData.data.authUrl);",
+                  "  console.log('Auth URL generated. Visit: ' + jsonData.data.authUrl);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/oauth/twitch",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "oauth", "twitch"]
+            },
+            "description": "Start OAuth flow with Twitch"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Linked Accounts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/oauth/linked",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "oauth", "linked"]
+            },
+            "description": "Get user's linked OAuth accounts"
+          },
+          "response": []
+        },
+        {
+          "name": "Unlink Discord Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/oauth/discord/unlink",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "oauth", "discord", "unlink"]
+            },
+            "description": "Unlink Discord account from user"
+          },
+          "response": []
+        },
+        {
+          "name": "Unlink GitHub Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/oauth/github/unlink",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "oauth", "github", "unlink"]
+            },
+            "description": "Unlink GitHub account from user"
+          },
+          "response": []
+        },
+        {
+          "name": "Unlink Google Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/oauth/google/unlink",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "oauth", "google", "unlink"]
+            },
+            "description": "Unlink Google account from user"
+          },
+          "response": []
+        },
+        {
+          "name": "Unlink Twitch Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/oauth/twitch/unlink",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "oauth", "twitch", "unlink"]
+            },
+            "description": "Unlink Twitch account from user"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "oauth_state",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "oauth_auth_url",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

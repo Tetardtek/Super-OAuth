@@ -1,0 +1,1125 @@
+openapi: 3.0.3
+info:
+  title: SuperOAuth API
+  description: |
+    Enterprise OAuth Authentication API with JWT token management
+
+    SuperOAuth is a comprehensive authentication solution combining classic email/password authentication with OAuth integration for popular platforms (Discord, Twitch, Google, GitHub).
+
+    ## Architecture
+    - Clean Architecture with Domain-Driven Design
+    - JWT-based authentication with refresh token rotation
+    - OAuth 2.0 flow support for multiple providers
+    - MySQL database with TypeORM
+    - Rate limiting and security middleware
+
+    ## Authentication Methods
+    1. **Bearer Token (JWT)** - Required for authenticated endpoints
+       - Authorization header: `Authorization: Bearer <access_token>`
+       - Access tokens expire in 5 minutes
+       - Use refresh tokens to obtain new access tokens
+
+    2. **OAuth 2.0** - Supported providers: Discord, Twitch, Google, GitHub
+       - Authorization Code flow with PKCE support
+       - State parameter validation for CSRF protection
+
+    ## Key Features
+    - Registration and login with email/password
+    - OAuth integration with 4 providers
+    - Token refresh without re-authentication
+    - Secure logout with token invalidation
+    - Linked OAuth accounts management
+    - User profile and authentication status
+
+  version: 1.0.0
+  license:
+    name: MIT
+  contact:
+    name: API Support
+    url: https://github.com/superoauth/api
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://api.superoauth.com/api/v1
+    description: Production server
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user with email and password
+      description: |
+        Create a new user account with classic email/password authentication.
+
+        **Validation Rules:**
+        - Email must be valid and unique
+        - Password must be 8-128 characters with uppercase, lowercase, digit, and special character
+        - Nickname must be 2-30 characters with letters, numbers, underscores, hyphens
+        - Email verification may be required (configure in .env)
+
+        **Success Response:** Returns user object and JWT tokens (access + refresh)
+        **Error Response:** 409 if email exists, 400 for validation errors
+      operationId: registerUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            examples:
+              success:
+                summary: Valid registration request
+                value:
+                  email: user@example.com
+                  password: SecurePass123!
+                  nickname: john_doe
+              invalid_password:
+                summary: Password without special character
+                value:
+                  email: user@example.com
+                  password: Password123
+                  nickname: john_doe
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                success:
+                  summary: Registration successful
+                  value:
+                    success: true
+                    message: User registered successfully
+                    data:
+                      user:
+                        id: 550e8400-e29b-41d4-a716-446655440000
+                        email: user@example.com
+                        nickname: john_doe
+                        emailVerified: false
+                        isActive: true
+                        createdAt: 2025-11-18T10:30:00Z
+                      tokens:
+                        accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                        refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_email:
+                  summary: Invalid email format
+                  value:
+                    success: false
+                    error: VALIDATION_ERROR
+                    message: Email must be a valid email address
+                invalid_password:
+                  summary: Password doesn't meet requirements
+                  value:
+                    success: false
+                    error: VALIDATION_ERROR
+                    message: Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                user_exists:
+                  summary: Email already registered
+                  value:
+                    success: false
+                    error: USER_EXISTS
+                    message: User with this email already exists
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      summary: Login user with email and password
+      description: |
+        Authenticate a user with email and password credentials.
+
+        Returns JWT access token (5 min expiry) and refresh token (7 day expiry).
+
+        **Rate Limited:** Max 5 attempts per 15 minutes
+      operationId: loginUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              success:
+                summary: Valid login request
+                value:
+                  email: user@example.com
+                  password: SecurePass123!
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              examples:
+                success:
+                  summary: Login successful
+                  value:
+                    success: true
+                    message: Login successful
+                    data:
+                      user:
+                        id: 550e8400-e29b-41d4-a716-446655440000
+                        email: user@example.com
+                        nickname: john_doe
+                        emailVerified: true
+                        isActive: true
+                        lastLoginAt: 2025-11-18T10:25:00Z
+                      tokens:
+                        accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                        refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_creds:
+                  summary: Invalid email or password
+                  value:
+                    success: false
+                    error: INVALID_CREDENTIALS
+                    message: Invalid email or password
+        '403':
+          description: Account disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                account_disabled:
+                  summary: User account is disabled
+                  value:
+                    success: false
+                    error: ACCOUNT_DISABLED
+                    message: Account is disabled
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      description: |
+        Obtain a new access token using a valid refresh token.
+
+        Refresh tokens are long-lived (7 days) and allow obtaining new access tokens without re-authentication.
+
+        **Implementation Note:** Uses automatic token rotation - new refresh token may be issued
+      operationId: refreshToken
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+            examples:
+              success:
+                summary: Valid refresh token
+                value:
+                  refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              examples:
+                success:
+                  summary: New tokens issued
+                  value:
+                    success: true
+                    message: Token refreshed successfully
+                    data:
+                      accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_token:
+                  summary: Refresh token invalid or expired
+                  value:
+                    success: false
+                    error: INVALID_REFRESH_TOKEN
+                    message: Invalid or expired refresh token
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      summary: Logout user and invalidate tokens
+      description: |
+        Logout the current user and invalidate their tokens.
+
+        Requires valid JWT access token in Authorization header.
+
+        **Behavior:**
+        - If refreshToken provided in body: Invalidates only that session
+        - If no refreshToken: Invalidates all active sessions for user
+      operationId: logoutUser
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  description: Optional refresh token to invalidate specific session
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              examples:
+                success:
+                  summary: User logged out
+                  value:
+                    success: true
+                    message: Logout successful
+        '401':
+          description: Unauthorized - missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      summary: Get current user profile
+      description: |
+        Retrieve the current authenticated user's profile information.
+
+        Requires valid JWT access token in Authorization header.
+      operationId: getCurrentUser
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+              examples:
+                success:
+                  summary: User profile
+                  value:
+                    success: true
+                    data:
+                      user:
+                        id: 550e8400-e29b-41d4-a716-446655440000
+                        email: user@example.com
+                        nickname: john_doe
+                        emailVerified: true
+                        isActive: true
+                        createdAt: 2025-11-18T08:00:00Z
+                        updatedAt: 2025-11-18T10:30:00Z
+                        lastLogin: 2025-11-18T10:25:00Z
+                        loginCount: 15
+        '401':
+          description: Unauthorized - missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /oauth/providers:
+    get:
+      summary: Get list of available OAuth providers
+      description: |
+        Retrieve information about all supported OAuth providers.
+
+        Returns provider details including icons, display names, and features.
+      operationId: getOAuthProviders
+      tags:
+        - OAuth
+      responses:
+        '200':
+          description: List of available providers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProvidersResponse'
+              examples:
+                success:
+                  summary: Available providers
+                  value:
+                    success: true
+                    data:
+                      providers:
+                        - name: discord
+                          displayName: Discord
+                          icon: https://cdn.discordapp.com/icons/...
+                          color: '#5865F2'
+                          url: https://discord.com
+                        - name: twitch
+                          displayName: Twitch
+                          icon: https://static.twitchcdn.net/...
+                          color: '#9146FF'
+                          url: https://twitch.tv
+                        - name: google
+                          displayName: Google
+                          icon: https://www.gstatic.com/...
+                          color: '#4285F4'
+                          url: https://google.com
+                        - name: github
+                          displayName: GitHub
+                          icon: https://github.githubassets.com/...
+                          color: '#000000'
+                          url: https://github.com
+                      count: 4
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /oauth/{provider}:
+    get:
+      summary: Start OAuth authentication flow
+      description: |
+        Initiate OAuth authentication with the specified provider.
+
+        Generates authorization URL and state parameter for CSRF protection.
+
+        **Supported Providers:** discord, twitch, google, github
+
+        **Flow:**
+        1. Client requests auth URL from this endpoint
+        2. Client redirects user to returned authUrl
+        3. User authorizes at provider
+        4. Provider redirects to `/oauth/{provider}/callback`
+        5. Exchange authorization code for tokens
+      operationId: startOAuthFlow
+      tags:
+        - OAuth
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          description: OAuth provider name
+          schema:
+            type: string
+            enum: [discord, twitch, google, github]
+            example: discord
+        - name: redirect_uri
+          in: query
+          required: false
+          description: Optional custom redirect URI for OAuth callback
+          schema:
+            type: string
+            format: uri
+            example: https://myapp.com/auth/callback
+      responses:
+        '200':
+          description: OAuth authentication URL generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthStartResponse'
+              examples:
+                success:
+                  summary: OAuth URL generated
+                  value:
+                    success: true
+                    message: OAuth flow initiated
+                    data:
+                      authUrl: https://discord.com/api/oauth2/authorize?client_id=...&redirect_uri=...&state=...
+                      state: state_1731000000_abcdef123456
+                      provider: discord
+        '400':
+          description: Invalid provider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_provider:
+                  summary: Provider not supported
+                  value:
+                    success: false
+                    error: UNSUPPORTED_PROVIDER
+                    message: OAuth provider not supported
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /oauth/{provider}/callback:
+    get:
+      summary: Handle OAuth provider callback
+      description: |
+        OAuth provider redirect endpoint. Called by provider after user authorization.
+
+        Exchanges authorization code for user information and creates/updates user account.
+
+        **Query Parameters:**
+        - `code` (required): Authorization code from provider
+        - `state` (required): State parameter for CSRF validation
+        - `error` (optional): Error from provider if user denied access
+
+        **Behavior:**
+        - If OAuth identity matches existing user: Login and update info
+        - If email matches existing user: Link OAuth account
+        - If new identity: Create new user account
+      operationId: handleOAuthCallback
+      tags:
+        - OAuth
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          description: OAuth provider name
+          schema:
+            type: string
+            enum: [discord, twitch, google, github]
+            example: discord
+        - name: code
+          in: query
+          required: true
+          description: Authorization code from OAuth provider
+          schema:
+            type: string
+            example: MQBx9oPL2bDPLy6rK9Za1L7u2zYaZo
+        - name: state
+          in: query
+          required: true
+          description: State parameter for CSRF protection
+          schema:
+            type: string
+            example: state_1731000000_abcdef123456
+        - name: error
+          in: query
+          required: false
+          description: OAuth provider error (if user denied access)
+          schema:
+            type: string
+            example: access_denied
+      responses:
+        '200':
+          description: OAuth authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthCallbackResponse'
+              examples:
+                success:
+                  summary: New user created via OAuth
+                  value:
+                    success: true
+                    message: User registered via OAuth
+                    data:
+                      user:
+                        id: 550e8400-e29b-41d4-a716-446655440000
+                        email: user@discord.com
+                        nickname: discord_user
+                        authProvider: discord
+                        isActive: true
+                        createdAt: 2025-11-18T10:30:00Z
+                      tokens:
+                        accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                        refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                        expiresIn: 300
+                      isNewUser: true
+                existing:
+                  summary: Existing user login via OAuth
+                  value:
+                    success: true
+                    message: OAuth login successful
+                    data:
+                      user:
+                        id: 550e8400-e29b-41d4-a716-446655440000
+                        email: user@example.com
+                        nickname: john_doe
+                        authProvider: discord
+                        isActive: true
+                        createdAt: 2025-11-17T08:00:00Z
+                      tokens:
+                        accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                        refreshToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                        expiresIn: 300
+                      isNewUser: false
+        '400':
+          description: Invalid OAuth parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_state:
+                  summary: State validation failed (CSRF attack prevention)
+                  value:
+                    success: false
+                    error: INVALID_STATE
+                    message: Invalid OAuth state parameter
+                invalid_code:
+                  summary: Authorization code invalid or expired
+                  value:
+                    success: false
+                    error: INVALID_AUTHORIZATION_CODE
+                    message: Invalid authorization code
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /oauth/linked:
+    get:
+      summary: Get user's linked OAuth accounts
+      description: |
+        Retrieve all OAuth accounts linked to the current user.
+
+        Requires valid JWT access token in Authorization header.
+      operationId: getLinkedAccounts
+      tags:
+        - OAuth
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of linked OAuth accounts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkedAccountsResponse'
+              examples:
+                success:
+                  summary: User's linked accounts
+                  value:
+                    success: true
+                    data:
+                      linkedAccounts:
+                        - provider: discord
+                          providerId: '123456789012345678'
+                          email: user@discord.com
+                          nickname: discord_user
+                          displayName: discord_user#1234
+                          avatar: https://cdn.discordapp.com/avatars/...
+                          linkedAt: 2025-11-18T08:00:00Z
+                        - provider: github
+                          providerId: '12345678'
+                          email: user@github.com
+                          nickname: github_user
+                          displayName: GitHub User
+                          avatar: https://avatars.githubusercontent.com/u/...
+                          linkedAt: 2025-11-18T09:15:00Z
+                      count: 2
+        '401':
+          description: Unauthorized - missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /oauth/{provider}/unlink:
+    delete:
+      summary: Unlink OAuth provider from user account
+      description: |
+        Remove a linked OAuth account from the current user.
+
+        Requires valid JWT access token in Authorization header.
+
+        **Validation Rules:**
+        - Cannot unlink if it's the only authentication method
+        - User must have a verified email or password set first
+        - Maximum 5 providers can be linked at once
+      operationId: unlinkOAuthProvider
+      tags:
+        - OAuth
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          description: OAuth provider name to unlink
+          schema:
+            type: string
+            enum: [discord, twitch, google, github]
+            example: discord
+      responses:
+        '200':
+          description: OAuth provider unlinked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Successfully unlinked discord account
+                      provider:
+                        type: string
+                        example: discord
+        '400':
+          description: Cannot unlink (last auth method)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                last_auth:
+                  summary: Cannot unlink last authentication method
+                  value:
+                    success: false
+                    error: CANNOT_UNLINK_LAST_AUTH
+                    message: Cannot unlink last authentication method. Please set a password first.
+        '401':
+          description: Unauthorized - missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Provider not linked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT access token for authenticated requests.
+
+        **Usage:** `Authorization: Bearer <access_token>`
+
+        **Lifespan:** 5 minutes (obtain new ones with /auth/refresh)
+
+        **Token Type:** Must have `type: "access"` claim
+
+  schemas:
+    # Request Schemas
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - nickname
+      properties:
+        email:
+          type: string
+          format: email
+          description: Valid email address (must be unique)
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          description: |
+            Password requirements:
+            - 8-128 characters
+            - At least one uppercase letter
+            - At least one lowercase letter
+            - At least one digit
+            - At least one special character (!@#$%^&*(),.?":{}|<>)
+          example: SecurePass123!
+        nickname:
+          type: string
+          minLength: 2
+          maxLength: 30
+          pattern: ^[a-zA-Z0-9_-]+$
+          description: Unique nickname (alphanumeric, underscores, hyphens)
+          example: john_doe
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          description: User password
+          example: SecurePass123!
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          description: Valid refresh token (7 day expiry)
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJ0eXBlIjoicmVmcmVzaCIsImlhdCI6MTczMTAwMDAwMCwiZXhwIjoxNzMxNjA0ODAwfQ.xxx
+
+    # Response Schemas
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Login successful
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/UserObject'
+            tokens:
+              $ref: '#/components/schemas/TokenPair'
+
+    TokenResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Token refreshed successfully
+        data:
+          $ref: '#/components/schemas/TokenPair'
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Operation successful
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Machine-readable error code
+          example: INVALID_CREDENTIALS
+        message:
+          type: string
+          description: Human-readable error message
+          example: Invalid email or password
+
+    UserProfileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/UserObjectExtended'
+
+    OAuthStartResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: OAuth flow initiated
+        data:
+          type: object
+          properties:
+            authUrl:
+              type: string
+              format: uri
+              description: Authorization URL to redirect user to
+              example: https://discord.com/api/oauth2/authorize?client_id=123&redirect_uri=...&state=...
+            state:
+              type: string
+              description: CSRF protection state parameter (store in session)
+              example: state_1731000000_abcdef123456
+            provider:
+              type: string
+              example: discord
+
+    OAuthCallbackResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: OAuth login successful
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/UserObject'
+            tokens:
+              type: object
+              properties:
+                accessToken:
+                  type: string
+                  description: JWT access token (5 min expiry)
+                refreshToken:
+                  type: string
+                  description: Refresh token (7 day expiry)
+                expiresIn:
+                  type: integer
+                  description: Access token expiry in seconds
+                  example: 300
+            isNewUser:
+              type: boolean
+              description: Whether this was a new user creation
+              example: false
+
+    ProvidersResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            providers:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProviderInfo'
+            count:
+              type: integer
+              example: 4
+
+    LinkedAccountsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            linkedAccounts:
+              type: array
+              items:
+                $ref: '#/components/schemas/LinkedAccount'
+            count:
+              type: integer
+              example: 2
+
+    # Data Models
+    UserObject:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        nickname:
+          type: string
+          example: john_doe
+        emailVerified:
+          type: boolean
+          example: true
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: 2025-11-18T08:00:00Z
+        authProvider:
+          type: string
+          description: OAuth provider if created via OAuth
+          example: discord
+
+    UserObjectExtended:
+      allOf:
+        - $ref: '#/components/schemas/UserObject'
+        - type: object
+          properties:
+            updatedAt:
+              type: string
+              format: date-time
+              example: 2025-11-18T10:30:00Z
+            lastLogin:
+              type: string
+              format: date-time
+              nullable: true
+              example: 2025-11-18T10:25:00Z
+            loginCount:
+              type: integer
+              example: 15
+            linkedProviders:
+              type: array
+              items:
+                type: string
+              example: [discord, github]
+
+    TokenPair:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: Short-lived JWT access token (5 min expiry)
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzMxMDAwMDAwLCJleHAiOjE3MzEwMDAzMDB9.xxx
+        refreshToken:
+          type: string
+          description: Long-lived refresh token (7 day expiry)
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJ0eXBlIjoicmVmcmVzaCIsImlhdCI6MTczMTAwMDAwMCwiZXhwIjoxNzMxNjA0ODAwfQ.xxx
+
+    ProviderInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Provider identifier
+          example: discord
+        displayName:
+          type: string
+          description: Human-readable provider name
+          example: Discord
+        icon:
+          type: string
+          format: uri
+          description: URL to provider icon/logo
+        color:
+          type: string
+          description: Brand color hex code
+          example: '#5865F2'
+        url:
+          type: string
+          format: uri
+          description: Provider website URL
+          example: https://discord.com
+
+    LinkedAccount:
+      type: object
+      properties:
+        provider:
+          type: string
+          example: discord
+        providerId:
+          type: string
+          description: User ID at OAuth provider
+          example: '123456789012345678'
+        email:
+          type: string
+          format: email
+          example: user@discord.com
+        nickname:
+          type: string
+          example: discord_user
+        displayName:
+          type: string
+          example: discord_user#1234
+        avatar:
+          type: string
+          format: uri
+          description: User avatar from provider
+        linkedAt:
+          type: string
+          format: date-time
+          example: 2025-11-18T08:00:00Z
+
+tags:
+  - name: Authentication
+    description: Classic email/password authentication endpoints
+  - name: OAuth
+    description: OAuth 2.0 authentication and account linking
+
+externalDocs:
+  description: SuperOAuth GitHub Repository
+  url: https://github.com/superoauth/api
