@@ -83,15 +83,57 @@
 - ✅ `container.ts` - `Map<string, any>` → `Map<string, unknown>` (1 fix)
 
 ### ⏳ Restants à faire (fichiers complexes OAuth):
-- ⏳ `infrastructure/oauth/oauth-config.ts` (~40+ `any`) - Fichier complexe avec multiples providers
-- ⏳ `infrastructure/oauth/oauth.service.ts` (~40+ `any`) - Même fichier que oauth-config
+
+**Fichier principal**: `infrastructure/oauth/oauth-config.ts` (~44 warnings)
+
+#### Plan d'action détaillé (approche sécurisée par segments):
+
+1. **📋 Analyse & Préparation**
+   - [ ] Lire et analyser la structure complète du fichier
+   - [ ] Identifier tous les types de réponses OAuth par provider
+   - [ ] Créer les interfaces de base communes à tous les providers
+
+2. **🎮 Discord Provider** (~11 warnings estimés)
+   - [ ] Créer `DiscordUserResponse` interface
+   - [ ] Créer `DiscordTokenResponse` interface
+   - [ ] Typer les fonctions de parsing Discord
+   - [ ] Vérifier avec lint
+
+3. **🔍 Google Provider** (~11 warnings estimés)
+   - [ ] Créer `GoogleUserResponse` interface
+   - [ ] Créer `GoogleTokenResponse` interface
+   - [ ] Typer les fonctions de parsing Google
+   - [ ] Vérifier avec lint
+
+4. **🐙 GitHub Provider** (~11 warnings estimés)
+   - [ ] Créer `GitHubUserResponse` interface
+   - [ ] Créer `GitHubTokenResponse` interface
+   - [ ] Typer les fonctions de parsing GitHub
+   - [ ] Vérifier avec lint
+
+5. **🟣 Twitch Provider** (~11 warnings estimés)
+   - [ ] Créer `TwitchUserResponse` interface
+   - [ ] Créer `TwitchTokenResponse` interface
+   - [ ] Typer les fonctions de parsing Twitch
+   - [ ] Vérifier avec lint
+
+6. **🛠️ Utilitaires & Validation**
+   - [ ] Typer les fonctions helper/utility
+   - [ ] Typer les validators
+   - [ ] Vérifier lint global: objectif 0-2 warnings
+
+7. **✅ Tests & Finalisation**
+   - [ ] Exécuter tous les tests frontend (249/249)
+   - [ ] Vérifier TypeScript compile
+   - [ ] Commit Phase 4 complète
 
 ### 📝 Note:
-Les fichiers `oauth-config.ts` et `oauth.service.ts` contiennent la majorité des warnings restants (~44/46).
-Ces fichiers gèrent les configurations et parsers pour Discord, Google, GitHub, Twitch.
-Nécessitent des interfaces détaillées pour chaque provider.
+Les fichiers OAuth contiennent la majorité des warnings restants (~44/46).
+Chaque provider (Discord, Google, GitHub, Twitch) nécessite des interfaces spécifiques
+basées sur leurs API responses officielles.
 
 **Résultat partiel**: Progrès 56→46 warnings (-10)
+**Objectif Phase 4**: 46→0-2 warnings (~44 warnings à éliminer)
 
 ---
 
