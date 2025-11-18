@@ -169,13 +169,14 @@ export class OAuthService implements IOAuthService {
           nickname: response.data.username
         };
 
-      case 'twitch':
+      case 'twitch': {
         const twitchUser = response.data.data[0];
         return {
           id: twitchUser.id,
           email: twitchUser.email,
           nickname: twitchUser.display_name || twitchUser.login
         };
+      }
 
       case 'google':
         return {

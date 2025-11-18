@@ -225,7 +225,7 @@ export class OAuthService {
         }
         break;
 
-      case 'twitch':
+      case 'twitch': {
         const twitchUser = rawData.data?.[0]; // Twitch returns array
         normalized = {
           id: twitchUser?.id || rawData.id,
@@ -236,6 +236,7 @@ export class OAuthService {
           raw: rawData
         };
         break;
+      }
 
       case 'google':
         normalized = {
