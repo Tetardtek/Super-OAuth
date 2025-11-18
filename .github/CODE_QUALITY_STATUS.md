@@ -7,7 +7,7 @@
 
 | Métrique | Avant | Actuel | Objectif | Progrès |
 |----------|-------|--------|----------|---------|
-| **ESLint Warnings** | 93 | 67 | 0 | 🟡 28% |
+| **ESLint Warnings** | 93 | 56 | 0 | 🟡 40% |
 | **Tests Frontend** | 249/249 ✅ | 249/249 ✅ | 249/249 | 🟢 100% |
 | **TypeScript Errors** | 0 | 5* | 0 | 🟡 Temporaire |
 
@@ -46,23 +46,25 @@
 
 ---
 
-## 🔄 Phase 3 : application/ - À FAIRE
+## ✅ Phase 3 : application/ - COMPLÉTÉ
 
-**Status**: ⏳ En attente
-**Warnings estimés**: ~15-20
-**Fichiers à traiter**:
+**Status**: ✅ Terminé
+**Warnings éliminés**: 10
+**Fichiers modifiés**:
 
 ### application/services/
-- `auth.service.ts` (2 `any`)
-  - verifyAccessToken return type
-  - verifyRefreshToken return type
-- `user.service.ts` (10+ `any`)
-  - Multiples dans les méthodes CRUD
+- ✅ `auth.service.ts` - Typé return types `verifyAccessToken` et `verifyRefreshToken` (2 fixes)
+- ✅ `user.service.ts` - Retiré cast `as any`, utilisé méthodes domain (3 fixes)
 
 ### application/use-cases/
-- `complete-oauth.use-case.ts` (2 `any`)
-- `login-classic.use-case.ts` (1 `any`)
-- `refresh-token.use-case.ts` (1 `any`)
+- ✅ `complete-oauth.use-case.ts` - `provider: OAuthProvider` au lieu de `as any` (2 fixes)
+- ✅ `login-classic.use-case.ts` - Ajouté `verifyPassword()` à User entity (1 fix)
+- ✅ `refresh-token.use-case.ts` - Typé `mapUserToDto(user: User)` (1 fix)
+
+### domain/entities/
+- ✅ `user.entity.ts` - Ajouté méthode `verifyPassword(password: string): boolean`
+
+**Résultat**: 0 warning dans application/, progrès 67→56 warnings (-10)
 
 ---
 
@@ -189,5 +191,5 @@ git push
 
 ---
 
-**Dernière mise à jour**: 2025-11-18 14:45
-**Prochain objectif**: Phase 3 - application/ (~15-20 warnings)
+**Dernière mise à jour**: 2025-11-18 16:48
+**Prochain objectif**: Phase 4 - infrastructure/ (~25-30 warnings)

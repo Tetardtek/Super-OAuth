@@ -69,7 +69,7 @@ export class UserService {
       ],
     };
 
-    const user = await userRepository.create(userData as any);
+    const user = await userRepository.create(userData);
 
     logger.info('✅ User created successfully from OAuth', {
       userId: user.id,
@@ -152,8 +152,8 @@ export class UserService {
     if (!user) return false;
 
     // User must have either a password or other OAuth providers
-    const hasPassword = !!(user as any).password;
-    const otherProviders = (user.linkedAccounts || []).filter((p: any) => p.provider !== provider);
+    const hasPassword = user.hasPassword;
+    const otherProviders = (user.linkedAccounts || []).filter((p) => p.getProvider() !== provider);
 
     return hasPassword || otherProviders.length > 0;
   }
@@ -176,13 +176,13 @@ export class UserService {
     const user = await userRepository.findById(userId);
     if (!user || !user.linkedAccounts) return [];
 
-    return (user.linkedAccounts || []).map((provider: any) => ({
-      provider: provider.provider,
-      providerId: provider.providerId,
-      email: provider.email,
-      nickname: provider.nickname,
-      avatar: provider.avatar,
-      linkedAt: provider.linkedAt,
+    return (user.linkedAccounts || []).map((account) => ({
+      provider: account.getProvider(),
+      providerId: account.getProviderId(),
+      email: account.getEmail(),
+      nickname: account.getDisplayName(),
+      avatar: account.getAvatarUrl(),
+      linkedAt: account.getCreatedAt(),
     }));
   }
 

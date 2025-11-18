@@ -4,6 +4,7 @@ import {
   ISessionRepository,
 } from '../interfaces/repositories.interface';
 import { RefreshTokenDto, AuthResponseDto, UserDto } from '../dto/auth.dto';
+import { User } from '../../domain/entities';
 
 export class RefreshTokenUseCase {
   constructor(
@@ -59,7 +60,7 @@ export class RefreshTokenUseCase {
     };
   }
 
-  private mapUserToDto(user: any): UserDto {
+  private mapUserToDto(user: User): UserDto {
     return {
       id: user.id,
       email: user.email?.toString() || null,

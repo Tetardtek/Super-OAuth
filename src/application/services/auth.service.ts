@@ -36,14 +36,14 @@ export class AuthService {
   /**
    * Verify access token
    */
-  async verifyAccessToken(token: string): Promise<any> {
+  async verifyAccessToken(token: string): Promise<{ userId: string } | null> {
     return tokenService.verifyAccessToken(token);
   }
 
   /**
    * Verify refresh token
    */
-  async verifyRefreshToken(token: string): Promise<any> {
+  async verifyRefreshToken(token: string): Promise<unknown | null> {
     return tokenService.verifyRefreshToken(token);
   }
 

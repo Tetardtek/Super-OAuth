@@ -80,7 +80,7 @@ export class LoginClassicUseCase {
 
     // 5. Verify password using secure comparison
     // bcrypt.compare uses constant-time comparison to prevent timing attacks
-    const isPasswordValid = Password.verify(dto.password, (user as any)._passwordHash);
+    const isPasswordValid = user.verifyPassword(dto.password);
     if (!isPasswordValid) {
       throw new Error('Invalid credentials');
     }

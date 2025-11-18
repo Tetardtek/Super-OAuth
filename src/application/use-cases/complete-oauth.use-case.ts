@@ -1,4 +1,4 @@
-import { User, LinkedAccount } from '../../domain/entities';
+import { User, LinkedAccount, OAuthProvider } from '../../domain/entities';
 import { Nickname, UserId, Email } from '../../domain/value-objects';
 import {
   IUserRepository,
@@ -51,7 +51,7 @@ export class CompleteOAuthUseCase {
           // Link this provider to existing user
           const linkedAccount = LinkedAccount.create({
             userId: new UserId(existingEmailUser.id),
-            provider: dto.provider as any,
+            provider: dto.provider as OAuthProvider,
             providerId: oauthResult.userInfo.id,
             displayName: oauthResult.userInfo.nickname,
             email: oauthResult.userInfo.email || '',
@@ -78,7 +78,7 @@ export class CompleteOAuthUseCase {
 
         const linkedAccount = LinkedAccount.create({
           userId: userId,
-          provider: dto.provider as any,
+          provider: dto.provider as OAuthProvider,
           providerId: oauthResult.userInfo.id,
           displayName: oauthResult.userInfo.nickname,
           email: oauthResult.userInfo.email || '',
