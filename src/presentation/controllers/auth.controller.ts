@@ -249,7 +249,7 @@ export class AuthController {
    * POST /auth/logout
    * Logout user and invalidate tokens
    */
-  async logout(req: any, res: Response): Promise<void> {
+  async logout(req: ValidatedRequest & { user: { id: string } }, res: Response): Promise<void> {
     try {
       const userId = req.user.id;
 

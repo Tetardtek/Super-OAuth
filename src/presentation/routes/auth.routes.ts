@@ -1,6 +1,6 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { authValidators } from '../validators/request.validators';
-import { validateBody, validateParams } from '../middleware/validation.middleware';
+import { validateBody, validateParams, ValidatedRequest } from '../middleware/validation.middleware';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { AuthController } from '../controllers/auth.controller';
 import Joi from 'joi';
@@ -16,10 +16,10 @@ const providerParamSchema = Joi.object({
 // Note: callbackQuerySchema will be used in future OAuth implementation
 
 // Wrapper functions to handle type compatibility
-const registerHandler = (req: any, res: any) => authController.register(req, res);
-const loginHandler = (req: any, res: any) => authController.login(req, res);
-const refreshTokenHandler = (req: any, res: any) => authController.refreshToken(req, res);
-const logoutHandler = (req: any, res: any) => authController.logout(req, res);
+const registerHandler = (req: ValidatedRequest, res: Response) => authController.register(req, res);
+const loginHandler = (req: ValidatedRequest, res: Response) => authController.login(req, res);
+const refreshTokenHandler = (req: ValidatedRequest, res: Response) => authController.refreshToken(req, res);
+const logoutHandler = (req: ValidatedRequest & { user: { id: string } }, res: Response) => authController.logout(req, res);
 
 /**
  * @route POST /auth/register
@@ -76,7 +76,7 @@ router.get(
  * @desc Get current user profile
  * @access Private
  */
-router.get('/me', authenticateToken, (req: any, res: any) => {
+router.get('/me', authenticateToken, (req: Request & { user?: { id: string } }, res: Response) => {
   res.json({
     success: true,
     data: {

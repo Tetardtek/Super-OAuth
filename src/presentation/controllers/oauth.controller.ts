@@ -14,8 +14,8 @@ import { OAuthError, OAuthErrorType } from '../../infrastructure/oauth/oauth-con
 
 // Extended Request interfaces
 interface ExtendedRequest extends Request {
-  user?: any;
-  session: any;
+  user?: { id: string; email?: string };
+  session: Record<string, unknown>;
 }
 
 export class OAuthController {

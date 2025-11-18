@@ -3,9 +3,10 @@ import { DIContainer } from '../../infrastructure/di/container';
 import { logger } from '../../shared/utils/logger.util';
 
 interface ValidatedRequest extends Request {
-  validatedBody?: any;
-  validatedParams?: any;
-  validatedQuery?: any;
+  validatedBody?: Record<string, unknown>;
+  validatedParams?: Record<string, unknown>;
+  validatedQuery?: Record<string, unknown>;
+  user?: { id: string };
 }
 
 export class AuthController {
@@ -231,7 +232,7 @@ export class AuthController {
   /**
    * POST /auth/logout
    */
-  async logout(req: any, res: Response): Promise<void> {
+  async logout(req: ValidatedRequest, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
       if (!userId) {

@@ -1,10 +1,14 @@
 import { Router, Request, Response } from 'express';
-import { validateBody, validateParams } from '../middleware/validation.middleware';
+import { validateBody, validateParams, ValidatedRequest } from '../middleware/validation.middleware';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { authValidators } from '../validators/request.validators';
 import { DIContainer } from '../../infrastructure/di/container';
 import { logger } from '../../shared/utils/logger.util';
 import Joi from 'joi';
+
+interface AuthenticatedRequest extends ValidatedRequest {
+  user?: { id: string; email?: string };
+}
 
 const router = Router();
 const container = DIContainer.getInstance();
@@ -18,7 +22,7 @@ const providerParamSchema = Joi.object({
  * POST /auth/register
  * Register new user with email/password
  */
-router.post('/register', validateBody(authValidators.register), async (req: any, res: Response) => {
+router.post('/register', validateBody(authValidators.register), async (req: ValidatedRequest, res: Response) => {
   try {
     const { email, password, nickname } = req.validatedBody || req.body;
 
@@ -75,7 +79,7 @@ router.post('/register', validateBody(authValidators.register), async (req: any,
  * POST /auth/login
  * Login user with email/password
  */
-router.post('/login', validateBody(authValidators.login), async (req: any, res: Response) => {
+router.post('/login', validateBody(authValidators.login), async (req: ValidatedRequest, res: Response) => {
   try {
     const { email, password } = req.validatedBody || req.body;
 
@@ -139,7 +143,7 @@ router.post('/login', validateBody(authValidators.login), async (req: any, res: 
 router.post(
   '/refresh',
   validateBody(authValidators.refreshToken),
-  async (req: any, res: Response) => {
+  async (req: ValidatedRequest, res: Response) => {
     try {
       const { refreshToken } = req.validatedBody || req.body;
 
@@ -188,7 +192,7 @@ router.post(
  * POST /auth/logout
  * Logout user and invalidate tokens
  */
-router.post('/logout', authenticateToken, async (req: any, res: Response) => {
+router.post('/logout', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -357,7 +361,7 @@ router.get(
  * GET /auth/me
  * Get current user profile
  */
-router.get('/me', authenticateToken, (req: any, res: Response) => {
+router.get('/me', authenticateToken, (req: AuthenticatedRequest, res: Response) => {
   res.json({
     success: true,
     data: {

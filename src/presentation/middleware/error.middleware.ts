@@ -5,7 +5,7 @@ export interface ErrorResponse {
   success: false;
   error: string;
   message: string;
-  details?: any;
+  details?: unknown;
 }
 
 /**

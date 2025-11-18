@@ -1,5 +1,5 @@
 import { User } from '../../domain/entities';
-import { Email, Password } from '../../domain/value-objects';
+import { Email } from '../../domain/value-objects';
 import {
   IUserRepository,
   ITokenService,

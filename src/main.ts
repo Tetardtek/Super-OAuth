@@ -115,8 +115,10 @@ class SuperOAuthServer {
 
     // Simple session middleware for OAuth state management
     // Stores temporary OAuth state tokens to prevent CSRF attacks
-    this.app.use((req: any, _res, next) => {
-      req.session = req.session || {};
+    this.app.use((req: express.Request, _res, next) => {
+      // Extend Request with session property (temporary OAuth state storage)
+      (req as express.Request & { session?: Record<string, unknown> }).session =
+        (req as express.Request & { session?: Record<string, unknown> }).session || {};
       next();
     });
   }
