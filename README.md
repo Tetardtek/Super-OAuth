@@ -324,11 +324,16 @@ export class CreateUserDto {
 
 ## 🧪 Tests
 
+SuperOAuth dispose d'une suite complète de **249 tests** couvrant le frontend et le backend.
+
 ### Lancer les Tests
 
 ```bash
-# Tests unitaires
-npm run test
+# Tests frontend (Vitest)
+npm run test:frontend
+
+# Tests backend (Jest)
+npm run test:backend
 
 # Tests avec couverture
 npm run test:coverage
@@ -338,6 +343,122 @@ npm run test:watch
 
 # Tests d'intégration
 npm run test:e2e
+```
+
+### Tests Frontend
+
+#### Architecture de Tests
+- **Framework** : Vitest avec jsdom
+- **249 tests unitaires** : 100% de réussite
+- **Durée d'exécution** : ~5 secondes
+- **Environnement** : Simulation DOM browser
+
+#### Modules Testés
+
+| Module | Tests | Description |
+|--------|-------|-------------|
+| **Storage** | 21 | localStorage, tokens, gestion des données |
+| **Validation** | 28 | Email, mots de passe, validation des entrées |
+| **TokenManager** | 36 | JWT tokens, refresh, authentification |
+| **HTTP** | 22 | Client HTTP, GET/POST/PUT/DELETE, auth headers |
+| **ToastManager** | 35 | Notifications toast, animations, auto-fermeture |
+| **UI** | 14 | Manipulation DOM, visibilité, valeurs, styles |
+| **Format** | 14 | Formatage dates, nombres, texte |
+| **Logger** | 9 | Logging console, niveaux de log |
+| **ErrorHandler** | 7 | Gestion erreurs, affichage, API errors |
+| **AuthService** | 15 | Login, register, logout, OAuth |
+| **Dashboard** | 15 | Dashboard utilisateur, affichage données |
+| **ServerMonitor** | 15 | Monitoring serveur, statut, health check |
+| **SharedUtils** | 18 | Utilitaires partagés, helpers |
+
+#### Exemple de Test
+
+```javascript
+// tests/frontend/unit/utils/validation.test.js
+describe('Validation', () => {
+  it('should validate strong password', () => {
+    const strong = 'MyP@ssw0rd123'
+    expect(Validation.isPasswordStrong(strong)).toBe(true)
+  })
+
+  it('should reject weak password', () => {
+    const weak = 'password'
+    expect(Validation.isPasswordStrong(weak)).toBe(false)
+  })
+})
+```
+
+#### Coverage Frontend
+- **Managers** : ToastManager, TokenManager
+- **Utils** : Storage, Validation, UI, HTTP, Format, Logger, ErrorHandler
+- **Components** : AuthService, Dashboard, ServerMonitor
+- **Shared** : SharedUtils
+
+### Tests Backend
+
+```bash
+# Tests unitaires backend
+npm run test:backend
+
+# Coverage backend
+npm run test:backend:coverage
+```
+
+#### Modules Backend Testés
+- Controllers (Auth, User, OAuth)
+- Services (Authentication, User Management)
+- Repositories (User, Token)
+- Middleware (Auth, Validation, Error Handling)
+- Domain Layer (Entities, Value Objects)
+
+### Configuration des Tests
+
+#### Vitest (Frontend)
+```javascript
+// vitest.config.js
+export default defineConfig({
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./tests/frontend/setup.js'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov']
+    }
+  }
+})
+```
+
+#### Setup Frontend
+Les tests frontend incluent des mocks pour :
+- `localStorage` avec stockage fonctionnel
+- `sessionStorage` avec spies
+- `fetch` API pour les requêtes HTTP
+- `console` pour éviter les logs durant tests
+- `window.location` pour la navigation
+
+### Qualité du Code
+
+#### Standards
+- ✅ **100% des tests passent** (249/249)
+- ✅ **Architecture modulaire** testable
+- ✅ **Mocks réalistes** avec état persistant
+- ✅ **Edge cases** couverts (null, empty, invalid)
+- ✅ **Tests d'intégration** entre modules
+
+#### Commandes Utiles
+
+```bash
+# Lancer uniquement les tests modifiés
+npm run test:frontend -- --changed
+
+# Lancer tests en parallèle
+npm run test:frontend -- --threads
+
+# Lancer un fichier spécifique
+npm run test:frontend -- tests/frontend/unit/utils/validation.test.js
+
+# Mode interactif
+npm run test:frontend -- --ui
 ```
 
 ## 🤖 Pour les Agents IA

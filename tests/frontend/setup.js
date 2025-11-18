@@ -8,14 +8,22 @@ import '@testing-library/jest-dom'
 // Mock global fetch pour les tests
 global.fetch = vi.fn()
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn((key) => null), // Retourner null par défaut
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+// Mock localStorage with actual storage
+const createLocalStorageMock = () => {
+  let store = {}
+  return {
+    getItem: (key) => {
+      // Return the value if it exists (including empty strings), otherwise null
+      return key in store ? store[key] : null
+    },
+    setItem: (key, value) => { store[key] = String(value) },
+    removeItem: (key) => { delete store[key] },
+    clear: () => { store = {} },
+    get length() { return Object.keys(store).length },
+    key: (index) => Object.keys(store)[index] || null
+  }
 }
-global.localStorage = localStorageMock
+global.localStorage = createLocalStorageMock()
 
 // Mock sessionStorage  
 const sessionStorageMock = {
@@ -57,19 +65,16 @@ window.location = {
 beforeEach(() => {
   // Reset mocks avant chaque test
   vi.clearAllMocks()
-  
+
   // Reset localStorage
-  localStorageMock.getItem.mockClear()
-  localStorageMock.setItem.mockClear()
-  localStorageMock.removeItem.mockClear()
-  localStorageMock.clear.mockClear()
-  
+  localStorage.clear()
+
   // Reset sessionStorage
   sessionStorageMock.getItem.mockClear()
   sessionStorageMock.setItem.mockClear()
   sessionStorageMock.removeItem.mockClear()
   sessionStorageMock.clear.mockClear()
-  
+
   // Reset DOM
   document.body.innerHTML = ''
   document.head.innerHTML = ''
