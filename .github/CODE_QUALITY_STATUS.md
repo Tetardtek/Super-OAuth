@@ -7,7 +7,7 @@
 
 | Métrique | Avant | Actuel | Objectif | Progrès |
 |----------|-------|--------|----------|---------|
-| **ESLint Warnings** | 93 | 43 | 0 | 🟡 54% |
+| **ESLint Warnings** | 93 | 34 | 0 | 🟡 63% |
 | **Tests Frontend** | 249/249 ✅ | 249/249 ✅ | 249/249 | 🟢 100% |
 | **TypeScript Errors** | 0 | 5* | 0 | 🟡 Temporaire |
 
@@ -120,13 +120,25 @@
 
 **Résultat Phase 4 OAuth**: Progrès 56→43 warnings (-13 total infrastructure/)
 
+### ✅ infrastructure/database/repositories/mappers/ - COMPLÉTÉ
+
+**Fichier traité**: `user.mapper.ts`
+
+- ✅ Refactorisation complète du mapper
+- ✅ Utilisation de `User.reconstruct()` au lieu de `as any`
+- ✅ Ajout de `User.getPasswordHash()` getter
+- ✅ Suppression de tous les accès aux champs privés
+
+**Résultat**: 43→34 warnings (-9)
+
+**Total Phase 4**: 56→34 warnings (-22 infrastructure/ complète) ✨
+
 ---
 
-## 🔄 Phase 5 : presentation/ - À FAIRE
+## 🔄 Phase 5 : presentation/ + main.ts - EN COURS
 
-**Status**: ⏳ En attente
-**Warnings estimés**: ~25-30
-**Fichiers à traiter**:
+**Status**: 🔄 En cours (34 warnings restants)
+**Fichiers identifiés avec warnings**:
 
 ### presentation/controllers/
 - `auth.controller.simple.ts` (5 `any`)
@@ -218,7 +230,7 @@ git push
 
 ---
 
-**Dernière mise à jour**: 2025-11-18 17:06
-**Prochain objectif**: Phase 5 - presentation/ (~25-30 warnings restants)
+**Dernière mise à jour**: 2025-11-18 17:13
+**Prochain objectif**: Terminer Phase 5 - presentation/ + main.ts (34 warnings restants)
 
-**Note**: 43 warnings restants (potentiellement dans presentation/ ou autres fichiers non traités)
+**On lâche rien ! 💪 Objectif: 0 warnings**
