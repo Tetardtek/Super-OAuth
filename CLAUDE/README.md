@@ -57,7 +57,8 @@ CLAUDE/
 │   ├── ARCHITECTURE.md         # Architecture DDD complète
 │   ├── CONTRIBUTING.md         # Standards et workflow
 │   ├── AI_AGENT_GUIDE.md       # Patterns et exemples
-│   └── PROJECT_STRUCTURE.md    # Navigation dans le projet
+│   ├── PROJECT_STRUCTURE.md    # Navigation dans le projet
+│   └── TESTING.md              # Guide complet des tests
 │
 └── status/                     # Statut et suivi
     ├── PROJECT_STATUS.md       # État actuel du projet
@@ -82,6 +83,7 @@ CLAUDE/
 | **CONTRIBUTING.md** | Standards code, Git workflow, tests | Avant de contribuer |
 | **AI_AGENT_GUIDE.md** | Patterns, exemples, erreurs | Pour coder efficacement |
 | **PROJECT_STRUCTURE.md** | Localisation fichiers, navigation | Pour trouver rapidement |
+| **TESTING.md** | Guide complet des tests (249 tests) | Pour écrire/comprendre les tests |
 
 ### 📊 Statut et Suivi
 
@@ -99,7 +101,8 @@ CLAUDE/
 | Documentation AI | 100% | ✅ |
 | Backend & API | 95% | ✅ |
 | Frontend | 90% | ✅ |
-| Tests | 90% | ✅ |
+| Tests Frontend | 100% | ✅ |
+| Tests (249 tests) | 100% | ✅ |
 | Performance | 100% | ✅ |
 | Sécurité | 90% | ✅ |
 | CI/CD | 30% | ⚠️ |
@@ -159,7 +162,8 @@ npm run build            # Compiler TypeScript
 npm start                # Lancer en production
 
 # Tests
-npm test                 # Tous les tests
+npm run test:frontend    # Tests frontend (249 tests)
+npm run test:backend     # Tests backend
 npm run test:coverage    # Tests avec couverture
 npm run test:watch       # Tests en mode watch
 

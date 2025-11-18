@@ -1,199 +1,78 @@
 /**
  * Application principale SuperOAuth
  * Interface web pour les tests d'authentification
- * @version 1.0.0
+ * @version 2.0.0 - REFACTORÉ
+ *
+ * Architecture modulaire:
+ * - Toast notifications: managers/toast-manager.js
+ * - Token management: managers/token-manager.js
+ * - Auth service: auth-service.js
+ * - Components: auth-component.js, dashboard.js, server-monitor.js
+ * - Utils: utils/*.js
  */
 
 // Configuration de l'API
 const API_BASE = '/api/v1';
 
-// Système de Toast Notifications
-class ToastManager {
-    constructor() {
-        this.container = null;
-        this.toasts = [];
-        this.initContainer();
-    }
+// Imports des managers
+import { Toast } from './managers/toast-manager.js';
+import { tokenManager } from './managers/token-manager.js';
 
-    initContainer() {
-        // Créer le conteneur de toast s'il n'existe pas
-        this.container = document.getElementById('toast-container');
-        if (!this.container) {
-            this.container = document.createElement('div');
-            this.container.id = 'toast-container';
-            this.container.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 10000;
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                pointer-events: none;
-            `;
-            document.body.appendChild(this.container);
-        }
-    }
+// Imports des services et composants
+import { AuthService } from './auth-service.js';
+import { Dashboard } from './dashboard.js';
 
-    show(message, type = 'info', duration = 5000) {
-        const toast = this.createToast(message, type, duration);
-        this.container.appendChild(toast);
-        this.toasts.push(toast);
+// Imports des utilitaires
+import { Logger } from './utils/logger.js';
 
-        // Animation d'entrée
-        setTimeout(() => {
-            toast.style.transform = 'translateX(0)';
-            toast.style.opacity = '1';
-        }, 10);
+// Initialisation des services
+const authService = new AuthService();
+const dashboardInstance = new Dashboard(authService);
 
-        // Auto-suppression
-        setTimeout(() => {
-            this.remove(toast);
-        }, duration);
+// Exposer globalement pour compatibilité
+window.Toast = Toast;
+window.tokenManager = tokenManager;
+window.dashboardInstance = dashboardInstance;
 
-        return toast;
-    }
-
-    createToast(message, type, duration) {
-        const toast = document.createElement('div');
-        
-        const colors = {
-            success: { bg: '#10b981', icon: '✅' },
-            error: { bg: '#ef4444', icon: '❌' },
-            warning: { bg: '#f59e0b', icon: '⚠️' },
-            info: { bg: '#3b82f6', icon: 'ℹ️' }
-        };
-
-        const config = colors[type] || colors.info;
-
-        toast.style.cssText = `
-            background: ${config.bg};
-            color: white;
-            padding: 16px 20px;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            transform: translateX(400px);
-            opacity: 0;
-            transition: all 0.3s ease;
-            max-width: 400px;
-            word-wrap: break-word;
-            pointer-events: auto;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 14px;
-            line-height: 1.4;
-        `;
-
-        toast.innerHTML = `
-            <span style="font-size: 16px;">${config.icon}</span>
-            <span style="flex: 1;">${message}</span>
-            <span style="font-size: 18px; opacity: 0.7; margin-left: 10px;">×</span>
-        `;
-
-        // Clic pour fermer
-        toast.addEventListener('click', () => {
-            this.remove(toast);
-        });
-
-        return toast;
-    }
-
-    remove(toast) {
-        if (!toast || !toast.parentElement) return;
-
-        // Animation de sortie
-        toast.style.transform = 'translateX(400px)';
-        toast.style.opacity = '0';
-
-        setTimeout(() => {
-            if (toast.parentElement) {
-                toast.parentElement.removeChild(toast);
-            }
-            const index = this.toasts.indexOf(toast);
-            if (index > -1) {
-                this.toasts.splice(index, 1);
-            }
-        }, 300);
-    }
-
-    success(message, duration) {
-        return this.show(message, 'success', duration);
-    }
-
-    error(message, duration) {
-        return this.show(message, 'error', duration);
-    }
-
-    warning(message, duration) {
-        return this.show(message, 'warning', duration);
-    }
-
-    info(message, duration) {
-        return this.show(message, 'info', duration);
-    }
-}
-
-// Instance globale du gestionnaire de toast
-const Toast = new ToastManager();
-
-// Logger simple
-const Logger = {
+// Logger simple pour compatibilité avec le code legacy
+const LegacyLogger = {
     info: (msg, data) => console.log(`ℹ️ ${msg}`, data || ''),
     success: (msg, data) => console.log(`✅ ${msg}`, data || ''),
     warn: (msg, data) => console.warn(`⚠️ ${msg}`, data || ''),
     error: (msg, data) => console.error(`❌ ${msg}`, data || '')
 };
 
-// Stockage des tokens
-class TokenManager {
-    static getAccessToken() {
-        return localStorage.getItem('accessToken');
-    }
-    
-    static getRefreshToken() {
-        return localStorage.getItem('refreshToken');
-    }
-    
-    static setTokens(accessToken, refreshToken) {
-        localStorage.setItem('accessToken', accessToken);
-        if (refreshToken) {
-            localStorage.setItem('refreshToken', refreshToken);
-        }
-    }
-    
-    static clearTokens() {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userInfo');
-    }
-}
+// Classe TokenManager legacy pour compatibilité (délègue au nouveau tokenManager)
+const TokenManager = {
+    getAccessToken: () => tokenManager.getAccessToken(),
+    getRefreshToken: () => tokenManager.getRefreshToken(),
+    setTokens: (access, refresh) => tokenManager.setTokens(access, refresh),
+    clearTokens: () => tokenManager.clearTokens()
+};
 
-// Fonctions d'authentification classique
+// Fonctions d'authentification classique (legacy - à migrer vers AuthComponent)
 async function loginClassic() {
     console.log('=== DÉBUT loginClassic ===');
-    
+
     const email = document.getElementById('loginEmail')?.value;
     const password = document.getElementById('loginPassword')?.value;
     const responseArea = document.getElementById('loginResponse');
-    
-    console.log('Éléments récupérés:', { 
-        email, 
-        password: password ? '[MDP PRÉSENT]' : '[MDP ABSENT]', 
-        responseArea: !!responseArea 
+
+    console.log('Éléments récupérés:', {
+        email,
+        password: password ? '[MDP PRÉSENT]' : '[MDP ABSENT]',
+        responseArea: !!responseArea
     });
-    
+
     if (!email || !password) {
         console.log('Erreur: champs manquants');
         Toast.error('Veuillez remplir tous les champs');
         return;
     }
-    
+
     try {
-        Logger.info('Tentative de connexion...', { email });
-        
+        LegacyLogger.info('Tentative de connexion...', { email });
+
         const response = await fetch(`${API_BASE}/auth/login`, {
             method: 'POST',
             headers: {
@@ -201,33 +80,33 @@ async function loginClassic() {
             },
             body: JSON.stringify({ email, password })
         });
-        
-        Logger.info('Réponse reçue', { status: response.status, ok: response.ok });
-        
+
+        LegacyLogger.info('Réponse reçue', { status: response.status, ok: response.ok });
+
         const data = await response.json();
-        Logger.info('Données parsées', { data });
-        
+        LegacyLogger.info('Données parsées', { data });
+
         if (response.ok) {
             // Structure de réponse: data.data.tokens.accessToken et data.data.user
             const tokens = data.data?.tokens || {};
             const user = data.data?.user || {};
-            
-            Logger.info('Tokens et utilisateur extraits', { tokens, user });
-            
+
+            LegacyLogger.info('Tokens et utilisateur extraits', { tokens, user });
+
             TokenManager.setTokens(tokens.accessToken, tokens.refreshToken);
             localStorage.setItem('userInfo', JSON.stringify(user));
-            
-            // Toast de succès au lieu de showResponse
+
+            // Toast de succès
             Toast.success(`Connexion réussie ! Bienvenue ${user.nickname || user.email}`);
             showResponse(responseArea, 'Connexion réussie !', 'success', data);
-            Logger.success('Connexion réussie', data);
-            
+            LegacyLogger.success('Connexion réussie', data);
+
             // Rediriger vers le dashboard
             setTimeout(() => {
-                Logger.info('Chargement du dashboard...');
+                LegacyLogger.info('Chargement du dashboard...');
                 loadUserDashboard();
             }, 1000);
-            
+
         } else {
             // Toast d'erreur personnalisé selon le type d'erreur
             const errorMessage = data.message || 'Erreur de connexion';
@@ -239,13 +118,13 @@ async function loginClassic() {
                 Toast.error(errorMessage);
             }
             showResponse(responseArea, data.message || 'Erreur de connexion', 'error', data);
-            Logger.error('Erreur de connexion', data);
+            LegacyLogger.error('Erreur de connexion', data);
         }
-        
+
     } catch (error) {
         Toast.error('Impossible de se connecter au serveur. Vérifiez votre connexion.');
         showResponse(responseArea, 'Erreur réseau lors de la connexion', 'error');
-        Logger.error('Erreur réseau', error);
+        LegacyLogger.error('Erreur réseau', error);
     }
 }
 
@@ -255,21 +134,21 @@ async function registerClassic() {
     const passwordConfirm = document.getElementById('registerPasswordConfirm')?.value;
     const nickname = document.getElementById('registerNickname')?.value;
     const responseArea = document.getElementById('registerResponse');
-    
+
     if (!email || !password || !passwordConfirm || !nickname) {
         Toast.error('Tous les champs sont obligatoires pour l\'inscription');
         return;
     }
-    
+
     if (password !== passwordConfirm) {
         Toast.error('Les mots de passe ne correspondent pas');
         showResponse(responseArea, 'Les mots de passe ne correspondent pas', 'error');
         return;
     }
-    
+
     try {
-        Logger.info('Tentative d\'inscription...', { email, nickname });
-        
+        LegacyLogger.info('Tentative d\'inscription...', { email, nickname });
+
         const response = await fetch(`${API_BASE}/auth/register`, {
             method: 'POST',
             headers: {
@@ -277,20 +156,20 @@ async function registerClassic() {
             },
             body: JSON.stringify({ email, password, nickname })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
             Toast.success('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
             showResponse(responseArea, 'Inscription réussie ! Vous pouvez maintenant vous connecter.', 'success', data);
-            Logger.success('Inscription réussie', data);
-            
+            LegacyLogger.success('Inscription réussie', data);
+
             // Vider les champs d'inscription
             document.getElementById('registerEmail').value = '';
             document.getElementById('registerPassword').value = '';
             document.getElementById('registerPasswordConfirm').value = '';
             document.getElementById('registerNickname').value = '';
-            
+
         } else {
             // Messages d'erreur personnalisés pour l'inscription
             const errorMessage = data.message || 'Erreur lors de l\'inscription';
@@ -304,20 +183,20 @@ async function registerClassic() {
                 Toast.error(errorMessage);
             }
             showResponse(responseArea, data.message || 'Erreur lors de l\'inscription', 'error', data);
-            Logger.error('Erreur d\'inscription', data);
+            LegacyLogger.error('Erreur d\'inscription', data);
         }
-        
+
     } catch (error) {
         Toast.error('Impossible de créer le compte. Vérifiez votre connexion.');
         showResponse(responseArea, 'Erreur réseau lors de l\'inscription', 'error');
-        Logger.error('Erreur réseau', error);
+        LegacyLogger.error('Erreur réseau', error);
     }
 }
 
 async function logout() {
     try {
         const accessToken = TokenManager.getAccessToken();
-        
+
         if (accessToken) {
             const response = await fetch(`${API_BASE}/auth/logout`, {
                 method: 'POST',
@@ -326,45 +205,45 @@ async function logout() {
                     'Content-Type': 'application/json'
                 }
             });
-            
+
             if (response.ok) {
-                Logger.success('Déconnexion réussie');
+                LegacyLogger.success('Déconnexion réussie');
                 Toast.success('Vous avez été déconnecté avec succès');
             } else {
-                Logger.warn('Erreur lors de la déconnexion côté serveur');
+                LegacyLogger.warn('Erreur lors de la déconnexion côté serveur');
                 Toast.warning('Déconnexion locale effectuée');
             }
         }
-        
+
     } catch (error) {
-        Logger.warn('Erreur lors de la déconnexion', error);
+        LegacyLogger.warn('Erreur lors de la déconnexion', error);
     } finally {
         // Nettoyer les tokens localement dans tous les cas
         TokenManager.clearTokens();
-        
+
         // Cacher le dashboard et afficher les sections de connexion
         const userDashboard = document.getElementById('userDashboard');
         if (userDashboard) {
             userDashboard.style.display = 'none';
         }
-        
-        Logger.success('Déconnexion locale terminée');
+
+        LegacyLogger.success('Déconnexion locale terminée');
     }
 }
 
 async function testRefreshToken() {
     const refreshToken = TokenManager.getRefreshToken();
     const responseArea = document.getElementById('loginResponse');
-    
+
     if (!refreshToken) {
         Toast.error('Aucun refresh token disponible');
         showResponse(responseArea, 'Aucun refresh token disponible', 'error');
         return;
     }
-    
+
     try {
-        Logger.info('Test du refresh token...');
-        
+        LegacyLogger.info('Test du refresh token...');
+
         const response = await fetch(`${API_BASE}/auth/refresh`, {
             method: 'POST',
             headers: {
@@ -372,42 +251,35 @@ async function testRefreshToken() {
             },
             body: JSON.stringify({ refreshToken })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
             TokenManager.setTokens(data.accessToken, data.refreshToken);
             Toast.success('Token rafraîchi avec succès !');
             showResponse(responseArea, 'Token rafraîchi avec succès !', 'success', data);
-            Logger.success('Token rafraîchi', data);
+            LegacyLogger.success('Token rafraîchi', data);
         } else {
             Toast.error('Impossible de rafraîchir le token. Reconnectez-vous.');
             showResponse(responseArea, data.message || 'Erreur lors du rafraîchissement', 'error', data);
-            Logger.error('Erreur de rafraîchissement', data);
+            LegacyLogger.error('Erreur de rafraîchissement', data);
         }
-        
+
     } catch (error) {
         Toast.error('Erreur réseau lors du rafraîchissement du token');
         showResponse(responseArea, 'Erreur réseau lors du rafraîchissement', 'error');
-        Logger.error('Erreur réseau', error);
+        LegacyLogger.error('Erreur réseau', error);
     }
 }
 
 // OAuth
 function oauthLogin(provider) {
-    Logger.info(`Redirection OAuth vers ${provider}...`);
+    LegacyLogger.info(`Redirection OAuth vers ${provider}...`);
     Toast.info(`Redirection vers ${provider.charAt(0).toUpperCase() + provider.slice(1)}...`);
     window.location.href = `/api/v1/auth/oauth/${provider}`;
 }
 
 // Dashboard utilisateur
-
-import { AuthService } from './auth-service.js';
-import { Dashboard } from './dashboard.js';
-const authService = new AuthService();
-const dashboardInstance = new Dashboard(authService);
-window.dashboardInstance = dashboardInstance;
-
 async function loadUserDashboard() {
     await dashboardInstance.load();
     // Fallback d'affichage si jamais le dashboard reste caché
@@ -431,39 +303,39 @@ async function refreshUserInfo() {
 // Vérification de l'état du serveur
 async function checkServerHealth() {
     const responseArea = document.getElementById('healthResponse');
-    
+
     try {
-        Logger.info('Vérification de l\'état du serveur...');
-        
+        LegacyLogger.info('Vérification de l\'état du serveur...');
+
         const response = await fetch('/health');
         const data = await response.json();
-        
+
         if (response.ok) {
             showResponse(responseArea, 'Serveur en ligne', 'success', data);
-            Logger.success('Serveur en ligne', data);
-            
+            LegacyLogger.success('Serveur en ligne', data);
+
             // Mettre à jour l'indicateur de statut
             const statusDot = document.getElementById('serverStatus');
             const statusText = document.getElementById('serverStatusText');
-            
+
             if (statusDot && statusText) {
                 statusDot.className = 'status-dot status-online';
                 statusText.textContent = `En ligne - ${data.environment || 'development'} (${data.version || 'v1.0.0'})`;
             }
-            
+
         } else {
             showResponse(responseArea, 'Serveur en erreur', 'error', data);
-            Logger.error('Serveur en erreur', data);
+            LegacyLogger.error('Serveur en erreur', data);
         }
-        
+
     } catch (error) {
         showResponse(responseArea, 'Impossible de joindre le serveur', 'error');
-        Logger.error('Erreur de connexion au serveur', error);
-        
+        LegacyLogger.error('Erreur de connexion au serveur', error);
+
         // Mettre à jour l'indicateur de statut
         const statusDot = document.getElementById('serverStatus');
         const statusText = document.getElementById('serverStatusText');
-        
+
         if (statusDot && statusText) {
             statusDot.className = 'status-dot status-offline';
             statusText.textContent = 'Hors ligne';
@@ -473,7 +345,7 @@ async function checkServerHealth() {
 
 // Fonction de test pour debug
 function testButton() {
-    Logger.info('🔧 Test des boutons - Les boutons fonctionnent !');
+    LegacyLogger.info('🔧 Test des boutons - Les boutons fonctionnent !');
     Toast.success('Les boutons fonctionnent parfaitement ! 🎉', 3000);
 }
 
@@ -481,13 +353,12 @@ function testButton() {
 function validatePasswordMatch() {
     const password = document.getElementById('registerPassword')?.value;
     const passwordConfirm = document.getElementById('registerPasswordConfirm')?.value;
-    
+
     if (password && passwordConfirm) {
         if (password === passwordConfirm) {
-            Logger.success('Les mots de passe correspondent');
-            // Optionnel: Toast.success('Les mots de passe correspondent', 2000);
+            LegacyLogger.success('Les mots de passe correspondent');
         } else {
-            Logger.warn('Les mots de passe ne correspondent pas');
+            LegacyLogger.warn('Les mots de passe ne correspondent pas');
             Toast.warning('Les mots de passe ne correspondent pas', 3000);
         }
     }
@@ -496,27 +367,27 @@ function validatePasswordMatch() {
 // Utilitaire pour afficher les réponses
 function showResponse(element, message, type = 'info', data = null) {
     if (!element) return;
-    
+
     const colors = {
         success: '#4CAF50',
         error: '#f44336',
         info: '#2196F3',
         warning: '#ff9800'
     };
-    
+
     element.style.display = 'block';
     element.style.backgroundColor = colors[type] + '20';
     element.style.border = `1px solid ${colors[type]}`;
     element.style.borderRadius = '5px';
     element.style.padding = '15px';
     element.style.marginTop = '10px';
-    
+
     let content = `<strong>${message}</strong>`;
-    
+
     if (data) {
         content += `<pre style="margin-top: 10px; font-size: 0.9em; overflow-x: auto;">${JSON.stringify(data, null, 2)}</pre>`;
     }
-    
+
     element.innerHTML = content;
 }
 
@@ -524,19 +395,19 @@ function showResponse(element, message, type = 'info', data = null) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('JavaScript chargé avec succès');
     Logger.success('SuperOAuth Interface chargée');
-    
+
     // Attacher les event listeners aux boutons
     attachEventListeners();
-    
+
     // Vérifier l'état du serveur
     checkServerHealth();
-    
+
     // Si un token existe, charger le dashboard
     const accessToken = TokenManager.getAccessToken();
     if (accessToken) {
         loadUserDashboard();
     }
-    
+
     // Ajouter les événements de validation des mots de passe
     const passwordConfirm = document.getElementById('registerPasswordConfirm');
     if (passwordConfirm) {
@@ -610,7 +481,6 @@ function attachEventListeners() {
     if (checkServerBtn) {
         checkServerBtn.addEventListener('click', checkServerHealth);
     }
-    // (Gardé : logs importants et état serveur)
 }
 
 Logger.info('🚀 SuperOAuth App.js chargé et prêt !');
