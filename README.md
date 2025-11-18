@@ -1,5 +1,11 @@
 # 🔐 SuperOAuth
 
+[![CI/CD Pipeline](https://github.com/Tetardtek/Super-OAuth/actions/workflows/ci.yml/badge.svg)](https://github.com/Tetardtek/Super-OAuth/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Tetardtek/Super-OAuth/branch/main/graph/badge.svg)](https://codecov.io/gh/Tetardtek/Super-OAuth)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.1.6-blue)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 **Système d'authentification moderne avec OAuth et gestion des tokens JWT**
 
 SuperOAuth est une solution complète d'authentification qui combine l'authentification classique par email/mot de passe avec l'intégration OAuth pour les plateformes populaires (Discord, Twitch, Google, GitHub).
