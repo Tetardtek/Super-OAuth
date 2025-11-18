@@ -9,9 +9,10 @@ import { authService } from '../../application/services/auth.service';
 import { userService } from '../../application/services/user.service';
 import { ApiResponse } from '../utils/response.util';
 import { logger } from '../utils/logger.util';
+import { User } from '../../domain/entities/user.entity';
 
 interface AuthenticatedRequest extends Request {
-  user?: any;
+  user?: User;
 }
 
 /**

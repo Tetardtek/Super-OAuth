@@ -213,7 +213,9 @@ class SuperOAuthServer {
         await DatabaseConnection.initialize();
         logger.info('Database connected successfully');
       } catch (dbError) {
-        logger.warn('Database connection failed (running without DB for demo)', dbError as Error);
+        logger.warn('Database connection failed (running without DB for demo)', {
+          error: dbError instanceof Error ? dbError.message : 'Unknown error',
+        });
         logger.info('Configure MySQL to enable full functionality');
       }
 

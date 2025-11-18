@@ -6,14 +6,14 @@
 
 import { Request, Response, NextFunction } from 'express';
 
-type AsyncFunction = (req: any, res: Response, next: NextFunction) => Promise<any>;
+type AsyncFunction<T = Request> = (req: T, res: Response, next: NextFunction) => Promise<void>;
 
 /**
  * Wrapper for async route handlers
  * Automatically catches async errors and passes them to next()
  */
-export const asyncHandler = (fn: AsyncFunction) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+export const asyncHandler = <T extends Request = Request>(fn: AsyncFunction<T>) => {
+  return (req: T, res: Response, next: NextFunction): void => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 };
