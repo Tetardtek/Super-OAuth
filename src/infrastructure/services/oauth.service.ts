@@ -18,6 +18,16 @@ interface OAuthProvider {
   redirectUri: string;
 }
 
+interface OAuthTokenResponse {
+  access_token: string;
+  refresh_token?: string;
+  token_type?: string;
+  expires_in?: number;
+  scope?: string;
+  error?: string;
+  error_description?: string;
+}
+
 export class OAuthService implements IOAuthService {
   private providers: Record<string, OAuthProvider>;
 
@@ -134,7 +144,7 @@ export class OAuthService implements IOAuthService {
     config: OAuthProvider,
     code: string,
     redirectUri?: string
-  ): Promise<any> {
+  ): Promise<OAuthTokenResponse> {
     const data = {
       client_id: config.clientId,
       client_secret: config.clientSecret,
@@ -143,7 +153,7 @@ export class OAuthService implements IOAuthService {
       grant_type: 'authorization_code',
     };
 
-    const response = await axios.post(config.tokenUrl, data, {
+    const response = await axios.post<OAuthTokenResponse>(config.tokenUrl, data, {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/x-www-form-urlencoded',

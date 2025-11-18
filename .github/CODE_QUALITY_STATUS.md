@@ -7,7 +7,7 @@
 
 | Métrique | Avant | Actuel | Objectif | Progrès |
 |----------|-------|--------|----------|---------|
-| **ESLint Warnings** | 93 | 56 | 0 | 🟡 40% |
+| **ESLint Warnings** | 93 | 46 | 0 | 🟡 51% |
 | **Tests Frontend** | 249/249 ✅ | 249/249 ✅ | 249/249 | 🟢 100% |
 | **TypeScript Errors** | 0 | 5* | 0 | 🟡 Temporaire |
 
@@ -68,30 +68,30 @@
 
 ---
 
-## 🔄 Phase 4 : infrastructure/ - À FAIRE
+## 🔄 Phase 4 : infrastructure/ - EN COURS
 
-**Status**: ⏳ En attente
-**Warnings estimés**: ~25-30
-**Fichiers à traiter**:
+**Status**: 🔄 Partiellement complété (fichiers simples terminés)
+**Warnings éliminés**: 10 (56→46)
+**Fichiers modifiés**:
 
-### infrastructure/oauth/
-- `oauth-config.ts` (2 `any`)
-- `oauth.service.ts` (1 `any`)
+### ✅ infrastructure/services/ - Fichiers simples complétés
+- ✅ `token.service.ts` - Créé `AccessTokenPayload` et `RefreshTokenPayload` interfaces (3 fixes)
+- ✅ `user.repository.ts` - Créé interfaces `CreateUserData`, `OAuthAccountData`, `OAuthUpdateData` (3 fixes)
+- ✅ `oauth.service.ts` - Créé `OAuthTokenResponse` interface (1 fix)
 
-### infrastructure/services/
-- `oauth.service.ts` (1 `any`)
-- `token.service.ts` (3 `any`)
-- `user.repository.ts` (1 `any`)
+### ✅ infrastructure/di/
+- ✅ `container.ts` - `Map<string, any>` → `Map<string, unknown>` (1 fix)
 
-### infrastructure/database/
-- `entities/linked-account.entity.ts` (2 `any`)
-- `entities/session-new.entity.ts` (1 `any`)
-- `entities/session.entity.ts` (1 `any`)
-- `entities/user.entity.ts` (2 `any`)
-- `repositories/mappers/user.mapper.ts` (9 `any`)
+### ⏳ Restants à faire (fichiers complexes OAuth):
+- ⏳ `infrastructure/oauth/oauth-config.ts` (~40+ `any`) - Fichier complexe avec multiples providers
+- ⏳ `infrastructure/oauth/oauth.service.ts` (~40+ `any`) - Même fichier que oauth-config
 
-### infrastructure/di/
-- `container.ts` (1 `any`)
+### 📝 Note:
+Les fichiers `oauth-config.ts` et `oauth.service.ts` contiennent la majorité des warnings restants (~44/46).
+Ces fichiers gèrent les configurations et parsers pour Discord, Google, GitHub, Twitch.
+Nécessitent des interfaces détaillées pour chaque provider.
+
+**Résultat partiel**: Progrès 56→46 warnings (-10)
 
 ---
 
@@ -191,5 +191,5 @@ git push
 
 ---
 
-**Dernière mise à jour**: 2025-11-18 16:48
-**Prochain objectif**: Phase 4 - infrastructure/ (~25-30 warnings)
+**Dernière mise à jour**: 2025-11-18 16:58
+**Prochain objectif**: Phase 4 suite - infrastructure/oauth/ fichiers complexes (~44 warnings)

@@ -1,5 +1,15 @@
-import jwt, { SignOptions } from 'jsonwebtoken';
+import jwt, { SignOptions, JwtPayload } from 'jsonwebtoken';
 import { ITokenService } from '../../application/interfaces/repositories.interface';
+
+interface AccessTokenPayload extends JwtPayload {
+  userId: string;
+  type: 'access';
+}
+
+interface RefreshTokenPayload extends JwtPayload {
+  type: 'refresh';
+  jti: string;
+}
 
 export class TokenService implements ITokenService {
   private readonly accessTokenSecret: string;
@@ -32,7 +42,7 @@ export class TokenService implements ITokenService {
     };
 
     const options: SignOptions = {
-      expiresIn: this.accessTokenExpiration as any,
+      expiresIn: this.accessTokenExpiration,
       issuer: 'superoauth',
       audience: 'superoauth-users',
     };
@@ -48,7 +58,7 @@ export class TokenService implements ITokenService {
     };
 
     const options: SignOptions = {
-      expiresIn: this.refreshTokenExpiration as any,
+      expiresIn: this.refreshTokenExpiration,
       issuer: 'superoauth',
       audience: 'superoauth-refresh',
     };
@@ -61,7 +71,7 @@ export class TokenService implements ITokenService {
       const decoded = jwt.verify(token, this.accessTokenSecret, {
         issuer: 'superoauth',
         audience: 'superoauth-users',
-      }) as any;
+      }) as AccessTokenPayload;
 
       if (decoded.type !== 'access' || !decoded.userId) {
         return null;
@@ -73,12 +83,12 @@ export class TokenService implements ITokenService {
     }
   }
 
-  verifyRefreshToken(token: string): any | null {
+  verifyRefreshToken(token: string): RefreshTokenPayload | null {
     try {
       const decoded = jwt.verify(token, this.refreshTokenSecret, {
         issuer: 'superoauth',
         audience: 'superoauth-refresh',
-      });
+      }) as RefreshTokenPayload;
 
       return decoded;
     } catch (error) {
