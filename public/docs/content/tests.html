@@ -1,6 +1,6 @@
 <div class="content-section">
     <h1 aria-label="Tests et Qualité" tabindex="0">🧪 Tests et Qualité</h1>
-    <p class="intro">Documentation complète de la suite de tests SuperOAuth avec 249 tests unitaires frontend.</p>
+    <p class="intro">Documentation complète de la suite de tests SuperOAuth avec 372 tests (123 backend + 249 frontend).</p>
 </div>
 
 <div class="content-section">
@@ -13,23 +13,24 @@
                 <li><strong>Tests:</strong> 249 tests ✅</li>
                 <li><strong>Taux de Réussite:</strong> 100%</li>
                 <li><strong>Durée:</strong> ~5 secondes</li>
-                <li><strong>Coverage:</strong> V8 provider (>80%)</li>
+                <li><strong>Coverage:</strong> V8 provider (>60%)</li>
             </ul>
         </div>
         <div class="info-card">
             <h3>🏗️ Backend</h3>
             <ul>
                 <li><strong>Framework:</strong> Jest + ts-jest</li>
-                <li><strong>Tests:</strong> 30 tests ✅</li>
+                <li><strong>Tests:</strong> 123 tests ✅ (+200%)</li>
                 <li><strong>Taux de Réussite:</strong> 100%</li>
-                <li><strong>Coverage:</strong> Focus domaine</li>
+                <li><strong>Coverage:</strong> ~45% (Phase 1)</li>
+                <li><strong>Phase:</strong> Sécurité critique complétée</li>
             </ul>
         </div>
         <div class="info-card">
             <h3>📊 Total</h3>
             <ul>
-                <li><strong>Tests Total:</strong> 279 tests</li>
-                <li><strong>Suites:</strong> 16 modules</li>
+                <li><strong>Tests Total:</strong> 372 tests</li>
+                <li><strong>Suites:</strong> 20 modules</li>
                 <li><strong>Frameworks:</strong> 2 (Vitest + Jest)</li>
                 <li><strong>Statut Global:</strong> ✅ 100%</li>
             </ul>
@@ -44,8 +45,11 @@
         <pre><code># Tests frontend complets (249 tests)
 npm run test:frontend
 
-# Tests backend complets
+# Tests backend complets (123 tests)
 npm run test
+
+# Tous les tests (372 tests)
+npm run test:all
 
 # Mode développement (watch)
 npm run test:frontend -- --watch
