@@ -53,17 +53,17 @@ CLAUDE/
 ├── QUICK_START.md              # Démarrage en 5 minutes
 ├── .cursorrules                # Règles pour agents IA
 │
-├── guides/                     # Guides techniques détaillés
-│   ├── ARCHITECTURE.md         # Architecture DDD complète
-│   ├── CONTRIBUTING.md         # Standards et workflow
-│   ├── AI_AGENT_GUIDE.md       # Patterns et exemples
-│   ├── PROJECT_STRUCTURE.md    # Navigation dans le projet
-│   └── TESTING.md              # Guide complet des tests
-│
-└── status/                     # Statut et suivi
-    ├── PROJECT_STATUS.md       # État actuel du projet
-    ├── PROJECT_CONTEXT_OLD.md  # Archive (référence)
-    └── SUIVI_PROJET_OLD.md     # Archive (référence)
+└── guides/                     # Guides techniques détaillés
+    ├── ARCHITECTURE.md         # Architecture DDD complète
+    ├── CONTRIBUTING.md         # Standards et workflow
+    ├── AI_AGENT_GUIDE.md       # Patterns et exemples
+    ├── PROJECT_STRUCTURE.md    # Navigation dans le projet
+    └── TESTING.md              # Guide complet des tests
+
+.github/                        # Statut des 3 chantiers
+├── PROJECT_STATUS.md           # État global du projet
+├── CODE_QUALITY_STATUS.md      # Qualité code (phases 1-6)
+└── DOCUMENTATION_STATUS.md     # État documentation
 ```
 
 ## 📚 Guides Disponibles
@@ -85,31 +85,29 @@ CLAUDE/
 | **PROJECT_STRUCTURE.md** | Localisation fichiers, navigation | Pour trouver rapidement |
 | **TESTING.md** | Guide complet des tests (249 tests) | Pour écrire/comprendre les tests |
 
-### 📊 Statut et Suivi
+### 📊 Statut et Suivi (dans `.github/`)
 
 | Document | Description | Quand le Consulter |
 |----------|-------------|-------------------|
-| **PROJECT_STATUS.md** | État actuel, métriques, roadmap | Pour voir l'avancement |
+| **PROJECT_STATUS.md** | État global, métriques, roadmap | Vue d'ensemble projet |
+| **CODE_QUALITY_STATUS.md** | Phases 1-6 qualité code | Voir refactoring any + ESLint |
+| **DOCUMENTATION_STATUS.md** | État documentation | Voir doc CLAUDE/ + public/docs/ |
 
 ## 🎯 Statut du Projet
 
-### Dernière Mise à Jour : 18 Novembre 2025
+**Voir `.github/PROJECT_STATUS.md` pour l'état détaillé**
 
-| Domaine | Progression | Statut |
-|---------|:-----------:|:------:|
-| Architecture | 100% | ✅ |
-| Documentation AI | 100% | ✅ |
-| Backend & API | 95% | ✅ |
-| Frontend | 90% | ✅ |
-| Tests Frontend | 100% | ✅ |
-| Tests (249 tests) | 100% | ✅ |
-| Performance | 100% | ✅ |
-| Sécurité | 90% | ✅ |
-| CI/CD | 30% | ⚠️ |
+| Domaine | Statut |
+|---------|:------:|
+| Architecture DDD | ✅ 100% |
+| Code Backend | ✅ 95% |
+| Tests Backend | ✅ 41/41 |
+| Documentation | ✅ 100% |
+| ESLint | ✅ 0 erreurs |
 
-**Phase Actuelle :** Phase 4.4 - Documentation Agents IA ✅ COMPLÉTÉE
+**Phase Actuelle :** Phase 6 - ESLint Strict Mode ✅ COMPLÉTÉ
 
-**Prochaine Phase :** Phase 5 - Fonctionnalités Avancées OAuth
+**Prochaine Étape :** Créer PR vers `main`
 
 ## 📜 Règles et Conventions
 
