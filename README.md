@@ -332,7 +332,10 @@ export class CreateUserDto {
 
 ## 🧪 Tests
 
-SuperOAuth dispose d'une suite complète de **249 tests** couvrant le frontend et le backend.
+SuperOAuth dispose d'une suite complète de **372 tests** (123 backend + 249 frontend) couvrant toutes les couches de l'application.
+
+> **📊 Documentation détaillée**: [tests/README.md](./tests/README.md)
+> **📈 Métriques temps réel**: [.github/TESTS_STATUS.md](./.github/TESTS_STATUS.md)
 
 ### Lancer les Tests
 
@@ -358,8 +361,18 @@ npm run test:e2e
 #### Architecture de Tests
 - **Framework** : Vitest avec jsdom
 - **249 tests unitaires** : 100% de réussite
+- **Coverage** : ~60%
 - **Durée d'exécution** : ~5 secondes
 - **Environnement** : Simulation DOM browser
+
+### Tests Backend
+
+#### Architecture de Tests
+- **Framework** : Jest avec ts-jest
+- **123 tests unitaires** : 100% de réussite
+- **Coverage** : ~45% (objectif: 82%)
+- **Durée d'exécution** : ~15 secondes
+- **Composants testés** : Use Cases (49), Middleware (27), Services (32), Value Objects (13)
 
 #### Modules Testés
 
@@ -529,7 +542,7 @@ Le pipeline CI/CD s'exécute automatiquement sur :
 
 | Job | Description | Durée estimée |
 |-----|-------------|---------------|
-| 🧪 **Backend Tests** | Tests unitaires Jest (30 tests) | ~30s |
+| 🧪 **Backend Tests** | Tests unitaires Jest (123 tests) | ~15s |
 | 🎨 **Frontend Tests** | Tests Vitest (249 tests) | ~10s |
 | 📝 **Linting** | Vérification ESLint | ~15s |
 | 🎨 **Formatting** | Vérification Prettier | ~10s |

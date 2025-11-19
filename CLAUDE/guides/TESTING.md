@@ -2,17 +2,21 @@
 
 ## Vue d'Ensemble
 
-SuperOAuth dispose d'une suite complète de **249 tests unitaires** pour le frontend, avec un taux de réussite de **100%**. Ce guide détaille l'architecture de tests, les bonnes pratiques et comment écrire de nouveaux tests.
+SuperOAuth dispose d'une suite complète de **372 tests** (123 backend + 249 frontend) avec un taux de réussite de **100%**. Ce guide explique **comment écrire de nouveaux tests** selon les bonnes pratiques du projet.
 
-## 📊 Statistiques
+> **⚠️ Ce guide explique COMMENT écrire des tests.**
+> **Pour les métriques à jour, consultez [.github/TESTS_STATUS.md](../../.github/TESTS_STATUS.md) et [tests/README.md](../../tests/README.md)**
 
-- **Total de tests** : 290 (249 frontend + 41 backend)
+## 📊 Statistiques Globales
+
+- **Total de tests** : 372 (123 backend + 249 frontend)
+- **Tests backend** : 123 tests (Jest) - Phase 1 complétée ✅
 - **Tests frontend** : 249 tests (Vitest)
-- **Tests backend** : 41 tests (Jest)
 - **Taux de réussite** : 100% ✅
-- **Durée d'exécution** : ~5 secondes (frontend), ~3 secondes (backend)
-- **Framework** : Vitest (frontend) + Jest (backend)
-- **Environnement** : jsdom (frontend), Node.js (backend)
+- **Coverage backend** : ~45% (objectif: 82%)
+- **Coverage frontend** : ~60%
+- **Durée d'exécution** : ~15s (backend), ~5s (frontend)
+- **Frameworks** : Jest + ts-jest (backend), Vitest + jsdom (frontend)
 
 ## 🗂️ Structure des Tests
 
