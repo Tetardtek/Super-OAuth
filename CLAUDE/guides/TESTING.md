@@ -6,11 +6,13 @@ SuperOAuth dispose d'une suite complète de **249 tests unitaires** pour le fron
 
 ## 📊 Statistiques
 
-- **Total de tests** : 249
+- **Total de tests** : 290 (249 frontend + 41 backend)
+- **Tests frontend** : 249 tests (Vitest)
+- **Tests backend** : 41 tests (Jest)
 - **Taux de réussite** : 100% ✅
-- **Durée d'exécution** : ~5 secondes
-- **Framework** : Vitest avec jsdom
-- **Environnement** : Simulation DOM browser
+- **Durée d'exécution** : ~5 secondes (frontend), ~3 secondes (backend)
+- **Framework** : Vitest (frontend) + Jest (backend)
+- **Environnement** : jsdom (frontend), Node.js (backend)
 
 ## 🗂️ Structure des Tests
 
@@ -562,4 +564,4 @@ export default defineConfig({
 
 ---
 
-**Maintenu par l'équipe SuperOAuth** | Dernière mise à jour : 2025-11-18
+**Maintenu par l'équipe SuperOAuth** | Dernière mise à jour : 19 Novembre 2024

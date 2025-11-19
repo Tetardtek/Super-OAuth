@@ -37,13 +37,6 @@ cp .env.example .env
 **Configuration minimale pour développement:**
 
 ```env
-# Base de données (optionnel si pas de DB locale)
-DB_HOST=localhost
-DB_PORT=3306
-DB_USERNAME=root
-DB_PASSWORD=your_password
-DB_DATABASE=superoauth
-
 # JWT (OBLIGATOIRE)
 JWT_SECRET=your_super_secret_key_min_32_chars
 JWT_REFRESH_SECRET=your_refresh_secret_key_min_32_chars
@@ -51,6 +44,13 @@ JWT_REFRESH_SECRET=your_refresh_secret_key_min_32_chars
 # Serveur
 PORT=3000
 NODE_ENV=development
+
+# Base de données (optionnel si pas de DB locale)
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=your_password
+DB_DATABASE=superoauth
 ```
 
 ### 3. Lancer l'Application
@@ -68,17 +68,10 @@ npm run dev
 
 Avant de commencer à coder, **LIRE OBLIGATOIREMENT** dans cet ordre:
 
-1. **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Comprendre l'architecture DDD
-2. **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Standards de code et workflow
-3. **[AI_AGENT_GUIDE.md](./AI_AGENT_GUIDE.md)** - Patterns et exemples pour agents IA
-4. **[PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md)** - Localiser les fichiers rapidement
-
-### Temps de Lecture Estimé
-
-- ARCHITECTURE.md: **10-15 minutes** ⏱️
-- CONTRIBUTING.md: **15-20 minutes** ⏱️
-- AI_AGENT_GUIDE.md: **20-25 minutes** ⏱️
-- PROJECT_STRUCTURE.md: **5-10 minutes** ⏱️
+1. **[guides/ARCHITECTURE.md](./guides/ARCHITECTURE.md)** (10-15 min) - Comprendre l'architecture DDD
+2. **[guides/DEVELOPMENT.md](./guides/DEVELOPMENT.md)** (20 min) - Standards de code et patterns
+3. **[guides/AI_AGENT_GUIDE.md](./guides/AI_AGENT_GUIDE.md)** (20 min) - Workflows et exemples pour agents IA
+4. **[guides/PROJECT_STRUCTURE.md](./guides/PROJECT_STRUCTURE.md)** (5-10 min) - Localiser les fichiers rapidement
 
 **Total: ~1 heure** pour bien comprendre le projet.
 
@@ -86,11 +79,12 @@ Avant de commencer à coder, **LIRE OBLIGATOIREMENT** dans cet ordre:
 
 ### Checklist Avant Toute Modification
 
-- [ ] J'ai lu `ARCHITECTURE.md` pour comprendre les couches DDD
-- [ ] J'ai lu `AI_AGENT_GUIDE.md` pour connaître les patterns
-- [ ] J'ai lu le fichier `.cursorrules` pour les conventions
+- [ ] J'ai lu [guides/ARCHITECTURE.md](./guides/ARCHITECTURE.md) pour comprendre les couches DDD
+- [ ] J'ai lu [guides/DEVELOPMENT.md](./guides/DEVELOPMENT.md) pour connaître les standards
+- [ ] J'ai lu [guides/AI_AGENT_GUIDE.md](./guides/AI_AGENT_GUIDE.md) pour les workflows
+- [ ] J'ai lu le fichier [.cursorrules](./.cursorrules) pour les conventions
 - [ ] J'ai lu le fichier concerné avant de le modifier
-- [ ] Je connais la structure du projet via `PROJECT_STRUCTURE.md`
+- [ ] Je connais la structure du projet via [guides/PROJECT_STRUCTURE.md](./guides/PROJECT_STRUCTURE.md)
 
 ### Règles d'Or (NON NÉGOCIABLES)
 
@@ -101,16 +95,7 @@ Avant de commencer à coder, **LIRE OBLIGATOIREMENT** dans cet ordre:
 5. ❌ **JAMAIS** utiliser le type `any` en TypeScript
 6. ❌ **JAMAIS** mettre de logique métier dans les Controllers
 
-### Où Trouver Quoi?
-
-| Je veux... | Aller dans... |
-|-----------|---------------|
-| Ajouter une route API | `src/presentation/routes/` |
-| Ajouter de la logique métier | `src/application/use-cases/` |
-| Modifier une entité | `src/domain/entities/` |
-| Ajouter un provider OAuth | `src/infrastructure/oauth/providers/` |
-| Ajouter un test | `tests/unit/` ou `tests/frontend/` |
-| Modifier la configuration | `src/shared/config/` ou `.env` |
+**Détails complets:** Voir [guides/DEVELOPMENT.md](./guides/DEVELOPMENT.md)
 
 ## 🛠️ Commandes Essentielles
 
@@ -130,7 +115,7 @@ npm start
 ### Tests
 
 ```bash
-# Tous les tests
+# Tous les tests (290 tests: 249 frontend + 41 backend)
 npm run test
 
 # Tests backend uniquement
@@ -178,96 +163,40 @@ npm run migration:revert
 npm run db:reset
 ```
 
-## 📂 Structure Rapide
+## 🗺️ Navigation Rapide
 
-```
-Super-OAuth/
-├── src/                    # Code source
-│   ├── domain/            # Logique métier pure
-│   ├── application/       # Use cases
-│   ├── infrastructure/    # DB, OAuth, services
-│   ├── presentation/      # Controllers, routes
-│   └── shared/            # Utils, config
-├── tests/                 # Tests
-├── public/                # Frontend (HTML/CSS/JS)
-├── scripts/               # Scripts utilitaires
-└── [docs]/                # Documentation (ce dossier)
-```
+### Où Trouver Quoi?
 
-## 🔧 Tâches Courantes
+| Je veux... | Aller dans... |
+|-----------|---------------|
+| Ajouter une route API | `src/presentation/routes/` |
+| Ajouter de la logique métier | `src/application/use-cases/` |
+| Modifier une entité | `src/domain/entities/` |
+| Ajouter un provider OAuth | `src/infrastructure/oauth/providers/` |
+| Ajouter un test | `tests/unit/` ou `tests/frontend/` |
+| Modifier la configuration | `src/shared/config/` ou `.env` |
+
+**Carte complète:** Voir [guides/PROJECT_STRUCTURE.md](./guides/PROJECT_STRUCTURE.md)
+
+## 🔧 Workflows Courants
 
 ### Ajouter un Nouvel Endpoint API
 
-1. **Créer le Use Case** dans `src/application/use-cases/`
-2. **Créer le Controller** dans `src/presentation/controllers/`
-3. **Ajouter la Route** dans `src/presentation/routes/`
-4. **Créer les Tests** dans `tests/unit/use-cases/`
+**Voir [guides/AI_AGENT_GUIDE.md](./guides/AI_AGENT_GUIDE.md)** - Exemple complet avec tous les fichiers
 
-**Exemple complet:** Voir `AI_AGENT_GUIDE.md` section "Pattern 1: Créer un Nouveau Use Case"
+1. Créer le Use Case dans `src/application/use-cases/`
+2. Créer le Controller dans `src/presentation/controllers/`
+3. Ajouter la Route dans `src/presentation/routes/`
+4. Créer les Tests dans `tests/unit/use-cases/`
 
 ### Ajouter un Provider OAuth
 
-1. **Créer le Provider** dans `src/infrastructure/oauth/providers/`
-2. **Enregistrer dans Factory** `src/infrastructure/oauth/oauth-provider.factory.ts`
-3. **Ajouter les Types** dans `src/shared/types/oauth.types.ts`
-4. **Configurer .env** avec les credentials
+**Voir [guides/AI_AGENT_GUIDE.md](./guides/AI_AGENT_GUIDE.md)** - Exemple complet LinkedIn
 
-**Exemple complet:** Voir `AI_AGENT_GUIDE.md` section "Pattern 3: Ajouter un Provider OAuth"
-
-### Modifier une Entité Existante
-
-1. **Modifier l'entité** dans `src/domain/entities/`
-2. **Générer la migration** `npm run migration:generate`
-3. **Mettre à jour les tests** dans `tests/unit/`
-4. **Exécuter la migration** `npm run migration:run`
-
-## ⚡ Workflow Rapide
-
-### Pour une Nouvelle Fonctionnalité
-
-```bash
-# 1. Créer une branche
-git checkout -b feature/ma-nouvelle-fonctionnalite
-
-# 2. Coder (en respectant les couches DDD)
-# Voir AI_AGENT_GUIDE.md pour les patterns
-
-# 3. Tester
-npm run test
-
-# 4. Vérifier la qualité
-npm run lint:fix
-npm run format
-npm run typecheck
-
-# 5. Commiter
-git commit -m "feat(scope): description de la feature"
-
-# 6. Push
-git push origin feature/ma-nouvelle-fonctionnalite
-```
-
-### Pour une Correction de Bug
-
-```bash
-# 1. Créer une branche
-git checkout -b bugfix/description-du-bug
-
-# 2. Identifier et corriger le bug
-
-# 3. Ajouter un test de non-régression
-# tests/unit/...
-
-# 4. Vérifier que tout passe
-npm run test
-npm run lint:fix
-
-# 5. Commiter
-git commit -m "fix(scope): description de la correction"
-
-# 6. Push
-git push origin bugfix/description-du-bug
-```
+1. Créer le Provider dans `src/infrastructure/oauth/providers/`
+2. Enregistrer dans Factory `src/infrastructure/oauth/oauth-provider.factory.ts`
+3. Ajouter les Types dans `src/shared/types/oauth.types.ts`
+4. Configurer .env avec les credentials
 
 ## 🐛 Problèmes Courants
 
@@ -290,20 +219,6 @@ import { User } from '../../../domain/entities/user.entity';
 2. Vérifier les credentials dans `.env`
 3. Créer la database: `CREATE DATABASE superoauth;`
 
-### Erreurs de compilation TypeScript
-
-**Solution:**
-```bash
-# Supprimer dist/ et node_modules/
-rm -rf dist node_modules
-
-# Réinstaller
-npm install
-
-# Recompiler
-npm run build
-```
-
 ### Tests qui échouent
 
 **Solution:**
@@ -321,11 +236,12 @@ npm run test
 
 | Document | Description |
 |----------|-------------|
-| [README.md](./README.md) | Vue d'ensemble du projet |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Architecture DDD détaillée |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | Guide de contribution |
-| [AI_AGENT_GUIDE.md](./AI_AGENT_GUIDE.md) | Patterns pour agents IA |
-| [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) | Structure des fichiers |
+| [README.md](./README.md) | Vue d'ensemble de la documentation |
+| [guides/ARCHITECTURE.md](./guides/ARCHITECTURE.md) | Architecture DDD détaillée |
+| [guides/DEVELOPMENT.md](./guides/DEVELOPMENT.md) | Standards et patterns |
+| [guides/AI_AGENT_GUIDE.md](./guides/AI_AGENT_GUIDE.md) | Workflows pour agents IA |
+| [guides/PROJECT_STRUCTURE.md](./guides/PROJECT_STRUCTURE.md) | Structure des fichiers |
+| [guides/TESTING.md](./guides/TESTING.md) | Guide des tests |
 
 ### Points d'Entrée du Code
 
@@ -336,13 +252,6 @@ npm run test
 | `src/application/use-cases/` | Logique métier principale |
 | `src/domain/entities/` | Modèles de données |
 
-### En Cas de Blocage
-
-1. **Consulter** `AI_AGENT_GUIDE.md` pour des exemples
-2. **Lire** le code existant similaire à ce que vous voulez faire
-3. **Vérifier** les tests pour comprendre l'usage
-4. **Chercher** dans `PROJECT_STRUCTURE.md` où se trouve le fichier
-
 ## ✅ Checklist Finale Avant de Commencer
 
 - [ ] Node.js 20+ installé
@@ -351,10 +260,11 @@ npm run test
 - [ ] `npm install` exécuté
 - [ ] `.env` configuré
 - [ ] Application démarre avec `npm run dev`
-- [ ] J'ai lu `ARCHITECTURE.md`
-- [ ] J'ai lu `AI_AGENT_GUIDE.md`
-- [ ] Je connais la structure via `PROJECT_STRUCTURE.md`
-- [ ] J'ai lu `.cursorrules`
+- [ ] J'ai lu [guides/ARCHITECTURE.md](./guides/ARCHITECTURE.md)
+- [ ] J'ai lu [guides/DEVELOPMENT.md](./guides/DEVELOPMENT.md)
+- [ ] J'ai lu [guides/AI_AGENT_GUIDE.md](./guides/AI_AGENT_GUIDE.md)
+- [ ] Je connais la structure via [guides/PROJECT_STRUCTURE.md](./guides/PROJECT_STRUCTURE.md)
+- [ ] J'ai lu [.cursorrules](./.cursorrules)
 
 ## 🎯 Prêt à Coder!
 
@@ -366,4 +276,6 @@ Vous êtes maintenant prêt à contribuer à SuperOAuth!
 - Écrire des tests pour le nouveau code
 - Documenter les fonctions publiques
 
-**Bon développement! 🚀**
+**Bon développement!**
+
+*Dernière mise à jour : 19 Novembre 2024*

@@ -1,72 +1,18 @@
-# 🤝 Guide de Contribution - SuperOAuth
+# 🛠️ Guide de Développement - SuperOAuth
 
-## Pour les Agents IA et Développeurs
+## Vue d'Ensemble
 
-Ce guide vous aidera à contribuer efficacement au projet SuperOAuth en respectant les conventions établies.
+Ce guide centralise tous les standards de code, patterns de développement et bonnes pratiques pour contribuer à SuperOAuth. Pour un démarrage rapide, consultez [QUICK_START.md](../QUICK_START.md).
 
 ## 📋 Table des Matières
 
-- [Principes Généraux](#principes-généraux)
 - [Standards de Code](#standards-de-code)
-- [Architecture et Structure](#architecture-et-structure)
+- [Architecture et Patterns](#architecture-et-patterns)
 - [Conventions de Nommage](#conventions-de-nommage)
 - [Gestion des Erreurs](#gestion-des-erreurs)
 - [Tests](#tests)
 - [Git Workflow](#git-workflow)
 - [Documentation](#documentation)
-
-## 🎯 Principes Généraux
-
-### 1. Toujours Lire Avant de Modifier
-
-**Pour les agents IA:** Avant toute modification:
-1. Lisez `ARCHITECTURE.md` pour comprendre la structure
-2. Lisez `PROJECT_STRUCTURE.md` pour localiser les fichiers
-3. Lisez `AI_AGENT_GUIDE.md` pour les instructions spécifiques
-4. Lisez le fichier concerné pour comprendre le contexte
-
-### 2. Respecter les Couches DDD
-
-❌ **INTERDIT:**
-```typescript
-// Controller qui accède directement au repository
-class AuthController {
-  constructor(private userRepository: UserRepository) {} // ❌ NO!
-}
-```
-
-✅ **CORRECT:**
-```typescript
-// Controller qui utilise un Use Case
-class AuthController {
-  constructor(private registerUseCase: RegisterClassicUseCase) {} // ✅ YES!
-}
-```
-
-### 3. Principe de Responsabilité Unique
-
-Chaque classe/fonction doit avoir **UNE SEULE** raison de changer.
-
-❌ **MAUVAIS:**
-```typescript
-class UserService {
-  registerUser() {} // Inscription
-  sendEmail() {} // Envoi email
-  hashPassword() {} // Hachage mot de passe
-  validateToken() {} // Validation JWT
-}
-```
-
-✅ **BON:**
-```typescript
-class RegisterClassicUseCase {
-  constructor(
-    private userRepository: IUserRepository,
-    private passwordHasher: IPasswordHasher,
-    private emailService: IEmailService
-  ) {}
-}
-```
 
 ## 💻 Standards de Code
 
@@ -85,7 +31,7 @@ Le projet utilise TypeScript en mode strict. **Aucune exception** tolérée.
 }
 ```
 
-### Formatting
+### Formatting et Linting
 
 - **Prettier** pour le formatage automatique
 - **ESLint** pour les règles de qualité
@@ -155,7 +101,22 @@ import { UserRepository } from '@infrastructure/database/repositories/user.repos
 import type { Request, Response } from 'express';
 ```
 
-## 🏗️ Architecture et Structure
+## 🏗️ Architecture et Patterns
+
+### Principes Fondamentaux
+
+1. **Domain-Driven Design (DDD)** avec séparation en couches
+2. **Clean Architecture** avec dépendances inversées
+3. **SOLID Principles** strictement appliqués
+4. **Injection de Dépendances** systématique
+
+### Architecture en Couches
+
+```
+Presentation → Application → Domain ← Infrastructure
+```
+
+**Règle d'or:** Les dépendances pointent TOUJOURS vers le Domain, jamais l'inverse.
 
 ### Ajouter une Nouvelle Fonctionnalité
 
@@ -202,18 +163,125 @@ import type { Request, Response } from 'express';
    // Définition des routes
    ```
 
-### Dependency Injection
-
-Utiliser le container DI:
+### Pattern: Use Case Basique
 
 ```typescript
-// src/infrastructure/di/container.ts
-export class DIContainer {
-  // Enregistrer les dépendances
-  static register() {
-    container.bind<IUserRepository>(TYPES.UserRepository)
-      .to(UserRepository);
+// DTO
+export interface CreateUserDto {
+  email: string;
+  password: string;
+  nickname: string;
+}
+
+// Use Case
+export class CreateUserUseCase {
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly passwordHasher: IPasswordHasher
+  ) {}
+
+  async execute(dto: CreateUserDto): Promise<User> {
+    logger.info('Creating user', { email: dto.email });
+
+    // Validation métier
+    const existingUser = await this.userRepository.findByEmail(dto.email);
+    if (existingUser) {
+      throw new UserAlreadyExistsError(dto.email);
+    }
+
+    // Logique métier
+    const hashedPassword = await this.passwordHasher.hash(dto.password);
+    const user = new User({
+      ...dto,
+      password: hashedPassword,
+    });
+
+    // Persistence
+    await this.userRepository.save(user);
+
+    logger.info('User created successfully', { userId: user.id });
+    return user;
   }
+}
+```
+
+### Pattern: Repository Basique
+
+```typescript
+// Interface (Domain)
+export interface IUserRepository {
+  findById(id: string): Promise<User | null>;
+  findByEmail(email: string): Promise<User | null>;
+  save(user: User): Promise<User>;
+  delete(id: string): Promise<void>;
+}
+
+// Implémentation (Infrastructure)
+export class UserRepository implements IUserRepository {
+  private repository: Repository<User>;
+
+  constructor() {
+    this.repository = DatabaseConnection.getRepository(User);
+  }
+
+  async findById(id: string): Promise<User | null> {
+    return this.repository.findOne({ where: { id } });
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.repository.findOne({ where: { email } });
+  }
+
+  async save(user: User): Promise<User> {
+    return this.repository.save(user);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.repository.delete(id);
+  }
+}
+```
+
+### Pattern: Value Object
+
+```typescript
+// Value Object Email
+export class Email {
+  private readonly value: string;
+
+  constructor(email: string) {
+    if (!this.isValid(email)) {
+      throw new InvalidEmailError(email);
+    }
+    this.value = email.toLowerCase();
+  }
+
+  private isValid(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  getValue(): string {
+    return this.value;
+  }
+
+  equals(other: Email): boolean {
+    return this.value === other.value;
+  }
+}
+```
+
+### Dependency Injection
+
+Toujours injecter les dépendances via le constructeur:
+
+```typescript
+export class RegisterClassicUseCase {
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly passwordHasher: IPasswordHasher,
+    private readonly emailService: IEmailService
+  ) {}
 }
 ```
 
@@ -322,37 +390,15 @@ async register(req: Request, res: Response, next: NextFunction) {
 }
 ```
 
-### Error Handler Middleware
+### Logging
+
+Utiliser le logger Winston pour toutes les opérations importantes:
 
 ```typescript
-// src/presentation/middleware/error-handler.middleware.ts
-export const errorHandler = (
-  error: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  logger.error('Error occurred', { error, path: req.path });
-
-  if (error instanceof UserAlreadyExistsError) {
-    return res.status(409).json({
-      success: false,
-      error: {
-        code: 'USER_ALREADY_EXISTS',
-        message: error.message
-      }
-    });
-  }
-
-  // Erreur générique
-  res.status(500).json({
-    success: false,
-    error: {
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'An unexpected error occurred'
-    }
-  });
-};
+logger.info('User registered successfully', { userId: user.id });
+logger.error('Registration failed', { error: error.message, email });
+logger.warn('Suspicious login attempt', { ip, userAgent });
+logger.debug('Token validation details', { token, expiry });
 ```
 
 ## 🧪 Tests
@@ -399,6 +445,14 @@ describe('RegisterClassicUseCase', () => {
   });
 });
 ```
+
+### Règles de Test
+
+1. **Un test = Un comportement**
+2. **Pattern AAA:** Arrange, Act, Assert
+3. **Noms descriptifs:** `should_{behavior}_when_{condition}`
+4. **Mocker les dépendances externes**
+5. **Tester les cas limites et erreurs**
 
 ### Couverture de Tests
 
@@ -499,19 +553,6 @@ async execute(dto: RegisterDto): Promise<User> {
 }
 ```
 
-### README des Modules
-
-Chaque module complexe doit avoir un `README.md`:
-
-```
-src/infrastructure/oauth/
-├── README.md              # Documentation du module OAuth
-├── providers/
-│   ├── discord.provider.ts
-│   └── google.provider.ts
-└── oauth-provider.factory.ts
-```
-
 ## 🔍 Checklist Avant Commit
 
 - [ ] Le code compile sans erreurs TypeScript
@@ -523,42 +564,17 @@ src/infrastructure/oauth/
 - [ ] Les migrations DB sont créées (si modèle modifié)
 - [ ] Les variables d'env sont documentées dans `.env.example`
 
-## 🤖 Instructions Spécifiques pour les Agents IA
-
-1. **Toujours analyser avant de coder**
-   - Lire les fichiers existants
-   - Comprendre le contexte
-   - Identifier les dépendances
-
-2. **Respecter l'architecture en couches**
-   - Ne jamais court-circuiter les couches
-   - Utiliser les interfaces pour les dépendances
-   - Injecter les dépendances via le constructeur
-
-3. **Écrire des tests**
-   - Un test unitaire par fonction importante
-   - Des tests d'intégration pour les flows complets
-   - Mocker les dépendances externes
-
-4. **Logger les opérations importantes**
-   ```typescript
-   logger.info('User registered successfully', { userId: user.id });
-   logger.error('Registration failed', { error: error.message });
-   ```
-
-5. **Documenter les changements**
-   - Commenter le code complexe
-   - Mettre à jour les README
-   - Ajouter des exemples d'utilisation
-
 ## 📞 Support
 
 Pour toute question:
-- Consulter `ARCHITECTURE.md`
-- Consulter `AI_AGENT_GUIDE.md`
+- Consulter [ARCHITECTURE.md](./ARCHITECTURE.md) pour l'architecture
+- Consulter [AI_AGENT_GUIDE.md](./AI_AGENT_GUIDE.md) pour les workflows IA
+- Consulter [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) pour la navigation
 - Vérifier les exemples existants dans le code
 - Ouvrir une issue GitHub
 
 ---
 
-**Merci de contribuer à SuperOAuth ! 🚀**
+**Merci de contribuer à SuperOAuth !**
+
+*Dernière mise à jour : 19 Novembre 2024*
