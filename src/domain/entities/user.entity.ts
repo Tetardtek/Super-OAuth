@@ -126,6 +126,13 @@ export class User {
     this._updatedAt = new Date();
   }
 
+  verifyPassword(password: string): boolean {
+    if (!this._passwordHash) {
+      return false;
+    }
+    return Password.verify(password, this._passwordHash);
+  }
+
   recordLogin(): void {
     this._lastLogin = new Date();
     this._loginCount += 1;
@@ -188,5 +195,13 @@ export class User {
   }
   get linkedProviders(): string[] {
     return this._linkedAccounts.map((acc) => acc.getProvider());
+  }
+
+  /**
+   * Get password hash (for persistence layer only)
+   * @internal
+   */
+  getPasswordHash(): string | null {
+    return this._passwordHash;
   }
 }

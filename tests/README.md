@@ -1,162 +1,208 @@
 # 🧪 Tests SuperOAuth
 
-## 📚 Documentation Complète
-## 🚀 Quick Start
+**Version:** 2.0.0 | **Date:** 2025-11-19 | **Coverage:** ~45% Backend, 60%+ Frontend
 
-### Exécution des Tests
-```bash
-# Tests frontend complets
-npm run test:frontend
-
-# Tests backend complets
-npm run test
-
-# Tous les tests (frontend + backend)
-npm run test:all
-
-# Mode développement (watch)
-npm run test:frontend:watch
-npm run test:watch
-
-# Interface graphique (frontend)
-npm run test:frontend:ui
-
-# Rapports de couverture
-npm run test:frontend:coverage
-npm run test:coverage
-npm run test:all:coverage
-```
+---
 
 ## 📊 État Actuel
 
-### Tests Frontend ✅
-- **Framework** : Vitest + jsdom
-- **Tests** : 63 tests (100% réussite)
-- **Composants** : 4 modules testés
-- **Coverage** : Configuration V8 avec seuils 60%
+### Résumé Exécutif
 
-### Tests Backend ✅
-- **Framework** : Jest + ts-jest
-- **Tests** : 30 tests (100% réussite)
-- **Composants** : 3 modules testés
-- **Coverage** : 11.94% globale (focus sur domaine)
+| Métrique | Backend (Jest) | Frontend (Vitest) | Total |
+|----------|----------------|-------------------|-------|
+| **Tests** | 123 | 249 | 372 |
+| **Fichiers** | 11 | 13 | 24 |
+| **Coverage** | ~45% 🟡 | ~60%+ 🟢 | ~50% 🟡 |
+| **Statut** | EN PROGRÈS | EXCELLENT | BON |
 
-### Répartition des Tests
-| Type | Module | Tests | Statut |
-|------|--------|-------|--------|
-| **Frontend** | Auth Service | 15 | ✅ |
-| **Frontend** | Dashboard | 15 | ✅ |
-| **Frontend** | Server Monitor | 15 | ✅ |
-| **Frontend** | Shared Utils | 18 | ✅ |
-| **Backend** | Value Objects | 7 | ✅ |
-| **Backend** | Use Cases | 5 | ✅ |
-| **Backend** | Token Service | 18 | ✅ |
-| **TOTAL** | - | **93** | **✅** |
+**✅ Phase 1 Complétée:** +82 tests sécurité (41 → 123 tests backend)
 
-## 🏗️ Structure
+### Distribution des Tests Backend
+
+| Couche | Tests | Fichiers |
+|--------|-------|----------|
+| **Use Cases** | 49 | 4 |
+| **Middleware** | 27 | 2 |
+| **Services Infrastructure** | 32 | 2 |
+| **Value Objects** | 13 | 1 |
+| **Utils** | 2 | 2 |
+
+---
+
+## 🚀 Quick Start
+
+### Commandes Principales
+
+```bash
+# Tests backend (Jest)
+npm test                      # Tous les tests backend
+npm run test:watch            # Mode watch
+npm run test:coverage         # Avec couverture
+
+# Tests frontend (Vitest)
+npm run test:frontend         # Tous les tests frontend
+npm run test:frontend:watch   # Mode watch
+npm run test:frontend:ui      # Interface graphique
+npm run test:frontend:coverage # Avec couverture
+
+# Tous les tests
+npm run test:all              # Backend + Frontend (372 tests)
+npm run test:all:coverage     # Avec couverture complète
+```
+
+---
+
+## 📁 Structure des Tests
 
 ```
 tests/
-├── frontend/                  # Tests Frontend (Vitest)
-│   ├── setup.js               # Configuration globale
-│   ├── mocks/
-│   │   └── api.js            # Mocks API
-│   └── unit/
-│       ├── auth-service.test.js
-│       ├── dashboard-component.test.js
-│       ├── server-monitor.test.js
-│       └── shared-utils.test.js
-├── unit/                      # Tests Backend (Jest)
-│   ├── value-objects.test.ts  # Domain Value Objects
-│   ├── use-cases/
-│   │   └── register-classic.test.ts
-│   └── services/
-│       └── token.service.test.ts
-└── README.md                  # Ce fichier
+├── unit/                              # Tests unitaires backend (Jest)
+│   ├── application/
+│   │   └── use-cases/                # Tests use cases (49 tests)
+│   │       ├── register-classic.test.ts      (4 tests)
+│   │       ├── login-classic.test.ts         (14 tests)
+│   │       ├── refresh-token.test.ts         (12 tests)
+│   │       └── complete-oauth.test.ts        (11 tests)
+│   ├── presentation/
+│   │   └── middleware/                # Tests middleware (27 tests)
+│   │       ├── auth.middleware.test.ts       (15 tests)
+│   │       └── validation.middleware.test.ts (12 tests)
+│   ├── infrastructure/
+│   │   └── services/                  # Tests services (32 tests)
+│   │       ├── oauth.service.test.ts         (18 tests)
+│   │       └── token.service.test.ts         (14 tests)
+│   ├── value-objects.test.ts          # Tests value objects (13 tests)
+│   ├── analyze-bundle-size.util.test.js      (1 test)
+│   └── optimize-bundles.utils.test.js        (1 test)
+│
+└── frontend/                          # Tests frontend (Vitest)
+    └── unit/                          # 249 tests
+        ├── auth-service.test.js
+        ├── dashboard-component.test.js
+        ├── server-monitor.test.js
+        ├── shared-utils.test.js
+        └── managers/
+            ├── toast-manager.test.js
+            └── token-manager.test.js
+        └── utils/                     # 7 modules testés
 ```
 
-## 🎯 Objectifs de Tests
+---
 
-### Classification Frontend
-- **Critiques** : 32 tests (51%) - Sécurité, auth, logique métier
-- **Performance** : 18 tests (29%) - UX, optimisations
-- **Robustesse** : 13 tests (20%) - Edge cases, recovery
+## 🎯 Couverture de Tests
 
-### Classification Backend
-- **Value Objects** : 7 tests - Validation domaine (Email, Password, etc.)
-- **Use Cases** : 5 tests - Logique métier (Register Classic)
-- **Services** : 18 tests - Infrastructure (Token Service)
+### Backend - Phase 1 Complétée ✅
 
-### Couverture Cible
-- **Frontend** : 60% minimum (configuré)
-- **Backend** : 90% minimum (objectif)
-- **Domaine Critique** : 95% (auth/sécurité)
+**Use Cases (4/7 testés)**
+- ✅ register-classic (4 tests)
+- ✅ login-classic (14 tests)
+- ✅ refresh-token (12 tests)
+- ✅ complete-oauth (11 tests)
+- ⏳ logout (À faire - Phase 2)
+- ⏳ start-oauth (À faire - Phase 2)
+- ⏳ password-reset (À faire - Phase 3)
+
+**Middleware (2/4 testés)**
+- ✅ auth.middleware (15 tests)
+- ✅ validation.middleware (12 tests)
+- ⏳ error.middleware (À faire - Phase 3)
+- ⏳ rate-limit.middleware (À faire - Phase 3)
+
+**Services Infrastructure (2/3 testés)**
+- ✅ oauth.service (18 tests)
+- ✅ token.service (14 tests)
+- ⏳ password.service (À faire - Phase 2)
+
+**Repositories (0/3 testés)**
+- ⏳ user.repository (À faire - Phase 2)
+- ⏳ session.repository (À faire - Phase 2)
+- ⏳ linked-account.repository (À faire - Phase 2)
+
+### Frontend - Excellent ✅
+
+- ✅ Auth Service (complet)
+- ✅ Dashboard Components (complet)
+- ✅ Server Monitor (complet)
+- ✅ Toast Manager (complet)
+- ✅ Token Manager (complet)
+- ✅ Utils (7 modules complets)
+
+---
+
+## 🧪 Standards de Test
+
+### Pattern AAA (Arrange-Act-Assert)
+
+```typescript
+it('should return user on valid credentials', async () => {
+  // Arrange
+  const mockUser = { id: '1', email: 'test@example.com' };
+  mockUserRepo.findByEmail.mockResolvedValue(mockUser);
+
+  // Act
+  const result = await loginUseCase.execute({ email, password });
+
+  // Assert
+  expect(result.user).toEqual(mockUser);
+});
+```
+
+### Principes
+
+✅ **Isolation** - Chaque test est indépendant
+✅ **Mocks typés** - Type safety complet
+✅ **Edge cases** - Cas limites testés
+✅ **Happy + Error paths** - Chemins normaux ET erreurs
+✅ **Sécurité** - Tests d'injection, JWT, CSRF
+✅ **Descriptif** - Noms de tests clairs
+
+---
+
+## 📈 Prochaines Phases
+
+### Phase 2 - Business Logic (84 tests) 🔄
+- Repositories (35 tests)
+- Mappers (20 tests)
+- Services application (22 tests)
+- Use cases restants (13 tests)
+
+### Phase 3 - Complétion (67 tests)
+- Entities (20 tests)
+- Middleware manquants (11 tests)
+- Value Objects split (14 tests)
+- Services manquants (22 tests)
+
+### Phase 4 - Intégration (70 tests)
+- Controllers integration (45 tests)
+- Database integration (25 tests)
+
+**Objectif final:** 340 tests backend | 82%+ coverage
+
+---
 
 ## 🔧 Configuration
 
-### Frontend - Vitest Config
-- **Environment** : jsdom (simulation navigateur)
-- **Globals** : Activé (describe, it, expect)
-- **Coverage** : V8 provider avec seuils
-- **Timeout** : 10s par test/hook
+### Jest (Backend)
+- **Preset:** ts-jest
+- **Environment:** node
+- **Coverage:** lcov, html, text
+- **Timeout:** 10s
+- **Setup:** tests/setup.ts
 
-### Backend - Jest Config
-- **Environment** : node (TypeScript)
-- **Preset** : ts-jest
-- **Coverage** : V8 provider avec HTML/LCOV
-- **Timeout** : 10s par test
+### Vitest (Frontend)
+- **Environment:** jsdom
+- **Coverage:** V8 provider
+- **UI:** @vitest/ui
+- **Globals:** true
 
-### Mocks Disponibles
-#### Frontend
-- **localStorage/sessionStorage** : Persistance données
-- **fetch API** : Requêtes HTTP
-- **clipboard API** : Copier/coller
-- **DOM APIs** : Simulation navigateur
-
-#### Backend
-- **Repositories** : Mocks TypeORM
-- **Services** : Mocks JWT/Token
-- **External APIs** : Mocks OAuth providers
-
-## 📈 Prochaines Étapes
-
-### Phase 3.2 - Tests Backend
-- Tests unitaires (Jest/Vitest)
-- Tests d'intégration (Supertest)
-- Tests base de données (Test containers)
-
-### Phase 3.3 - Tests E2E
-- Playwright ou Cypress
-- Scénarios utilisateur complets
-- Tests cross-browser
-
-### Phase 3.4 - Tests Performance
-- Tests de charge (Artillery/k6)
-- Benchmarks API
-- Monitoring continu
-
-## 🆘 Aide et Support
-
-### Commandes Utiles
-```bash
-# Debug tests frontend spécifiques
-npx vitest auth-service --inspect-brk
-
-# Debug tests backend spécifiques
-npm run test -- --testNamePattern="UserId"
-
-# Tests avec pattern
-npx vitest --grep "login"
-npm run test -- --testPathPattern="value-objects"
-
-# Verbose output
-npx vitest --reporter=verbose
-npm run test -- --verbose
-```
-
-### Documentation
-- [Guide Vitest](https://vitest.dev/guide/)
-- [jsdom Reference](https://github.com/jsdom/jsdom)
 ---
 
-*Dernière mise à jour : Phase 3.1 - Juillet 2025*
+## 📚 Ressources
+
+- **Status détaillé:** `.github/TESTS_STATUS.md`
+- **Code quality:** `.github/CODE_QUALITY_STATUS.md`
+- **Setup:** `tests/setup.ts`
+
+---
+
+**Dernière mise à jour:** 2025-11-19 | **Phase:** 1/4 complétée ✅

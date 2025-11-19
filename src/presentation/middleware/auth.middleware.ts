@@ -1,15 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { getSecurityConfig } from '../../shared/config/security.config';
 import { logger } from '../../shared/utils/logger.util';
 import { DIContainer } from '../../infrastructure/di/container';
-import { IUserRepository } from '../../application/interfaces/repositories.interface';
+import type { IUserRepository } from '../../application/interfaces/repositories.interface';
 
 export interface AuthenticatedUser {
   id: string;
-  email?: string;
+  email?: string | undefined;
   nickname: string;
   isActive: boolean;
+}
+
+interface AccessTokenPayload extends JwtPayload {
+  userId: string;
+  type: 'access';
+  email?: string;
+  nickname?: string;
+  isActive?: boolean;
 }
 
 /**
@@ -40,7 +48,7 @@ export const authenticateToken = async (
   }
 
   try {
-    const decoded = jwt.verify(token, securityConfig.jwt.accessTokenSecret) as any;
+    const decoded = jwt.verify(token, securityConfig.jwt.accessTokenSecret) as AccessTokenPayload;
 
     // Verify token type (should be access token)
     if (decoded.type !== 'access') {
@@ -60,7 +68,7 @@ export const authenticateToken = async (
     }
 
     // Get fresh user data from database
-    const userRepository = DIContainer.getInstance().get('UserRepository') as IUserRepository;
+    const userRepository = DIContainer.getInstance().get<IUserRepository>('UserRepository');
     const user = await userRepository.findById(decoded.userId);
 
     if (!user || !user.isActive) {
@@ -80,7 +88,7 @@ export const authenticateToken = async (
     }
 
     // Attach user info to request
-    (req as any).user = {
+    (req as Request & { user: AuthenticatedUser }).user = {
       id: user.id,
       email: user.email?.toString() || '',
       nickname: user.nickname.toString(),
@@ -136,13 +144,13 @@ export const optionalAuth = (req: Request, _res: Response, next: NextFunction): 
   }
 
   try {
-    const decoded = jwt.verify(token, securityConfig.jwt.accessTokenSecret) as any;
+    const decoded = jwt.verify(token, securityConfig.jwt.accessTokenSecret) as AccessTokenPayload;
 
     if (decoded.type === 'access') {
-      (req as any).user = {
+      (req as Request & { user: AuthenticatedUser }).user = {
         id: decoded.userId,
         email: decoded.email,
-        nickname: decoded.nickname,
+        nickname: decoded.nickname || '',
         isActive: decoded.isActive || true,
       };
     }

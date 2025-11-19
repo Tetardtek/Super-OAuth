@@ -5,13 +5,13 @@ import { logger } from '../../shared/utils/logger.util';
 export interface ValidationError {
   field: string;
   message: string;
-  value?: any;
+  value?: unknown;
 }
 
-export interface ValidatedRequest<T = any> extends Request {
-  validatedBody: T;
-  validatedParams?: any;
-  validatedQuery?: any;
+export interface ValidatedRequest<T = Record<string, unknown>> extends Request {
+  validatedBody?: T | undefined;
+  validatedParams?: Record<string, unknown> | undefined;
+  validatedQuery?: Record<string, unknown> | undefined;
 }
 
 /**

@@ -2,14 +2,6 @@
 
 Ce dossier contient toute la documentation nécessaire pour les agents IA (Claude Code, Cursor, GitHub Copilot, etc.) qui travaillent sur le projet SuperOAuth.
 
-## 📋 Table des Matières
-
-- [Démarrage Rapide](#démarrage-rapide)
-- [Structure du Dossier](#structure-du-dossier)
-- [Guides Disponibles](#guides-disponibles)
-- [Statut du Projet](#statut-du-projet)
-- [Règles et Conventions](#règles-et-conventions)
-
 ## 🚀 Démarrage Rapide
 
 ### Pour un Agent IA Nouveau sur le Projet
@@ -31,19 +23,19 @@ Ce dossier contient toute la documentation nécessaire pour les agents IA (Claud
    - Flux de données
    - Modèle de données
 
-4. **[guides/AI_AGENT_GUIDE.md](./guides/AI_AGENT_GUIDE.md)** (20-25 min)
-   - Patterns complets avec exemples
-   - Erreurs communes à éviter
-   - Workflows pour tâches courantes
+4. **[guides/DEVELOPMENT.md](./guides/DEVELOPMENT.md)** (20 min)
+   - Standards de code
+   - Patterns de développement
+   - Gestion des erreurs
 
-5. **[guides/PROJECT_STRUCTURE.md](./guides/PROJECT_STRUCTURE.md)** (5-10 min)
+5. **[guides/AI_AGENT_GUIDE.md](./guides/AI_AGENT_GUIDE.md)** (20 min)
+   - Workflows pour agents IA
+   - Exemples complets step-by-step
+   - Erreurs communes à éviter
+
+6. **[guides/PROJECT_STRUCTURE.md](./guides/PROJECT_STRUCTURE.md)** (5-10 min)
    - Localisation rapide des fichiers
    - Carte de navigation
-
-6. **[status/PROJECT_STATUS.md](./status/PROJECT_STATUS.md)** (5 min)
-   - État actuel du projet
-   - Prochaines actions
-   - Métriques
 
 ## 📁 Structure du Dossier
 
@@ -53,67 +45,65 @@ CLAUDE/
 ├── QUICK_START.md              # Démarrage en 5 minutes
 ├── .cursorrules                # Règles pour agents IA
 │
-├── guides/                     # Guides techniques détaillés
-│   ├── ARCHITECTURE.md         # Architecture DDD complète
-│   ├── CONTRIBUTING.md         # Standards et workflow
-│   ├── AI_AGENT_GUIDE.md       # Patterns et exemples
-│   ├── PROJECT_STRUCTURE.md    # Navigation dans le projet
-│   └── TESTING.md              # Guide complet des tests
-│
-└── status/                     # Statut et suivi
-    ├── PROJECT_STATUS.md       # État actuel du projet
-    ├── PROJECT_CONTEXT_OLD.md  # Archive (référence)
-    └── SUIVI_PROJET_OLD.md     # Archive (référence)
+└── guides/                     # Guides techniques détaillés
+    ├── ARCHITECTURE.md         # Architecture DDD complète
+    ├── DEVELOPMENT.md          # Standards de code et patterns
+    ├── AI_AGENT_GUIDE.md       # Workflows pour agents IA
+    ├── PROJECT_STRUCTURE.md    # Navigation dans le projet
+    └── TESTING.md              # Guide complet des tests
 ```
 
 ## 📚 Guides Disponibles
 
 ### 🎯 Guides Essentiels
 
-| Guide | Description | Quand le Lire |
-|-------|-------------|---------------|
-| **QUICK_START.md** | Démarrage rapide en 5 min | Dès le début |
-| **.cursorrules** | Règles strictes pour agents IA | Avant tout changement |
+| Guide | Description | Lignes | Quand le Lire |
+|-------|-------------|--------|---------------|
+| **QUICK_START.md** | Démarrage rapide en 5 min | ~200 | Dès le début |
+| **.cursorrules** | Règles strictes pour agents IA | ~350 | Avant tout changement |
 
 ### 📖 Guides Détaillés
 
-| Guide | Description | Quand le Lire |
-|-------|-------------|---------------|
-| **ARCHITECTURE.md** | Architecture DDD, flux, sécurité | Pour comprendre la structure |
-| **CONTRIBUTING.md** | Standards code, Git workflow, tests | Avant de contribuer |
-| **AI_AGENT_GUIDE.md** | Patterns, exemples, erreurs | Pour coder efficacement |
-| **PROJECT_STRUCTURE.md** | Localisation fichiers, navigation | Pour trouver rapidement |
-| **TESTING.md** | Guide complet des tests (249 tests) | Pour écrire/comprendre les tests |
+| Guide | Description | Lignes | Quand le Lire |
+|-------|-------------|--------|---------------|
+| **ARCHITECTURE.md** | Architecture DDD, flux, sécurité | ~300 | Pour comprendre la structure |
+| **DEVELOPMENT.md** | Standards code, patterns, tests | ~500 | Pour développer |
+| **AI_AGENT_GUIDE.md** | Workflows IA, exemples complets | ~400 | Pour coder efficacement |
+| **PROJECT_STRUCTURE.md** | Localisation fichiers, navigation | ~350 | Pour trouver rapidement |
+| **TESTING.md** | Guide complet des tests (290 tests) | ~350 | Pour écrire/comprendre les tests |
 
-### 📊 Statut et Suivi
-
-| Document | Description | Quand le Consulter |
-|----------|-------------|-------------------|
-| **PROJECT_STATUS.md** | État actuel, métriques, roadmap | Pour voir l'avancement |
+**Total: ~2600 lignes** (au lieu de 3993 précédemment)
 
 ## 🎯 Statut du Projet
 
-### Dernière Mise à Jour : 18 Novembre 2025
+**Voir `.github/PROJECT_STATUS.md` pour l'état détaillé**
 
-| Domaine | Progression | Statut |
-|---------|:-----------:|:------:|
-| Architecture | 100% | ✅ |
-| Documentation AI | 100% | ✅ |
-| Backend & API | 95% | ✅ |
-| Frontend | 90% | ✅ |
-| Tests Frontend | 100% | ✅ |
-| Tests (249 tests) | 100% | ✅ |
-| Performance | 100% | ✅ |
-| Sécurité | 90% | ✅ |
-| CI/CD | 30% | ⚠️ |
+| Domaine | Statut |
+|---------|:------:|
+| Architecture DDD | ✅ 100% |
+| Code Backend | ✅ 95% |
+| Tests | ✅ 290/290 (100%) |
+| Documentation | ✅ 100% |
+| ESLint | ✅ 0 erreurs |
 
-**Phase Actuelle :** Phase 4.4 - Documentation Agents IA ✅ COMPLÉTÉE
+**Phase Actuelle :** Phase 6 - ESLint Strict Mode ✅ COMPLÉTÉ
 
-**Prochaine Phase :** Phase 5 - Fonctionnalités Avancées OAuth
+**Prochaine Étape :** Créer PR vers `main`
 
-## 📜 Règles et Conventions
+## 🎓 Checklist pour Agents IA
 
-### Règles d'Or (NON NÉGOCIABLES)
+Avant de modifier quoi que ce soit :
+
+- [ ] J'ai lu `QUICK_START.md`
+- [ ] J'ai lu `.cursorrules`
+- [ ] J'ai compris l'architecture via `guides/ARCHITECTURE.md`
+- [ ] Je connais les standards via `guides/DEVELOPMENT.md`
+- [ ] Je connais les workflows via `guides/AI_AGENT_GUIDE.md`
+- [ ] Je sais où sont les fichiers via `guides/PROJECT_STRUCTURE.md`
+- [ ] Je respecte les conventions de nommage
+- [ ] Je comprends la séparation des couches DDD
+
+## 📜 Règles d'Or (NON NÉGOCIABLES)
 
 1. ✅ **TOUJOURS** respecter la séparation des couches DDD
 2. ✅ **TOUJOURS** utiliser l'injection de dépendances
@@ -122,50 +112,17 @@ CLAUDE/
 5. ❌ **JAMAIS** utiliser le type `any`
 6. ❌ **JAMAIS** mettre de logique métier dans les Controllers
 
-### Conventions de Nommage
+**Détails complets:** Voir [.cursorrules](./.cursorrules)
 
-```typescript
-// Classes: PascalCase
-class UserEntity {}
-class RegisterClassicUseCase {}
-
-// Interfaces: PascalCase avec 'I'
-interface IUserRepository {}
-
-// Fonctions/Variables: camelCase
-const getUserById = () => {}
-const isEmailValid = true
-
-// Constantes: SCREAMING_SNAKE_CASE
-const MAX_LOGIN_ATTEMPTS = 5
-
-// Fichiers: kebab-case
-user.entity.ts
-register-classic.use-case.ts
-auth.controller.ts
-```
-
-### Architecture en Couches
-
-```
-Presentation ──> Application ──> Domain <── Infrastructure
-```
-
-**Interdiction absolue :** Les dépendances doivent TOUJOURS pointer vers le Domain, jamais l'inverse.
-
-## 🔧 Commandes Utiles
+## 🔧 Commandes Rapides
 
 ```bash
 # Développement
 npm run dev              # Lancer en mode développement
-npm run build            # Compiler TypeScript
-npm start                # Lancer en production
 
 # Tests
+npm run test             # Tous les tests (290 tests)
 npm run test:frontend    # Tests frontend (249 tests)
-npm run test:backend     # Tests backend
-npm run test:coverage    # Tests avec couverture
-npm run test:watch       # Tests en mode watch
 
 # Qualité
 npm run lint:fix         # Corriger le code
@@ -173,46 +130,24 @@ npm run format           # Formater le code
 npm run typecheck        # Vérifier les types
 
 # Base de données
-npm run migration:generate  # Générer une migration
-npm run migration:run       # Exécuter les migrations
-npm run db:reset           # Réinitialiser la DB
+npm run migration:run    # Exécuter les migrations
 ```
 
-## 🆘 En Cas de Problème
+**Commandes complètes:** Voir [QUICK_START.md](./QUICK_START.md)
 
-### Erreur "Cannot find module"
-→ Vérifier les alias TypeScript dans `tsconfig.json`
-→ Utiliser `@domain/`, `@application/`, etc.
+## 🆘 Navigation Rapide
 
-### Tests qui échouent
-```bash
-npm run test -- --clearCache
-npm run test
-```
+### Je veux...
 
-### "Database connection failed"
-→ L'application peut fonctionner sans DB en mode démo
-→ Vérifier `.env` et les credentials MySQL
-
-## 📞 Support
-
-1. **Consulter les guides** dans `/CLAUDE/guides`
-2. **Vérifier le statut** dans `/CLAUDE/status`
-3. **Chercher dans la doc** via `PROJECT_STRUCTURE.md`
-4. **Lire les exemples** dans `AI_AGENT_GUIDE.md`
-
-## 🎓 Checklist pour Agents IA
-
-Avant de modifier quoi que ce soit :
-
-- [ ] J'ai lu `QUICK_START.md`
-- [ ] J'ai lu `.cursorrules`
-- [ ] J'ai compris l'architecture via `ARCHITECTURE.md`
-- [ ] Je connais les patterns via `AI_AGENT_GUIDE.md`
-- [ ] Je sais où sont les fichiers via `PROJECT_STRUCTURE.md`
-- [ ] J'ai vérifié le statut du projet via `PROJECT_STATUS.md`
-- [ ] Je respecte les conventions de nommage
-- [ ] Je comprends la séparation des couches DDD
+| Objectif | Fichier à Consulter |
+|----------|-------------------|
+| Démarrer rapidement | [QUICK_START.md](./QUICK_START.md) |
+| Comprendre l'architecture | [guides/ARCHITECTURE.md](./guides/ARCHITECTURE.md) |
+| Connaître les standards | [guides/DEVELOPMENT.md](./guides/DEVELOPMENT.md) |
+| Voir des exemples complets | [guides/AI_AGENT_GUIDE.md](./guides/AI_AGENT_GUIDE.md) |
+| Trouver un fichier | [guides/PROJECT_STRUCTURE.md](./guides/PROJECT_STRUCTURE.md) |
+| Écrire des tests | [guides/TESTING.md](./guides/TESTING.md) |
+| Voir les règles strictes | [.cursorrules](./.cursorrules) |
 
 ## 🚀 Prêt à Contribuer
 
@@ -226,7 +161,7 @@ Une fois tous les guides lus et la checklist validée, vous êtes prêt à contr
 
 ---
 
-**Bon développement ! 🎉**
+**Bon développement !**
 
 *Documentation maintenue par : Équipe SuperOAuth*
-*Dernière mise à jour : 18 Novembre 2025*
+*Dernière mise à jour : 19 Novembre 2024*

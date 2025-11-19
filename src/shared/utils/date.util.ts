@@ -35,7 +35,7 @@ export class DateUtil {
     return date.toISOString().slice(0, 19).replace('T', ' ');
   }
 
-  static isValidDate(date: any): boolean {
+  static isValidDate(date: unknown): boolean {
     return date instanceof Date && !isNaN(date.getTime());
   }
 

@@ -185,9 +185,9 @@ src/
     └── constants/      # Constantes
 ```
 
-## 🔧 Ajout de Fonctionnalités
+## 🔧 Workflow pour Ajouter une Feature
 
-### Workflow pour Ajouter une Feature
+**Voir [guides/AI_AGENT_GUIDE.md](./guides/AI_AGENT_GUIDE.md) pour des exemples complets step-by-step**
 
 1. **Analyser la demande**
    - Identifier la couche concernée
@@ -208,40 +208,6 @@ src/
 4. **Documentation**
    - JSDoc pour les fonctions publiques
    - Commentaires pour la logique complexe
-   - Mise à jour du README si nécessaire
-
-### Exemple: Ajouter un Provider OAuth
-
-```typescript
-// 1. Domain: Ajouter le provider dans les types
-// src/shared/types/oauth.types.ts
-export type OAuthProvider = 'discord' | 'google' | 'github' | 'twitch' | 'linkedin';
-
-// 2. Infrastructure: Créer le provider
-// src/infrastructure/oauth/providers/linkedin.provider.ts
-export class LinkedInOAuthProvider implements IOAuthProvider {
-  getAuthorizationUrl(): string { ... }
-  handleCallback(code: string): Promise<OAuthUserInfo> { ... }
-}
-
-// 3. Infrastructure: Enregistrer dans la factory
-// src/infrastructure/oauth/oauth-provider.factory.ts
-case 'linkedin':
-  return new LinkedInOAuthProvider();
-
-// 4. Application: Le Use Case existant fonctionne automatiquement
-// Aucune modification nécessaire grâce à l'interface IOAuthProvider
-
-// 5. Presentation: Ajouter la route
-// src/presentation/routes/oauth.routes.ts
-router.get('/oauth/linkedin', oauthController.startOAuth);
-router.get('/oauth/linkedin/callback', oauthController.completeOAuth);
-
-// 6. Config: Ajouter les variables d'environnement
-// .env.example
-LINKEDIN_CLIENT_ID=your_client_id
-LINKEDIN_CLIENT_SECRET=your_client_secret
-```
 
 ## 🧪 Tests
 
@@ -253,55 +219,7 @@ LINKEDIN_CLIENT_SECRET=your_client_secret
 4. **Mocker les dépendances externes**
 5. **Tester les cas limites et erreurs**
 
-### Structure d'un Test
-
-```typescript
-describe('RegisterClassicUseCase', () => {
-  let useCase: RegisterClassicUseCase;
-  let mockUserRepository: jest.Mocked<IUserRepository>;
-  let mockPasswordHasher: jest.Mocked<IPasswordHasher>;
-
-  beforeEach(() => {
-    // Arrange - Setup des mocks
-    mockUserRepository = {
-      findByEmail: jest.fn(),
-      save: jest.fn(),
-    } as any;
-
-    mockPasswordHasher = {
-      hash: jest.fn(),
-    } as any;
-
-    useCase = new RegisterClassicUseCase(
-      mockUserRepository,
-      mockPasswordHasher
-    );
-  });
-
-  it('should_register_user_when_email_not_exists', async () => {
-    // Arrange
-    const dto = { email: 'test@example.com', password: 'Pass123!' };
-    mockUserRepository.findByEmail.mockResolvedValue(null);
-    mockPasswordHasher.hash.mockResolvedValue('hashed_password');
-
-    // Act
-    const result = await useCase.execute(dto);
-
-    // Assert
-    expect(result).toBeDefined();
-    expect(mockUserRepository.save).toHaveBeenCalledTimes(1);
-  });
-
-  it('should_throw_error_when_user_already_exists', async () => {
-    // Arrange
-    const dto = { email: 'test@example.com', password: 'Pass123!' };
-    mockUserRepository.findByEmail.mockResolvedValue({} as User);
-
-    // Act & Assert
-    await expect(useCase.execute(dto)).rejects.toThrow(UserAlreadyExistsError);
-  });
-});
-```
+**Voir [guides/TESTING.md](./guides/TESTING.md) pour le guide complet**
 
 ## 🔐 Sécurité
 
@@ -331,24 +249,6 @@ describe('RegisterClassicUseCase', () => {
 - Email (masqué: `u***@example.com`)
 - IP (partielle: `192.168.x.x`)
 - Actions utilisateur
-
-## 📊 Performance
-
-### Optimisations
-
-1. **Requêtes Database**
-   - Utiliser les relations TypeORM
-   - Éviter les N+1 queries
-   - Ajouter des index sur les colonnes fréquemment recherchées
-
-2. **Caching**
-   - Redis pour les sessions
-   - Cache les données peu changeantes
-   - Invalider le cache intelligemment
-
-3. **Async/Await**
-   - Paralléliser les opérations indépendantes
-   - Utiliser `Promise.all()` quand possible
 
 ## 🎨 Formatage et Style
 
@@ -456,11 +356,12 @@ npm run typecheck
 
 Avant toute modification, consulter:
 
-1. `ARCHITECTURE.md` - Architecture détaillée du projet
-2. `CONTRIBUTING.md` - Guide de contribution complet
-3. `AI_AGENT_GUIDE.md` - Instructions spécifiques pour agents IA
-4. `PROJECT_STRUCTURE.md` - Structure détaillée des fichiers
-5. `README.md` - Documentation générale
+1. `guides/ARCHITECTURE.md` - Architecture détaillée du projet
+2. `guides/DEVELOPMENT.md` - Standards de code et patterns
+3. `guides/AI_AGENT_GUIDE.md` - Workflows et exemples pour agents IA
+4. `guides/PROJECT_STRUCTURE.md` - Structure détaillée des fichiers
+5. `guides/TESTING.md` - Guide complet des tests
+6. `README.md` - Vue d'ensemble de la documentation
 
 ## 🤖 Instructions pour Agents IA
 
@@ -497,7 +398,7 @@ Avant toute modification, consulter:
 
 ## 🎯 Objectifs de Qualité
 
-- **Couverture de tests:** 85%+
+- **Tests:** 290 tests (249 frontend + 41 backend) avec 100% de réussite
 - **Complexité cyclomatique:** < 10 par fonction
 - **Duplication de code:** < 3%
 - **Taille des fichiers:** < 300 lignes
@@ -510,3 +411,5 @@ Avant toute modification, consulter:
 - La sécurité sur la performance
 - La maintenabilité sur l'optimisation prématurée
 - Les tests sur le code de production
+
+*Dernière mise à jour : 19 Novembre 2024*

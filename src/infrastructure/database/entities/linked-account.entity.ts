@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
   Index,
 } from 'typeorm';
+import type { UserEntity } from './user.entity';
 
 @Entity('linked_accounts')
 @Index('idx_linked_accounts_user_provider', ['userId', 'provider'], { unique: true })
@@ -36,7 +37,7 @@ export class LinkedAccountEntity {
   avatarUrl?: string | null;
 
   @Column({ type: 'json', nullable: true })
-  metadata?: Record<string, any> | null;
+  metadata?: Record<string, unknown> | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
@@ -46,5 +47,5 @@ export class LinkedAccountEntity {
 
   @ManyToOne('UserEntity', 'linkedAccounts', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user!: any;
+  user!: UserEntity;
 }

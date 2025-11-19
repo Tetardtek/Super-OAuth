@@ -16,24 +16,19 @@ SuperOAuth/
 
 ### Racine du Projet
 
+**Pour la structure complète du dossier CLAUDE**, voir [../README.md](../README.md).
+
 ```
 SuperOAuth/
-├── .env                     # Variables d'environnement (ne pas commit)
-├── .env.example             # Template des variables d'environnement
+├── .env, .env.example       # Variables d'environnement
 ├── .gitignore               # Fichiers ignorés par Git
-├── .cursorrules             # Règles pour agents IA (Cursor, Claude Code)
 ├── package.json             # Dépendances et scripts npm
-├── package-lock.json        # Lock des versions npm
 ├── tsconfig.json            # Configuration TypeScript
 ├── jest.config.js           # Configuration Jest (tests backend)
 ├── vitest.config.js         # Configuration Vitest (tests frontend)
 │
-├── 📚 Documentation
-├── README.md                # Documentation principale
-├── ARCHITECTURE.md          # Architecture DDD détaillée
-├── CONTRIBUTING.md          # Guide de contribution
-├── AI_AGENT_GUIDE.md        # Guide pour agents IA
-└── PROJECT_STRUCTURE.md     # Ce fichier
+├── 📚 CLAUDE/               # Documentation pour agents IA
+└── ...                      # (voir ../README.md)
 ```
 
 ### 📁 src/ - Code Source Principal

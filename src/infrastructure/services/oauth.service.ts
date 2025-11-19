@@ -18,6 +18,16 @@ interface OAuthProvider {
   redirectUri: string;
 }
 
+interface OAuthTokenResponse {
+  access_token: string;
+  refresh_token?: string | undefined;
+  token_type?: string | undefined;
+  expires_in?: number | undefined;
+  scope?: string | undefined;
+  error?: string | undefined;
+  error_description?: string | undefined;
+}
+
 export class OAuthService implements IOAuthService {
   private providers: Record<string, OAuthProvider>;
 
@@ -121,7 +131,7 @@ export class OAuthService implements IOAuthService {
 
     return {
       accessToken: tokenResponse.access_token,
-      refreshToken: tokenResponse.refresh_token,
+      ...(tokenResponse.refresh_token && { refreshToken: tokenResponse.refresh_token }),
       userInfo: {
         id: userInfo.id,
         ...(userInfo.email && { email: userInfo.email }),
@@ -134,7 +144,7 @@ export class OAuthService implements IOAuthService {
     config: OAuthProvider,
     code: string,
     redirectUri?: string
-  ): Promise<any> {
+  ): Promise<OAuthTokenResponse> {
     const data = {
       client_id: config.clientId,
       client_secret: config.clientSecret,
@@ -143,7 +153,7 @@ export class OAuthService implements IOAuthService {
       grant_type: 'authorization_code',
     };
 
-    const response = await axios.post(config.tokenUrl, data, {
+    const response = await axios.post<OAuthTokenResponse>(config.tokenUrl, data, {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -204,7 +214,7 @@ export class OAuthService implements IOAuthService {
 
       case 'github':
         return {
-          id: response.data.id.toString(),
+          id: String(response.data.id),
           email: response.data.email,
           nickname: response.data.login,
         };

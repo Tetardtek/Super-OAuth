@@ -7,6 +7,8 @@ import {
   UpdateDateColumn,
   Index,
 } from 'typeorm';
+import type { LinkedAccountEntity } from './linked-account.entity';
+import type { SessionEntity } from './session.entity';
 
 @Entity('users')
 @Index('idx_users_email', ['email'], { unique: true, where: 'email IS NOT NULL' })
@@ -44,8 +46,8 @@ export class UserEntity {
   loginCount!: number;
 
   @OneToMany('LinkedAccountEntity', 'user', { cascade: true })
-  linkedAccounts!: any[];
+  linkedAccounts!: LinkedAccountEntity[];
 
   @OneToMany('SessionEntity', 'user', { cascade: true })
-  sessions!: any[];
+  sessions!: SessionEntity[];
 }

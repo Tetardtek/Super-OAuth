@@ -40,6 +40,7 @@ import {
   requestLogger,
   apiRateLimit,
 } from './presentation/middleware';
+import { PROJECT_INFO, ENDPOINT_STATUS } from './shared/constants/project-info';
 
 /**
  * SuperOAuth Server Class
@@ -114,8 +115,10 @@ class SuperOAuthServer {
 
     // Simple session middleware for OAuth state management
     // Stores temporary OAuth state tokens to prevent CSRF attacks
-    this.app.use((req: any, _res, next) => {
-      req.session = req.session || {};
+    this.app.use((req: express.Request, _res, next) => {
+      // Extend Request with session property (temporary OAuth state storage)
+      (req as express.Request & { session?: Record<string, unknown> }).session =
+        (req as express.Request & { session?: Record<string, unknown> }).session || {};
       next();
     });
   }
@@ -164,33 +167,18 @@ class SuperOAuthServer {
     // API status endpoint
     this.app.get('/api/v1', (_req, res) => {
       res.json({
-        message: 'SuperOAuth API v1.0.0',
+        message: `${PROJECT_INFO.name} API ${PROJECT_INFO.apiVersion}.0.0`,
         status: 'ready',
-        phase: 'Phase 5 in progress - API Controllers (REST)',
-        nextPhase: 'Phase 6 - Testing & Documentation',
+        phase: PROJECT_INFO.currentPhase,
+        nextPhase: PROJECT_INFO.nextPhase,
         endpoints: {
           health: '/health',
           docs: '/docs',
           auth: {
-            auth: {
-              register: 'POST /api/v1/auth/register ✅',
-              login: 'POST /api/v1/auth/login ✅',
-              refresh: 'POST /api/v1/auth/refresh ✅',
-              logout: 'POST /api/v1/auth/logout ✅',
-              me: 'GET /api/v1/auth/me ✅',
-            },
-            oauth: {
-              providers: 'GET /api/v1/oauth/providers ✅',
-              start: 'GET /api/v1/oauth/{provider} ✅',
-              callback: 'GET /api/v1/oauth/{provider}/callback ✅',
-              linked: 'GET /api/v1/oauth/linked ✅',
-              unlink: 'DELETE /api/v1/oauth/{provider}/unlink ✅',
-            },
+            auth: ENDPOINT_STATUS.auth,
+            oauth: ENDPOINT_STATUS.oauth,
           },
-          user: {
-            profile: 'GET /api/v1/user/profile (Phase 6)',
-            accounts: 'GET /api/v1/user/linked-accounts (Phase 6)',
-          },
+          user: ENDPOINT_STATUS.user,
         },
       });
     });
@@ -213,7 +201,9 @@ class SuperOAuthServer {
         await DatabaseConnection.initialize();
         logger.info('Database connected successfully');
       } catch (dbError) {
-        logger.warn('Database connection failed (running without DB for demo)', dbError as Error);
+        logger.warn('Database connection failed (running without DB for demo)', {
+          error: dbError instanceof Error ? dbError.message : 'Unknown error',
+        });
         logger.info('Configure MySQL to enable full functionality');
       }
 
@@ -225,33 +215,35 @@ class SuperOAuthServer {
           webInterface: `http://localhost:${this.config.port}`,
           healthCheck: `http://localhost:${this.config.port}/health`,
           apiBase: `http://localhost:${this.config.port}${this.config.apiBasePath}`,
-          phase: 'Phase 4.2.B.1 OAuth Integration - COMPLETE ✅',
-          nextPhase: 'Phase 4.3 - Web Documentation',
+          phase: PROJECT_INFO.currentPhase,
+          nextPhase: PROJECT_INFO.nextPhase,
         });
       });
 
       // Graceful shutdown
-      process.on('SIGTERM', async () => {
+      process.on('SIGTERM', () => {
         logger.info('SIGTERM received, shutting down gracefully');
-        server.close(async () => {
-          try {
-            await DatabaseConnection.close();
-          } catch (error) {
-            logger.debug('Database was not connected');
-          }
-          process.exit(0);
+        server.close(() => {
+          void DatabaseConnection.close()
+            .catch(() => {
+              logger.debug('Database was not connected');
+            })
+            .finally(() => {
+              process.exit(0);
+            });
         });
       });
 
-      process.on('SIGINT', async () => {
+      process.on('SIGINT', () => {
         logger.info('SIGINT received, shutting down gracefully');
-        server.close(async () => {
-          try {
-            await DatabaseConnection.close();
-          } catch (error) {
-            logger.debug('Database was not connected');
-          }
-          process.exit(0);
+        server.close(() => {
+          void DatabaseConnection.close()
+            .catch(() => {
+              logger.debug('Database was not connected');
+            })
+            .finally(() => {
+              process.exit(0);
+            });
         });
       });
     } catch (error) {

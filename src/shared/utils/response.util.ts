@@ -4,13 +4,19 @@
  * @version 1.0.0
  */
 
-export interface StandardApiResponse<T = any> {
+export interface ValidationError {
+  field: string;
+  message: string;
+  value?: unknown;
+}
+
+export interface StandardApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: {
     message: string;
     code: string;
-    details?: any;
+    details?: unknown;
   };
   timestamp: string;
   requestId?: string;
@@ -31,14 +37,19 @@ export class ApiResponse {
   /**
    * Create an error response
    */
-  static error(message: string, code: string, details?: any): StandardApiResponse {
+  static error(message: string, code: string, details?: unknown): StandardApiResponse {
     return {
       success: false,
-      error: {
-        message,
-        code,
-        details,
-      },
+      error: details
+        ? {
+            message,
+            code,
+            details,
+          }
+        : {
+            message,
+            code,
+          },
       timestamp: new Date().toISOString(),
     };
   }
@@ -46,7 +57,7 @@ export class ApiResponse {
   /**
    * Create a validation error response
    */
-  static validationError(errors: any[]): StandardApiResponse {
+  static validationError(errors: ValidationError[]): StandardApiResponse {
     return {
       success: false,
       error: {

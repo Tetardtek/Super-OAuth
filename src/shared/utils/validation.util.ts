@@ -28,7 +28,12 @@ export class ValidationUtil {
     .min(2)
     .max(32)
     .pattern(/^[a-zA-Z0-9_-]+$/)
-    .custom((value, helpers) => {
+    .custom((value: unknown, helpers) => {
+      // Type guard: ensure value is a string
+      if (typeof value !== 'string') {
+        return helpers.error('nickname.invalidType');
+      }
+
       if (
         value.startsWith('_') ||
         value.startsWith('-') ||
@@ -67,6 +72,7 @@ export class ValidationUtil {
       'string.pattern.base': 'Nickname can only contain letters, numbers, underscores, and hyphens',
       'nickname.invalidFormat': 'Nickname cannot start or end with special characters',
       'nickname.reserved': 'This nickname is reserved',
+      'nickname.invalidType': 'Nickname must be a string',
       'any.required': 'Nickname is required',
     });
 

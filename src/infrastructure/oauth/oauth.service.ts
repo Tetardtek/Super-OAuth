@@ -16,6 +16,11 @@ import {
   validateOAuthConfig,
   getOAuthConfig,
   isProviderSupported,
+  DiscordUser,
+  GoogleUser,
+  GitHubUser,
+  TwitchUserResponse,
+  ProviderRawData,
 } from './oauth-config';
 import { logger } from '../../shared/utils/logger.util';
 
@@ -232,57 +237,67 @@ export class OAuthService {
   /**
    * Normalize user data from different providers
    */
-  private normalizeUserData(provider: string, rawData: any): OAuthUserInfo {
+  private normalizeUserData(provider: string, rawData: ProviderRawData): OAuthUserInfo {
     let normalized: OAuthUserInfo;
 
     switch (provider) {
-      case 'discord':
+      case 'discord': {
+        const discordData = rawData as DiscordUser;
         normalized = {
-          id: rawData.id,
-          email: rawData.email,
-          nickname: rawData.username,
+          id: discordData.id,
+          email: discordData.email,
+          nickname: discordData.username,
           provider: 'discord',
-          raw: rawData,
+          raw: discordData,
         };
-        if (rawData.avatar) {
-          normalized.avatar = `https://cdn.discordapp.com/avatars/${rawData.id}/${rawData.avatar}.png`;
+        if (discordData.avatar) {
+          normalized.avatar = `https://cdn.discordapp.com/avatars/${discordData.id}/${discordData.avatar}.png`;
         }
         break;
+      }
 
       case 'twitch': {
-        const twitchUser = rawData.data?.[0]; // Twitch returns array
+        const twitchData = rawData as TwitchUserResponse;
+        const twitchUser = twitchData.data?.[0];
+        if (!twitchUser) {
+          throw new OAuthError(OAuthErrorType.USER_INFO_FAILED, 'No user data from Twitch', provider);
+        }
         normalized = {
-          id: twitchUser?.id || rawData.id,
-          email: twitchUser?.email || rawData.email,
-          nickname: twitchUser?.display_name || twitchUser?.login || rawData.login,
-          avatar: twitchUser?.profile_image_url || rawData.profile_image_url,
+          id: twitchUser.id,
+          email: twitchUser.email,
+          nickname: twitchUser.display_name || twitchUser.login,
+          avatar: twitchUser.profile_image_url,
           provider: 'twitch',
-          raw: rawData,
+          raw: twitchData,
         };
         break;
       }
 
-      case 'google':
+      case 'google': {
+        const googleData = rawData as GoogleUser;
         normalized = {
-          id: rawData.id,
-          email: rawData.email,
-          nickname: rawData.name || rawData.given_name || rawData.email?.split('@')[0],
-          avatar: rawData.picture,
+          id: googleData.id,
+          email: googleData.email,
+          nickname: googleData.name || googleData.given_name || googleData.email?.split('@')[0] || 'User',
+          avatar: googleData.picture,
           provider: 'google',
-          raw: rawData,
+          raw: googleData,
         };
         break;
+      }
 
-      case 'github':
+      case 'github': {
+        const githubData = rawData as GitHubUser;
         normalized = {
-          id: rawData.id.toString(),
-          email: rawData.email,
-          nickname: rawData.name || rawData.login,
-          avatar: rawData.avatar_url,
+          id: githubData.id.toString(),
+          email: githubData.email,
+          nickname: githubData.name || githubData.login,
+          avatar: githubData.avatar_url,
           provider: 'github',
-          raw: rawData,
+          raw: githubData,
         };
         break;
+      }
 
       default:
         throw new OAuthError(OAuthErrorType.INVALID_PROVIDER, `Unknown provider: ${provider}`);

@@ -4,6 +4,7 @@
  * @version 1.0.0
  */
 
+import { JwtPayload } from 'jsonwebtoken';
 import { User } from '../../domain/entities/user.entity';
 import { tokenService } from '../../infrastructure/services/token.service';
 import { logger } from '../../shared/utils/logger.util';
@@ -36,14 +37,14 @@ export class AuthService {
   /**
    * Verify access token
    */
-  async verifyAccessToken(token: string): Promise<any> {
+  async verifyAccessToken(token: string): Promise<{ userId: string } | null> {
     return tokenService.verifyAccessToken(token);
   }
 
   /**
    * Verify refresh token
    */
-  async verifyRefreshToken(token: string): Promise<any> {
+  async verifyRefreshToken(token: string): Promise<JwtPayload | null> {
     return tokenService.verifyRefreshToken(token);
   }
 

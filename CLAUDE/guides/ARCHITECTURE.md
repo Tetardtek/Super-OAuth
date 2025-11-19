@@ -359,26 +359,25 @@ npm run dev
 
 ## 🔧 Extensibilité
 
+**Pour des exemples complets step-by-step**, voir [AI_AGENT_GUIDE.md](./AI_AGENT_GUIDE.md) et [DEVELOPMENT.md](./DEVELOPMENT.md).
+
 ### Ajouter un nouveau Provider OAuth
 
-1. Créer `src/infrastructure/oauth/providers/{provider}.provider.ts`
-2. Implémenter l'interface `IOAuthProvider`
-3. Ajouter les credentials dans `.env`
-4. Enregistrer dans `OAuthProviderFactory`
+1. Créer le provider dans `src/infrastructure/oauth/providers/`
+2. Enregistrer dans `OAuthProviderFactory`
+3. Ajouter les types et credentials `.env`
 
 ### Ajouter un nouveau Use Case
 
-1. Créer `src/application/use-cases/{feature}.use-case.ts`
-2. Définir le DTO dans `src/application/dto/`
-3. Ajouter le controller dans `src/presentation/controllers/`
-4. Créer la route dans `src/presentation/routes/`
+1. Créer use case + DTO dans `src/application/`
+2. Créer controller + route dans `src/presentation/`
+3. Créer les tests dans `tests/unit/`
 
 ### Ajouter une nouvelle Entité
 
-1. Créer l'entité dans `src/domain/entities/`
-2. Créer l'interface repository dans `src/domain/repositories/`
-3. Implémenter le repository dans `src/infrastructure/database/repositories/`
-4. Générer la migration: `npm run migration:generate`
+1. Créer entité + interface repository dans `src/domain/`
+2. Implémenter repository dans `src/infrastructure/database/`
+3. Générer migration: `npm run migration:generate`
 
 ## 📚 Références
 

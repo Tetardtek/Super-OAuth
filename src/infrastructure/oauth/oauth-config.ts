@@ -146,15 +146,64 @@ export interface OAuthTokenResponse {
 }
 
 /**
+ * Provider-specific raw responses
+ */
+export interface DiscordUser {
+  id: string;
+  username: string;
+  discriminator: string;
+  avatar?: string;
+  email?: string;
+  verified?: boolean;
+}
+
+export interface GoogleUser {
+  id: string;
+  email: string;
+  verified_email?: boolean;
+  name?: string;
+  given_name?: string;
+  family_name?: string;
+  picture?: string;
+  locale?: string;
+}
+
+export interface GitHubUser {
+  id: number;
+  login: string;
+  avatar_url: string;
+  name?: string;
+  email?: string;
+  bio?: string;
+  company?: string;
+  location?: string;
+}
+
+export interface TwitchUser {
+  id: string;
+  login: string;
+  display_name: string;
+  email?: string;
+  profile_image_url?: string;
+  description?: string;
+}
+
+export interface TwitchUserResponse {
+  data: TwitchUser[];
+}
+
+export type ProviderRawData = DiscordUser | GoogleUser | GitHubUser | TwitchUserResponse;
+
+/**
  * Normalized OAuth User Info
  */
 export interface OAuthUserInfo {
   id: string;
-  email?: string;
+  email?: string | undefined;
   nickname: string;
-  avatar?: string;
+  avatar?: string | undefined;
   provider: string;
-  raw: any; // Original provider response
+  raw: ProviderRawData; // Original provider response
 }
 
 /**
@@ -175,7 +224,7 @@ export class OAuthError extends Error {
     public type: OAuthErrorType,
     message: string,
     public provider?: string,
-    public originalError?: any
+    public originalError?: unknown
   ) {
     super(message);
     this.name = 'OAuthError';

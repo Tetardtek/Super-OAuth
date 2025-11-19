@@ -5,6 +5,41 @@ import { UserEntity } from '../database/entities/user.entity';
 import { DatabaseConnection } from '../database/config/database.config';
 import { UserMapper } from '../database/repositories/mappers/user.mapper';
 
+interface CreateUserData {
+  email?: string | null | undefined;
+  nickname: string;
+  avatar?: string | undefined;
+  isVerified?: boolean | undefined;
+  authProvider?: string | undefined;
+  linkedAccounts?: Array<{
+    provider: string;
+    providerId: string;
+    email?: string | undefined;
+    nickname?: string | undefined;
+    avatar?: string | undefined;
+    linkedAt: Date;
+    raw?: unknown;
+  }> | undefined;
+}
+
+interface OAuthAccountData {
+  provider: string;
+  providerId: string;
+  email?: string | undefined;
+  nickname?: string | undefined;
+  avatar?: string | undefined;
+  linkedAt: Date;
+  raw?: unknown;
+}
+
+interface OAuthUpdateData {
+  email?: string | undefined;
+  nickname?: string | undefined;
+  avatar?: string | undefined;
+  lastLoginAt?: Date | undefined;
+  raw?: unknown;
+}
+
 export class UserRepository implements IUserRepository {
   private repository: Repository<UserEntity>;
 
@@ -71,21 +106,22 @@ export class UserRepository implements IUserRepository {
   /**
    * Create a new user
    */
-  async create(_userData: any): Promise<User> {
+  async create(_userData: CreateUserData): Promise<User> {
     // This would need to be implemented based on your database schema
     // For now, returning a mock user as placeholder
-    const mockUser = {
-      id: 'mock-id',
-      email: null,
-      nickname: 'mock-user',
-      isActive: true,
-      emailVerified: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      lastLogin: null,
-      loginCount: 0,
-      linkedAccounts: [],
-    } as any;
+    const mockUser = User.reconstruct(
+      'mock-id',
+      null,
+      'mock-user',
+      null,
+      false,
+      true,
+      new Date(),
+      new Date(),
+      null,
+      0,
+      []
+    );
 
     return mockUser;
   }
@@ -102,7 +138,7 @@ export class UserRepository implements IUserRepository {
   /**
    * Link OAuth account to user
    */
-  async linkOAuthAccount(_userId: string, _oauthData: any): Promise<void> {
+  async linkOAuthAccount(_userId: string, _oauthData: OAuthAccountData): Promise<void> {
     // This would need to be implemented based on your database schema
     // For now, empty implementation as placeholder
   }
@@ -114,7 +150,7 @@ export class UserRepository implements IUserRepository {
     _userId: string,
     _provider: string,
     _providerId: string,
-    _updateData: any
+    _updateData: OAuthUpdateData
   ): Promise<void> {
     // This would need to be implemented based on your database schema
     // For now, empty implementation as placeholder

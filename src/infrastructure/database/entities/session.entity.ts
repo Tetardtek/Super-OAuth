@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
   Index,
 } from 'typeorm';
+import type { UserEntity } from './user.entity';
 
 @Entity('sessions')
 @Index('idx_sessions_user_id', ['userId'])
@@ -50,5 +51,5 @@ export class SessionEntity {
 
   @ManyToOne('UserEntity', 'sessions', { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
-  user!: any;
+  user!: UserEntity;
 }

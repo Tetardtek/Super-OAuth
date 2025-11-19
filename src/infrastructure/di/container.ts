@@ -25,7 +25,7 @@ import {
 
 export class DIContainer {
   private static instance: DIContainer;
-  private services: Map<string, any> = new Map();
+  private services: Map<string, unknown> = new Map();
 
   private constructor() {
     this.registerServices();

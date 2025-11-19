@@ -2,43 +2,9 @@
 
 ## 📘 Introduction
 
-Ce guide est **spécifiquement conçu pour les agents IA** (Claude Code, Cursor, GitHub Copilot, etc.) travaillant sur le projet SuperOAuth. Il contient des instructions claires, des patterns à suivre, et des exemples concrets.
+Ce guide est **spécifiquement conçu pour les agents IA** (Claude Code, Cursor, GitHub Copilot, etc.) travaillant sur SuperOAuth. Il contient des workflows optimisés pour les IA et des exemples complets step-by-step.
 
-## 🎯 Principes Fondamentaux
-
-### 1. Toujours Lire Avant d'Écrire
-
-**RÈGLE #1:** Ne jamais modifier un fichier sans l'avoir lu et compris.
-
-**Workflow obligatoire:**
-```
-1. Lire les fichiers de documentation (ARCHITECTURE.md, CONTRIBUTING.md)
-2. Lire le fichier à modifier
-3. Lire les fichiers dépendants
-4. Analyser l'impact des changements
-5. Implémenter la modification
-6. Tester le résultat
-```
-
-### 2. Respecter l'Architecture en Couches
-
-**Architecture DDD stricte:**
-```
-Presentation ──> Application ──> Domain <── Infrastructure
-```
-
-**Interdictions absolues:**
-- ❌ Controller qui accède directement au Repository
-- ❌ Use Case qui utilise directement TypeORM
-- ❌ Domain qui dépend de l'Infrastructure
-- ❌ Logique métier dans les Controllers
-
-### 3. TypeScript Strict - Zéro Compromis
-
-- ❌ `any` est **INTERDIT**
-- ✅ Utiliser `unknown` si type inconnu
-- ✅ Créer des types spécifiques
-- ✅ Utiliser des génériques pour la réutilisabilité
+**Pour les standards de code généraux**, voir [DEVELOPMENT.md](./DEVELOPMENT.md).
 
 ## 📋 Checklist pour Chaque Tâche
 
@@ -66,284 +32,268 @@ Avant de commencer toute tâche, vérifier:
 - [ ] La documentation est à jour
 ```
 
-## 🛠️ Patterns Communs
+## 🛠️ Workflow Step-by-Step
 
-### Pattern 1: Créer un Nouveau Use Case
+### 1. Toujours Lire Avant d'Écrire
 
-**Étapes:**
+**RÈGLE #1:** Ne jamais modifier un fichier sans l'avoir lu et compris.
 
-1. **Créer le DTO** dans `application/dto/`
-```typescript
-// src/application/dto/verify-email.dto.ts
-export interface VerifyEmailDto {
-  token: string;
-  userId: string;
-}
+**Workflow obligatoire:**
+```
+1. Lire les fichiers de documentation (ARCHITECTURE.md, DEVELOPMENT.md)
+2. Lire le fichier à modifier
+3. Lire les fichiers dépendants
+4. Analyser l'impact des changements
+5. Implémenter la modification
+6. Tester le résultat
 ```
 
-2. **Créer l'erreur métier** dans `domain/errors/`
+### 2. Analyser l'Impact
+
+Avant toute modification, se poser ces questions:
+
+- ✅ Est-ce que je respecte la séparation des couches?
+- ✅ Est-ce que j'utilise l'injection de dépendances?
+- ✅ Est-ce que mes erreurs sont typées et explicites?
+- ✅ Est-ce que je log les opérations importantes?
+- ✅ Est-ce que mon code est testé?
+- ✅ Est-ce que la sécurité est préservée?
+
+## 📚 Exemples Complets Step-by-Step
+
+### Exemple 1: Feature "Réinitialisation de Mot de Passe"
+
+**Contexte:** L'utilisateur demande d'ajouter la fonctionnalité de reset password.
+
+**Étapes à suivre:**
+
+#### 1. Domain Layer
+
 ```typescript
-// src/domain/errors/email-errors.ts
-export class InvalidVerificationTokenError extends Error {
+// src/domain/errors/password-errors.ts
+export class InvalidResetTokenError extends Error {
   constructor() {
-    super('Invalid or expired verification token');
-    this.name = 'InvalidVerificationTokenError';
+    super('Invalid or expired reset token');
+    this.name = 'InvalidResetTokenError';
   }
 }
+
+// src/domain/entities/user.entity.ts (ajouter les champs)
+@Column({ name: 'reset_token', nullable: true })
+resetToken: string | null;
+
+@Column({ name: 'reset_token_expires', nullable: true })
+resetTokenExpires: Date | null;
 ```
 
-3. **Créer le Use Case** dans `application/use-cases/`
-```typescript
-// src/application/use-cases/verify-email.use-case.ts
-import { IUserRepository } from '@application/interfaces/repositories.interface';
-import { VerifyEmailDto } from '@application/dto/verify-email.dto';
-import { InvalidVerificationTokenError } from '@domain/errors/email-errors';
-import { logger } from '@shared/utils/logger.util';
+#### 2. Application Layer
 
-export class VerifyEmailUseCase {
+```typescript
+// src/application/dto/password-reset.dto.ts
+export interface RequestPasswordResetDto {
+  email: string;
+}
+
+export interface ResetPasswordDto {
+  token: string;
+  newPassword: string;
+}
+
+// src/application/use-cases/request-password-reset.use-case.ts
+export class RequestPasswordResetUseCase {
   constructor(
-    private readonly userRepository: IUserRepository
+    private readonly userRepository: IUserRepository,
+    private readonly emailService: IEmailService
   ) {}
 
-  async execute(dto: VerifyEmailDto): Promise<void> {
-    logger.debug('Verifying email', { userId: dto.userId });
+  async execute(dto: RequestPasswordResetDto): Promise<void> {
+    logger.info('Password reset requested', { email: dto.email });
 
-    const user = await this.userRepository.findById(dto.userId);
+    const user = await this.userRepository.findByEmail(dto.email);
 
     if (!user) {
-      logger.warn('User not found for email verification', { userId: dto.userId });
-      throw new InvalidVerificationTokenError();
+      // Ne pas révéler que l'email n'existe pas (sécurité)
+      logger.warn('Password reset requested for non-existent email', { email: dto.email });
+      return;
     }
 
-    if (user.verificationToken !== dto.token) {
-      logger.warn('Invalid verification token', { userId: dto.userId });
-      throw new InvalidVerificationTokenError();
-    }
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 3600000); // 1 heure
 
-    user.isEmailVerified = true;
-    user.verificationToken = null;
+    user.resetToken = resetToken;
+    user.resetTokenExpires = expiresAt;
 
     await this.userRepository.save(user);
 
-    logger.info('Email verified successfully', { userId: user.id });
+    await this.emailService.sendPasswordResetEmail(user.email, resetToken);
+
+    logger.info('Password reset email sent', { userId: user.id });
+  }
+}
+
+// src/application/use-cases/reset-password.use-case.ts
+export class ResetPasswordUseCase {
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly passwordHasher: IPasswordHasher
+  ) {}
+
+  async execute(dto: ResetPasswordDto): Promise<void> {
+    logger.info('Attempting password reset', { token: dto.token });
+
+    const user = await this.userRepository.findByResetToken(dto.token);
+
+    if (!user || !user.resetTokenExpires || user.resetTokenExpires < new Date()) {
+      logger.warn('Invalid or expired reset token', { token: dto.token });
+      throw new InvalidResetTokenError();
+    }
+
+    const hashedPassword = await this.passwordHasher.hash(dto.newPassword);
+
+    user.password = hashedPassword;
+    user.resetToken = null;
+    user.resetTokenExpires = null;
+
+    await this.userRepository.save(user);
+
+    logger.info('Password reset successfully', { userId: user.id });
   }
 }
 ```
 
-4. **Créer le Controller** dans `presentation/controllers/`
-```typescript
-// src/presentation/controllers/email.controller.ts
-import { Request, Response, NextFunction } from 'express';
-import { VerifyEmailUseCase } from '@application/use-cases/verify-email.use-case';
-import { logger } from '@shared/utils/logger.util';
+#### 3. Infrastructure Layer
 
-export class EmailController {
+```typescript
+// src/infrastructure/database/repositories/user.repository.ts (ajouter)
+async findByResetToken(token: string): Promise<User | null> {
+  return this.repository.findOne({ where: { resetToken: token } });
+}
+
+// src/infrastructure/services/email.service.ts (ajouter)
+async sendPasswordResetEmail(email: string, token: string): Promise<void> {
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+  await this.transporter.sendMail({
+    to: email,
+    subject: 'Password Reset Request',
+    html: `
+      <h1>Password Reset</h1>
+      <p>Click the link below to reset your password:</p>
+      <a href="${resetUrl}">Reset Password</a>
+      <p>This link expires in 1 hour.</p>
+    `,
+  });
+}
+```
+
+#### 4. Presentation Layer
+
+```typescript
+// src/presentation/controllers/password.controller.ts
+export class PasswordController {
   constructor(
-    private readonly verifyEmailUseCase: VerifyEmailUseCase
+    private readonly requestResetUseCase: RequestPasswordResetUseCase,
+    private readonly resetPasswordUseCase: ResetPasswordUseCase
   ) {}
 
-  async verifyEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async requestReset(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      await this.verifyEmailUseCase.execute({
-        token: req.query.token as string,
-        userId: req.query.userId as string,
-      });
-
+      await this.requestResetUseCase.execute(req.body);
       res.json({
         success: true,
-        message: 'Email verified successfully',
+        message: 'If the email exists, a reset link has been sent',
       });
     } catch (error) {
-      logger.error('Email verification failed', { error });
+      next(error);
+    }
+  }
+
+  async resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      await this.resetPasswordUseCase.execute(req.body);
+      res.json({
+        success: true,
+        message: 'Password reset successfully',
+      });
+    } catch (error) {
       next(error);
     }
   }
 }
-```
 
-5. **Ajouter la route** dans `presentation/routes/`
-```typescript
-// src/presentation/routes/email.routes.ts
-import { Router } from 'express';
-import { EmailController } from '@presentation/controllers/email.controller';
-import { container } from '@infrastructure/di/container';
-
+// src/presentation/routes/password.routes.ts
 const router = Router();
-const emailController = container.resolve(EmailController);
 
-router.get('/verify', emailController.verifyEmail.bind(emailController));
+router.post(
+  '/request-reset',
+  validateRequest(requestResetSchema),
+  passwordController.requestReset.bind(passwordController)
+);
+
+router.post(
+  '/reset',
+  validateRequest(resetPasswordSchema),
+  passwordController.resetPassword.bind(passwordController)
+);
 
 export default router;
 ```
 
-6. **Créer les tests** dans `tests/unit/use-cases/`
-```typescript
-// tests/unit/use-cases/verify-email.use-case.spec.ts
-import { VerifyEmailUseCase } from '@application/use-cases/verify-email.use-case';
-import { IUserRepository } from '@application/interfaces/repositories.interface';
-import { InvalidVerificationTokenError } from '@domain/errors/email-errors';
+#### 5. Tests
 
-describe('VerifyEmailUseCase', () => {
-  let useCase: VerifyEmailUseCase;
+```typescript
+// tests/unit/use-cases/reset-password.use-case.spec.ts
+describe('ResetPasswordUseCase', () => {
+  let useCase: ResetPasswordUseCase;
   let mockUserRepository: jest.Mocked<IUserRepository>;
+  let mockPasswordHasher: jest.Mocked<IPasswordHasher>;
 
   beforeEach(() => {
-    mockUserRepository = {
-      findById: jest.fn(),
-      save: jest.fn(),
-    } as any;
-
-    useCase = new VerifyEmailUseCase(mockUserRepository);
+    mockUserRepository = { findByResetToken: jest.fn(), save: jest.fn() } as any;
+    mockPasswordHasher = { hash: jest.fn() } as any;
+    useCase = new ResetPasswordUseCase(mockUserRepository, mockPasswordHasher);
   });
 
-  it('should verify email successfully with valid token', async () => {
+  it('should reset password with valid token', async () => {
     const mockUser = {
       id: 'user-123',
-      verificationToken: 'valid-token',
-      isEmailVerified: false,
+      resetToken: 'valid-token',
+      resetTokenExpires: new Date(Date.now() + 3600000),
     };
 
-    mockUserRepository.findById.mockResolvedValue(mockUser as any);
+    mockUserRepository.findByResetToken.mockResolvedValue(mockUser as any);
+    mockPasswordHasher.hash.mockResolvedValue('hashed_password');
 
-    await useCase.execute({
-      userId: 'user-123',
-      token: 'valid-token',
-    });
+    await useCase.execute({ token: 'valid-token', newPassword: 'NewPass123!' });
 
-    expect(mockUser.isEmailVerified).toBe(true);
-    expect(mockUser.verificationToken).toBeNull();
+    expect(mockUser.password).toBe('hashed_password');
+    expect(mockUser.resetToken).toBeNull();
     expect(mockUserRepository.save).toHaveBeenCalledWith(mockUser);
   });
 
-  it('should throw error with invalid token', async () => {
+  it('should throw error with expired token', async () => {
     const mockUser = {
       id: 'user-123',
-      verificationToken: 'valid-token',
-      isEmailVerified: false,
+      resetToken: 'valid-token',
+      resetTokenExpires: new Date(Date.now() - 1000), // Expiré
     };
 
-    mockUserRepository.findById.mockResolvedValue(mockUser as any);
+    mockUserRepository.findByResetToken.mockResolvedValue(mockUser as any);
 
     await expect(useCase.execute({
-      userId: 'user-123',
-      token: 'invalid-token',
-    })).rejects.toThrow(InvalidVerificationTokenError);
+      token: 'valid-token',
+      newPassword: 'NewPass123!',
+    })).rejects.toThrow(InvalidResetTokenError);
   });
 });
 ```
 
-### Pattern 2: Ajouter une Nouvelle Entité
+### Exemple 2: Ajouter un Provider OAuth (LinkedIn)
 
-**Exemple: Ajout d'une entité Notification**
+**Contexte:** L'utilisateur demande d'ajouter LinkedIn comme provider OAuth.
 
-1. **Créer l'entité** dans `domain/entities/`
-```typescript
-// src/domain/entities/notification.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from './user.entity';
+#### 1. Créer le Provider
 
-export type NotificationType = 'info' | 'warning' | 'success' | 'error';
-
-@Entity('notifications')
-export class Notification {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column({ name: 'user_id' })
-  userId: string;
-
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
-  user: User;
-
-  @Column({ type: 'varchar', length: 50 })
-  type: NotificationType;
-
-  @Column({ type: 'varchar', length: 255 })
-  title: string;
-
-  @Column({ type: 'text' })
-  message: string;
-
-  @Column({ name: 'is_read', type: 'boolean', default: false })
-  isRead: boolean;
-
-  @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
-
-  @Column({ name: 'read_at', type: 'timestamp', nullable: true })
-  readAt: Date | null;
-}
-```
-
-2. **Créer l'interface du repository** dans `domain/repositories/`
-```typescript
-// src/domain/repositories/notification.repository.interface.ts
-import { Notification } from '@domain/entities/notification.entity';
-
-export interface INotificationRepository {
-  findById(id: string): Promise<Notification | null>;
-  findByUserId(userId: string, limit?: number): Promise<Notification[]>;
-  save(notification: Notification): Promise<Notification>;
-  markAsRead(id: string): Promise<void>;
-  deleteById(id: string): Promise<void>;
-}
-```
-
-3. **Implémenter le repository** dans `infrastructure/database/repositories/`
-```typescript
-// src/infrastructure/database/repositories/notification.repository.ts
-import { Repository } from 'typeorm';
-import { Notification } from '@domain/entities/notification.entity';
-import { INotificationRepository } from '@domain/repositories/notification.repository.interface';
-import { DatabaseConnection } from '@infrastructure/database/config/database.config';
-
-export class NotificationRepository implements INotificationRepository {
-  private repository: Repository<Notification>;
-
-  constructor() {
-    this.repository = DatabaseConnection.getRepository(Notification);
-  }
-
-  async findById(id: string): Promise<Notification | null> {
-    return this.repository.findOne({ where: { id } });
-  }
-
-  async findByUserId(userId: string, limit: number = 10): Promise<Notification[]> {
-    return this.repository.find({
-      where: { userId },
-      order: { createdAt: 'DESC' },
-      take: limit,
-    });
-  }
-
-  async save(notification: Notification): Promise<Notification> {
-    return this.repository.save(notification);
-  }
-
-  async markAsRead(id: string): Promise<void> {
-    await this.repository.update(id, {
-      isRead: true,
-      readAt: new Date(),
-    });
-  }
-
-  async deleteById(id: string): Promise<void> {
-    await this.repository.delete(id);
-  }
-}
-```
-
-4. **Créer la migration**
-```bash
-npm run migration:generate -- src/infrastructure/database/migrations/CreateNotificationsTable
-```
-
-### Pattern 3: Ajouter un Provider OAuth
-
-**Exemple: LinkedIn OAuth Provider**
-
-1. **Créer le provider** dans `infrastructure/oauth/providers/`
 ```typescript
 // src/infrastructure/oauth/providers/linkedin.provider.ts
 import axios from 'axios';
@@ -428,7 +378,8 @@ export class LinkedInOAuthProvider implements IOAuthProvider {
 }
 ```
 
-2. **Enregistrer dans la factory** dans `infrastructure/oauth/`
+#### 2. Enregistrer dans la Factory
+
 ```typescript
 // src/infrastructure/oauth/oauth-provider.factory.ts
 import { LinkedInOAuthProvider } from './providers/linkedin.provider';
@@ -453,13 +404,15 @@ export class OAuthProviderFactory {
 }
 ```
 
-3. **Mettre à jour les types** dans `shared/types/`
+#### 3. Mettre à jour les Types
+
 ```typescript
 // src/shared/types/oauth.types.ts
 export type OAuthProvider = 'discord' | 'google' | 'github' | 'twitch' | 'linkedin';
 ```
 
-4. **Ajouter les variables d'environnement**
+#### 4. Configuration
+
 ```bash
 # .env.example
 LINKEDIN_CLIENT_ID=your_linkedin_client_id
@@ -559,53 +512,17 @@ async execute(dto: RegisterDto): Promise<User> {
 }
 ```
 
-### Erreur #4: Utiliser 'any'
-
-❌ **MAUVAIS:**
-```typescript
-function processData(data: any) {
-  return data.value.toUpperCase();
-}
-```
-
-✅ **CORRECT:**
-```typescript
-interface DataWithValue {
-  value: string;
-}
-
-function processData(data: DataWithValue): string {
-  return data.value.toUpperCase();
-}
-```
-
-### Erreur #5: Ne Pas Valider les Entrées
-
-❌ **MAUVAIS:**
-```typescript
-router.post('/register', authController.register);
-```
-
-✅ **CORRECT:**
-```typescript
-router.post(
-  '/register',
-  validateRequest(registerSchema), // Middleware de validation
-  authController.register
-);
-```
-
 ## 📚 Ressources Utiles
 
 ### Fichiers à Consulter
 
 | Tâche | Fichier à Lire |
 |-------|----------------|
-| Comprendre l'architecture | `ARCHITECTURE.md` |
-| Contribuer au projet | `CONTRIBUTING.md` |
-| Localiser un fichier | `PROJECT_STRUCTURE.md` |
-| Voir les conventions | `.cursorrules` |
-| Comprendre l'API | `README.md` |
+| Comprendre l'architecture | [ARCHITECTURE.md](./ARCHITECTURE.md) |
+| Standards de code | [DEVELOPMENT.md](./DEVELOPMENT.md) |
+| Localiser un fichier | [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) |
+| Tests | [TESTING.md](./TESTING.md) |
+| Conventions | [../.cursorrules](../.cursorrules) |
 
 ### Commandes Importantes
 
@@ -630,226 +547,6 @@ npm run typecheck        # Vérifier les types
 npm run migration:generate  # Générer une migration
 npm run migration:run       # Exécuter les migrations
 npm run db:reset            # Réinitialiser la DB
-```
-
-## 🎓 Exemples Complets
-
-### Exemple Complet: Feature "Réinitialisation de Mot de Passe"
-
-**1. Domain Layer**
-```typescript
-// src/domain/errors/password-errors.ts
-export class InvalidResetTokenError extends Error {
-  constructor() {
-    super('Invalid or expired reset token');
-    this.name = 'InvalidResetTokenError';
-  }
-}
-
-// src/domain/entities/user.entity.ts (ajouter les champs)
-@Column({ name: 'reset_token', nullable: true })
-resetToken: string | null;
-
-@Column({ name: 'reset_token_expires', nullable: true })
-resetTokenExpires: Date | null;
-```
-
-**2. Application Layer**
-```typescript
-// src/application/dto/password-reset.dto.ts
-export interface RequestPasswordResetDto {
-  email: string;
-}
-
-export interface ResetPasswordDto {
-  token: string;
-  newPassword: string;
-}
-
-// src/application/use-cases/request-password-reset.use-case.ts
-export class RequestPasswordResetUseCase {
-  constructor(
-    private readonly userRepository: IUserRepository,
-    private readonly emailService: IEmailService
-  ) {}
-
-  async execute(dto: RequestPasswordResetDto): Promise<void> {
-    logger.info('Password reset requested', { email: dto.email });
-
-    const user = await this.userRepository.findByEmail(dto.email);
-
-    if (!user) {
-      // Ne pas révéler que l'email n'existe pas (sécurité)
-      logger.warn('Password reset requested for non-existent email', { email: dto.email });
-      return;
-    }
-
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 3600000); // 1 heure
-
-    user.resetToken = resetToken;
-    user.resetTokenExpires = expiresAt;
-
-    await this.userRepository.save(user);
-
-    await this.emailService.sendPasswordResetEmail(user.email, resetToken);
-
-    logger.info('Password reset email sent', { userId: user.id });
-  }
-}
-
-// src/application/use-cases/reset-password.use-case.ts
-export class ResetPasswordUseCase {
-  constructor(
-    private readonly userRepository: IUserRepository,
-    private readonly passwordHasher: IPasswordHasher
-  ) {}
-
-  async execute(dto: ResetPasswordDto): Promise<void> {
-    logger.info('Attempting password reset', { token: dto.token });
-
-    const user = await this.userRepository.findByResetToken(dto.token);
-
-    if (!user || !user.resetTokenExpires || user.resetTokenExpires < new Date()) {
-      logger.warn('Invalid or expired reset token', { token: dto.token });
-      throw new InvalidResetTokenError();
-    }
-
-    const hashedPassword = await this.passwordHasher.hash(dto.newPassword);
-
-    user.password = hashedPassword;
-    user.resetToken = null;
-    user.resetTokenExpires = null;
-
-    await this.userRepository.save(user);
-
-    logger.info('Password reset successfully', { userId: user.id });
-  }
-}
-```
-
-**3. Infrastructure Layer**
-```typescript
-// src/infrastructure/database/repositories/user.repository.ts (ajouter)
-async findByResetToken(token: string): Promise<User | null> {
-  return this.repository.findOne({ where: { resetToken: token } });
-}
-
-// src/infrastructure/services/email.service.ts (ajouter)
-async sendPasswordResetEmail(email: string, token: string): Promise<void> {
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-
-  await this.transporter.sendMail({
-    to: email,
-    subject: 'Password Reset Request',
-    html: `
-      <h1>Password Reset</h1>
-      <p>Click the link below to reset your password:</p>
-      <a href="${resetUrl}">Reset Password</a>
-      <p>This link expires in 1 hour.</p>
-    `,
-  });
-}
-```
-
-**4. Presentation Layer**
-```typescript
-// src/presentation/controllers/password.controller.ts
-export class PasswordController {
-  constructor(
-    private readonly requestResetUseCase: RequestPasswordResetUseCase,
-    private readonly resetPasswordUseCase: ResetPasswordUseCase
-  ) {}
-
-  async requestReset(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      await this.requestResetUseCase.execute(req.body);
-      res.json({
-        success: true,
-        message: 'If the email exists, a reset link has been sent',
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
-      await this.resetPasswordUseCase.execute(req.body);
-      res.json({
-        success: true,
-        message: 'Password reset successfully',
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-}
-
-// src/presentation/routes/password.routes.ts
-const router = Router();
-
-router.post(
-  '/request-reset',
-  validateRequest(requestResetSchema),
-  passwordController.requestReset.bind(passwordController)
-);
-
-router.post(
-  '/reset',
-  validateRequest(resetPasswordSchema),
-  passwordController.resetPassword.bind(passwordController)
-);
-
-export default router;
-```
-
-**5. Tests**
-```typescript
-// tests/unit/use-cases/reset-password.use-case.spec.ts
-describe('ResetPasswordUseCase', () => {
-  let useCase: ResetPasswordUseCase;
-  let mockUserRepository: jest.Mocked<IUserRepository>;
-  let mockPasswordHasher: jest.Mocked<IPasswordHasher>;
-
-  beforeEach(() => {
-    mockUserRepository = { findByResetToken: jest.fn(), save: jest.fn() } as any;
-    mockPasswordHasher = { hash: jest.fn() } as any;
-    useCase = new ResetPasswordUseCase(mockUserRepository, mockPasswordHasher);
-  });
-
-  it('should reset password with valid token', async () => {
-    const mockUser = {
-      id: 'user-123',
-      resetToken: 'valid-token',
-      resetTokenExpires: new Date(Date.now() + 3600000),
-    };
-
-    mockUserRepository.findByResetToken.mockResolvedValue(mockUser as any);
-    mockPasswordHasher.hash.mockResolvedValue('hashed_password');
-
-    await useCase.execute({ token: 'valid-token', newPassword: 'NewPass123!' });
-
-    expect(mockUser.password).toBe('hashed_password');
-    expect(mockUser.resetToken).toBeNull();
-    expect(mockUserRepository.save).toHaveBeenCalledWith(mockUser);
-  });
-
-  it('should throw error with expired token', async () => {
-    const mockUser = {
-      id: 'user-123',
-      resetToken: 'valid-token',
-      resetTokenExpires: new Date(Date.now() - 1000), // Expiré
-    };
-
-    mockUserRepository.findByResetToken.mockResolvedValue(mockUser as any);
-
-    await expect(useCase.execute({
-      token: 'valid-token',
-      newPassword: 'NewPass123!',
-    })).rejects.toThrow(InvalidResetTokenError);
-  });
-});
 ```
 
 ## 🎯 Résumé pour Agents IA
@@ -886,3 +583,5 @@ describe('ResetPasswordUseCase', () => {
 - La clarté sur la concision
 - La sécurité sur la performance
 - La maintenabilité sur l'optimisation prématurée
+
+*Dernière mise à jour : 19 Novembre 2024*
