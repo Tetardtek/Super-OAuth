@@ -148,7 +148,7 @@ export class AuthController {
         errorMessage.includes('User not found') ||
         errorMessage.includes('Invalid password')
       ) {
-        res.status(401).json({
+        void res.status(401).json({
           success: false,
           error: 'INVALID_CREDENTIALS',
           message: 'Invalid email or password',

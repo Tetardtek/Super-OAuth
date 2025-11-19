@@ -183,7 +183,7 @@ export class OAuthController {
         req.session!.oauthRedirectUrl || `${process.env.FRONTEND_URL}/auth/success`;
       delete req.session!.oauthRedirectUrl;
 
-      const urlWithTokens = `${redirectUrl}?token=${tokens.accessToken}&refresh=${tokens.refreshToken}&provider=${provider}`;
+      const urlWithTokens = `${String(redirectUrl)}?token=${tokens.accessToken}&refresh=${tokens.refreshToken}&provider=${provider}`;
       res.redirect(urlWithTokens);
     } catch (error) {
       logger.error(

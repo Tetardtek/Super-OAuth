@@ -4,6 +4,7 @@ import { authenticateToken } from '../middleware/auth.middleware';
 import { authValidators } from '../validators/request.validators';
 import { DIContainer } from '../../infrastructure/di/container';
 import { logger } from '../../shared/utils/logger.util';
+import { asyncHandler } from '../../shared/utils/async-handler.util';
 import Joi from 'joi';
 
 interface AuthenticatedRequest extends ValidatedRequest {
@@ -22,7 +23,7 @@ const providerParamSchema = Joi.object({
  * POST /auth/register
  * Register new user with email/password
  */
-router.post('/register', validateBody(authValidators.register), async (req: ValidatedRequest, res: Response) => {
+router.post('/register', validateBody(authValidators.register), asyncHandler(async (req: ValidatedRequest, res: Response) => {
   try {
     const { email, password, nickname } = req.validatedBody || req.body;
 
@@ -73,13 +74,13 @@ router.post('/register', validateBody(authValidators.register), async (req: Vali
       message: 'Registration failed',
     });
   }
-});
+}));
 
 /**
  * POST /auth/login
  * Login user with email/password
  */
-router.post('/login', validateBody(authValidators.login), async (req: ValidatedRequest, res: Response) => {
+router.post('/login', validateBody(authValidators.login), asyncHandler(async (req: ValidatedRequest, res: Response) => {
   try {
     const { email, password } = req.validatedBody || req.body;
 
@@ -134,7 +135,7 @@ router.post('/login', validateBody(authValidators.login), async (req: ValidatedR
       message: 'Login failed',
     });
   }
-});
+}));
 
 /**
  * POST /auth/refresh
@@ -143,7 +144,7 @@ router.post('/login', validateBody(authValidators.login), async (req: ValidatedR
 router.post(
   '/refresh',
   validateBody(authValidators.refreshToken),
-  async (req: ValidatedRequest, res: Response) => {
+  asyncHandler(async (req: ValidatedRequest, res: Response) => {
     try {
       const { refreshToken } = req.validatedBody || req.body;
 
@@ -185,14 +186,14 @@ router.post(
         message: 'Token refresh failed',
       });
     }
-  }
+  })
 );
 
 /**
  * POST /auth/logout
  * Logout user and invalidate tokens
  */
-router.post('/logout', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/logout', (req, res, next) => void authenticateToken(req, res, next), asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -230,7 +231,7 @@ router.post('/logout', authenticateToken, async (req: AuthenticatedRequest, res:
       message: 'Logout failed',
     });
   }
-});
+}));
 
 /**
  * GET /auth/oauth/:provider
@@ -239,7 +240,7 @@ router.post('/logout', authenticateToken, async (req: AuthenticatedRequest, res:
 router.get(
   '/oauth/:provider',
   validateParams(providerParamSchema),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     try {
       const { provider } = req.params;
       const redirectUri = req.query.redirect_uri as string;
@@ -282,7 +283,7 @@ router.get(
         message: 'OAuth initialization failed',
       });
     }
-  }
+  })
 );
 
 /**
@@ -292,7 +293,7 @@ router.get(
 router.get(
   '/callback/:provider',
   validateParams(providerParamSchema),
-  async (req: Request, res: Response) => {
+  asyncHandler(async (req: Request, res: Response) => {
     try {
       const { provider } = req.params;
       const { code, state } = req.query;
@@ -354,14 +355,14 @@ router.get(
         message: 'OAuth authentication failed',
       });
     }
-  }
+  })
 );
 
 /**
  * GET /auth/me
  * Get current user profile
  */
-router.get('/me', authenticateToken, (req: AuthenticatedRequest, res: Response) => {
+router.get('/me', (req, res, next) => void authenticateToken(req, res, next), (req: AuthenticatedRequest, res: Response) => {
   res.json({
     success: true,
     data: {

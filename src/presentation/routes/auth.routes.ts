@@ -1,8 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { authValidators } from '../validators/request.validators';
-import { validateBody, validateParams, ValidatedRequest } from '../middleware/validation.middleware';
+import { validateBody, validateParams } from '../middleware/validation.middleware';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { AuthController } from '../controllers/auth.controller';
+import { asyncHandler } from '../../shared/utils/async-handler.util';
 import Joi from 'joi';
 
 const router = Router();
@@ -15,40 +16,33 @@ const providerParamSchema = Joi.object({
 
 // Note: callbackQuerySchema will be used in future OAuth implementation
 
-// Wrapper functions to handle type compatibility
-const registerHandler = (req: ValidatedRequest, res: Response) => authController.register(req, res);
-const loginHandler = (req: ValidatedRequest, res: Response) => authController.login(req, res);
-const refreshTokenHandler = (req: ValidatedRequest, res: Response) => authController.refreshToken(req, res);
-const logoutHandler = (req: ValidatedRequest & { user: { id: string } }, res: Response) => authController.logout(req, res);
-
 /**
  * @route POST /auth/register
  * @desc Register new user with email/password
  * @access Public
  */
-router.post('/register', validateBody(authValidators.register), registerHandler);
+router.post('/register', validateBody(authValidators.register), asyncHandler(authController.register.bind(authController)));
 
 /**
  * @route POST /auth/login
  * @desc Login user with email/password
  * @access Public
  */
-router.post('/login', validateBody(authValidators.login), loginHandler);
+router.post('/login', validateBody(authValidators.login), asyncHandler(authController.login.bind(authController)));
 
 /**
  * @route POST /auth/refresh
  * @desc Refresh access token
  * @access Public
  */
-router.post('/refresh', validateBody(authValidators.refreshToken), refreshTokenHandler);
+router.post('/refresh', validateBody(authValidators.refreshToken), asyncHandler(authController.refreshToken.bind(authController)));
 
 /**
  * @route POST /auth/logout
  * @desc Logout user
  * @access Private
  */
-// @ts-expect-error - Type mismatch with exactOptionalPropertyTypes but functionally correct
-router.post('/logout', authenticateToken, logoutHandler);
+router.post('/logout', (req, res, next) => void authenticateToken(req, res, next), asyncHandler(authController.logout.bind(authController)));
 
 /**
  * @route GET /auth/oauth/:provider
@@ -58,7 +52,7 @@ router.post('/logout', authenticateToken, logoutHandler);
 router.get(
   '/oauth/:provider',
   validateParams(providerParamSchema),
-  authController.startOAuth.bind(authController)
+  asyncHandler(authController.startOAuth.bind(authController))
 );
 
 /**
@@ -69,7 +63,7 @@ router.get(
 router.get(
   '/callback/:provider',
   validateParams(providerParamSchema),
-  authController.oauthCallback.bind(authController)
+  asyncHandler(authController.oauthCallback.bind(authController))
 );
 
 /**
@@ -77,7 +71,7 @@ router.get(
  * @desc Get current user profile
  * @access Private
  */
-router.get('/me', authenticateToken, (req: Request & { user?: { id: string } }, res: Response) => {
+router.get('/me', (req, res, next) => void authenticateToken(req, res, next), (req: Request & { user?: { id: string } }, res: Response) => {
   res.json({
     success: true,
     data: {

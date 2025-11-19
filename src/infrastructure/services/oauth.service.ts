@@ -214,7 +214,7 @@ export class OAuthService implements IOAuthService {
 
       case 'github':
         return {
-          id: response.data.id.toString(),
+          id: String(response.data.id),
           email: response.data.email,
           nickname: response.data.login,
         };

@@ -6,7 +6,7 @@
 
 import { Router } from 'express';
 import { oauthController } from '../controllers/oauth.controller';
-import { asyncHandler } from '../../shared/middleware/async-handler.middleware';
+import { asyncHandler } from '../../shared/utils/async-handler.util';
 import { authMiddleware } from '../../shared/middleware/auth.middleware';
 
 const router = Router();
@@ -25,7 +25,7 @@ router.get('/providers', asyncHandler(oauthController.getProviders.bind(oauthCon
  */
 router.get(
   '/linked',
-  authMiddleware,
+  (req, res, next) => void authMiddleware(req, res, next),
   asyncHandler(oauthController.getLinkedAccounts.bind(oauthController))
 );
 
@@ -53,7 +53,7 @@ router.get(
  */
 router.delete(
   '/:provider/unlink',
-  authMiddleware,
+  (req, res, next) => void authMiddleware(req, res, next),
   asyncHandler(oauthController.unlinkOAuthProvider.bind(oauthController))
 );
 

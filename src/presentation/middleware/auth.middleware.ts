@@ -3,7 +3,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import { getSecurityConfig } from '../../shared/config/security.config';
 import { logger } from '../../shared/utils/logger.util';
 import { DIContainer } from '../../infrastructure/di/container';
-import { IUserRepository } from '../../application/interfaces/repositories.interface';
+import type { IUserRepository } from '../../application/interfaces/repositories.interface';
 
 export interface AuthenticatedUser {
   id: string;
@@ -68,7 +68,7 @@ export const authenticateToken = async (
     }
 
     // Get fresh user data from database
-    const userRepository = DIContainer.getInstance().get('UserRepository') as IUserRepository;
+    const userRepository = DIContainer.getInstance().get<IUserRepository>('UserRepository');
     const user = await userRepository.findById(decoded.userId);
 
     if (!user || !user.isActive) {

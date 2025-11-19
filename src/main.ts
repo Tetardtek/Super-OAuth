@@ -221,27 +221,29 @@ class SuperOAuthServer {
       });
 
       // Graceful shutdown
-      process.on('SIGTERM', async () => {
+      process.on('SIGTERM', () => {
         logger.info('SIGTERM received, shutting down gracefully');
-        server.close(async () => {
-          try {
-            await DatabaseConnection.close();
-          } catch (error) {
-            logger.debug('Database was not connected');
-          }
-          process.exit(0);
+        server.close(() => {
+          void DatabaseConnection.close()
+            .catch(() => {
+              logger.debug('Database was not connected');
+            })
+            .finally(() => {
+              process.exit(0);
+            });
         });
       });
 
-      process.on('SIGINT', async () => {
+      process.on('SIGINT', () => {
         logger.info('SIGINT received, shutting down gracefully');
-        server.close(async () => {
-          try {
-            await DatabaseConnection.close();
-          } catch (error) {
-            logger.debug('Database was not connected');
-          }
-          process.exit(0);
+        server.close(() => {
+          void DatabaseConnection.close()
+            .catch(() => {
+              logger.debug('Database was not connected');
+            })
+            .finally(() => {
+              process.exit(0);
+            });
         });
       });
     } catch (error) {
