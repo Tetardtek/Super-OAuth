@@ -11,6 +11,22 @@ interface AuthenticatedRequest extends ValidatedRequest {
   user?: { id: string; email?: string };
 }
 
+// Request body types
+interface RegisterBody {
+  email: string;
+  password: string;
+  nickname: string;
+}
+
+interface LoginBody {
+  email: string;
+  password: string;
+}
+
+interface RefreshTokenBody {
+  refreshToken: string;
+}
+
 const router = Router();
 const container = DIContainer.getInstance();
 
@@ -25,7 +41,7 @@ const providerParamSchema = Joi.object({
  */
 router.post('/register', validateBody(authValidators.register), asyncHandler(async (req: ValidatedRequest, res: Response) => {
   try {
-    const { email, password, nickname } = req.validatedBody || req.body;
+    const { email, password, nickname } = (req.validatedBody || req.body) as RegisterBody;
 
     logger.info('User registration attempt', { email, nickname, ip: req.ip });
 
@@ -82,7 +98,7 @@ router.post('/register', validateBody(authValidators.register), asyncHandler(asy
  */
 router.post('/login', validateBody(authValidators.login), asyncHandler(async (req: ValidatedRequest, res: Response) => {
   try {
-    const { email, password } = req.validatedBody || req.body;
+    const { email, password } = (req.validatedBody || req.body) as LoginBody;
 
     logger.info('User login attempt', { email, ip: req.ip });
 
@@ -146,7 +162,7 @@ router.post(
   validateBody(authValidators.refreshToken),
   asyncHandler(async (req: ValidatedRequest, res: Response) => {
     try {
-      const { refreshToken } = req.validatedBody || req.body;
+      const { refreshToken } = (req.validatedBody || req.body) as RefreshTokenBody;
 
       logger.info('Token refresh attempt', { ip: req.ip });
 

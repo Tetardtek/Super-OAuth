@@ -10,9 +10,9 @@
 | Métrique | Statut |
 |----------|--------|
 | **ESLint Errors** | 0 ✅ |
-| **ESLint Warnings** | 87 ⚠️ |
+| **ESLint Warnings** | 72 ⚠️ |
 | **TypeScript Errors** | 0 ✅ |
-| **Tests Backend** | 41/41 ✅ |
+| **Tests Backend** | 123/123 ✅ |
 | **Build** | ✅ Réussi |
 
 ---
@@ -77,11 +77,46 @@
 
 ---
 
+## ✅ Phase 7 : Réduction Warnings TypeScript (EN COURS)
+
+**Date** : 19 Novembre 2025
+
+### Objectif
+Réduire les 87 warnings ESLint liés aux opérations `unsafe any` sur les requêtes Express.
+
+### Corrections Effectuées
+
+**Fichiers modifiés** :
+1. `src/presentation/routes/auth.routes.simple.ts`
+2. `src/presentation/controllers/auth.controller.ts`
+3. `src/presentation/controllers/oauth.controller.ts`
+
+**Approche** :
+- Ajout d'interfaces TypeScript pour typer les request bodies :
+  - `RegisterBody`, `LoginBody`, `RefreshTokenBody`
+  - `OAuthParams`, `OAuthQuery`
+- Remplacement des assertions `any` par `as unknown as Type`
+- Retrait des assertions non-null inutiles (`!`)
+- Utilisation d'optional chaining (`?.`) pour les sessions
+
+### Résultat
+- **Warnings** : 87 → 72 (-15 warnings, -17%)
+- ✅ Build OK
+- ✅ Tests OK (123/123)
+
+### Tests Backend - Phase 1
+Merge de la branche `feature/backend-tests-phase1` :
+- **+82 nouveaux tests** (41 → 123)
+- Couverture : OAuth, Auth, Validation, Token
+- Tous les tests passent ✅
+
+---
+
 ## 🎯 Prochaines Étapes
 
-### Optionnel : Réduction des 87 Warnings
-Les warnings restants sont des opérations `unsafe any` sur `req.body`, `req.params`.
-Non bloquants mais peuvent être résolus en ajoutant des types stricts pour les requêtes.
+### Optionnel : Réduction des 72 Warnings Restants
+Les 72 warnings restants sont principalement dans `validation.middleware.ts` (opérations unsafe sur `any` liées à Joi).
+Non bloquants car provenant de la bibliothèque Joi elle-même.
 
 ### Après Merge
 - [ ] Activer `--max-warnings=0` dans ESLint

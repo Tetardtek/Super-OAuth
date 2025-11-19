@@ -9,6 +9,31 @@ import { StartOAuthUseCase } from '../../application/use-cases/start-oauth.use-c
 import { CompleteOAuthUseCase } from '../../application/use-cases/complete-oauth.use-case';
 import { logger } from '../../shared/utils/logger.util';
 
+// Request body types
+interface RegisterBody {
+  email: string;
+  password: string;
+  nickname: string;
+}
+
+interface LoginBody {
+  email: string;
+  password: string;
+}
+
+interface RefreshTokenBody {
+  refreshToken: string;
+}
+
+interface OAuthParams {
+  provider: string;
+}
+
+interface OAuthQuery {
+  code?: string;
+  state?: string;
+}
+
 export class AuthController {
   private readonly registerUseCase: RegisterClassicUseCase;
   private readonly loginUseCase: LoginClassicUseCase;
@@ -33,7 +58,7 @@ export class AuthController {
    */
   async register(req: ValidatedRequest, res: Response): Promise<void> {
     try {
-      const { email, password, nickname } = req.validatedBody!;
+      const { email, password, nickname } = req.validatedBody as unknown as RegisterBody;
 
       logger.info('User registration attempt', {
         email,
@@ -43,9 +68,9 @@ export class AuthController {
       });
 
       const result = await this.registerUseCase.execute({
-        email: email as string,
-        password: password as string,
-        nickname: nickname as string,
+        email,
+        password,
+        nickname,
       });
 
       logger.info('User registered successfully', {
@@ -113,7 +138,7 @@ export class AuthController {
    */
   async login(req: ValidatedRequest, res: Response): Promise<void> {
     try {
-      const { email, password } = req.validatedBody!;
+      const { email, password } = req.validatedBody as unknown as LoginBody;
 
       logger.info('User login attempt', {
         email,
@@ -122,8 +147,8 @@ export class AuthController {
       });
 
       const result = await this.loginUseCase.execute({
-        email: email as string,
-        password: password as string,
+        email,
+        password,
       });
 
       logger.info('User logged in successfully', {
@@ -194,7 +219,7 @@ export class AuthController {
    */
   async refreshToken(req: ValidatedRequest, res: Response): Promise<void> {
     try {
-      const { refreshToken } = req.validatedBody!;
+      const { refreshToken } = req.validatedBody as unknown as RefreshTokenBody;
 
       logger.info('Token refresh attempt', {
         ip: req.ip,
@@ -202,7 +227,7 @@ export class AuthController {
       });
 
       const result = await this.refreshTokenUseCase.execute({
-        refreshToken: refreshToken as string,
+        refreshToken,
       });
 
       logger.info('Token refreshed successfully', {
@@ -260,7 +285,7 @@ export class AuthController {
 
       // For this implementation, we'll use refreshToken from request body
       // In a more sophisticated setup, you might track refresh tokens differently
-      const refreshToken = req.body?.refreshToken;
+      const refreshToken = (req.body as { refreshToken?: string } | undefined)?.refreshToken;
       if (refreshToken) {
         await this.logoutUseCase.execute(refreshToken);
       } else {
@@ -296,7 +321,7 @@ export class AuthController {
    */
   async startOAuth(req: Request, res: Response): Promise<void> {
     try {
-      const { provider } = req.params;
+      const { provider } = req.params as unknown as OAuthParams;
       const redirectUri = req.query.redirect_uri as string;
 
       logger.info('OAuth flow start', {
@@ -327,7 +352,7 @@ export class AuthController {
       });
     } catch (error) {
       logger.error('OAuth start failed', error instanceof Error ? error : undefined, {
-        provider: req.params.provider,
+        provider: (req.params as unknown as OAuthParams).provider,
         ip: req.ip,
       });
 
@@ -354,8 +379,8 @@ export class AuthController {
    */
   async oauthCallback(req: Request, res: Response): Promise<void> {
     try {
-      const { provider } = req.params;
-      const { code, state } = req.query;
+      const { provider } = req.params as unknown as OAuthParams;
+      const { code, state } = req.query as unknown as OAuthQuery;
 
       logger.info('OAuth callback received', {
         provider,
@@ -364,10 +389,14 @@ export class AuthController {
         userAgent: req.get('User-Agent'),
       });
 
+      if (!code || !state) {
+        throw new Error('Missing code or state parameter');
+      }
+
       const result = await this.completeOAuthUseCase.execute({
-        provider: provider as 'discord' | 'twitch' | 'google' | 'github',
-        code: code as string,
-        state: state as string,
+        provider,
+        code,
+        state,
       });
 
       logger.info('OAuth authentication completed', {

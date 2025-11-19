@@ -15,7 +15,18 @@ import { OAuthError, OAuthErrorType } from '../../infrastructure/oauth/oauth-con
 // Extended Request interfaces
 interface ExtendedRequest extends Request {
   user?: { id: string; email?: string } | undefined;
-  session?: Record<string, unknown> | undefined;
+  session?: { oauthState?: string } & Record<string, unknown> | undefined;
+}
+
+interface OAuthParams {
+  provider: string;
+}
+
+interface OAuthQuery {
+  redirectUrl?: string;
+  code?: string;
+  state?: string;
+  error?: string;
 }
 
 export class OAuthController {
@@ -24,8 +35,8 @@ export class OAuthController {
    * GET /auth/oauth/:provider
    */
   async startOAuth(req: ExtendedRequest, res: Response): Promise<void> {
-    const { provider } = req.params;
-    const { redirectUrl } = req.query;
+    const { provider } = req.params as unknown as OAuthParams;
+    const { redirectUrl } = req.query as unknown as OAuthQuery;
 
     try {
       logger.info(`🚀 Starting OAuth flow for ${provider}`, { provider, redirectUrl });
@@ -33,11 +44,13 @@ export class OAuthController {
       // Generate OAuth URL and state
       const { authUrl, state } = await oauthService.generateAuthUrl(
         provider,
-        redirectUrl as string
+        redirectUrl
       );
 
       // Store state in session for additional security
-      req.session!.oauthState = state;
+      if (req.session) {
+        req.session.oauthState = state;
+      }
 
       logger.info(`✅ OAuth URL generated for ${provider}`, { provider });
 
@@ -72,8 +85,8 @@ export class OAuthController {
    * GET /auth/oauth/:provider/callback
    */
   async handleOAuthCallback(req: ExtendedRequest, res: Response): Promise<void> {
-    const { provider } = req.params;
-    const { code, state, error: oauthError } = req.query;
+    const { provider } = req.params as unknown as OAuthParams;
+    const { code, state, error: oauthError } = req.query as unknown as OAuthQuery;
 
     try {
       logger.info(`🔄 Processing OAuth callback for ${provider}`, {
@@ -105,10 +118,10 @@ export class OAuthController {
       }
 
       // Validate state matches session
-      if (req.session!.oauthState !== state) {
+      if (req.session?.oauthState !== state) {
         logger.warn(`⚠️ OAuth state mismatch for ${provider}`, {
           provider,
-          sessionState: req.session!.oauthState,
+          sessionState: req.session?.oauthState,
           receivedState: state,
         });
         res.redirect(
@@ -117,11 +130,11 @@ export class OAuthController {
         return;
       }
 
-      // Process OAuth callback
+      // Process OAuth callback (code and state are validated above)
       const oauthUserInfo = await oauthService.handleCallback(
         provider,
-        code as string,
-        state as string
+        code,
+        state
       );
 
       logger.info(`👤 OAuth user info received for ${provider}`, {
@@ -170,7 +183,9 @@ export class OAuthController {
       const tokens = await authService.generateTokens(user);
 
       // Clear OAuth state from session
-      delete req.session!.oauthState;
+      if (req.session?.oauthState) {
+        delete req.session.oauthState;
+      }
 
       logger.info(`✅ OAuth authentication successful for ${provider}`, {
         userId: user.id,
@@ -180,8 +195,10 @@ export class OAuthController {
 
       // Redirect to frontend with tokens
       const redirectUrl =
-        req.session!.oauthRedirectUrl || `${process.env.FRONTEND_URL}/auth/success`;
-      delete req.session!.oauthRedirectUrl;
+        req.session?.oauthRedirectUrl || `${process.env.FRONTEND_URL}/auth/success`;
+      if (req.session?.oauthRedirectUrl) {
+        delete req.session.oauthRedirectUrl;
+      }
 
       const urlWithTokens = `${String(redirectUrl)}?token=${tokens.accessToken}&refresh=${tokens.refreshToken}&provider=${provider}`;
       res.redirect(urlWithTokens);
