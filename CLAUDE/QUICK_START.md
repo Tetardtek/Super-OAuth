@@ -115,21 +115,25 @@ npm start
 ### Tests
 
 ```bash
-# Tous les tests (290 tests: 249 frontend + 41 backend)
+# Tous les tests (372 tests: 123 backend + 249 frontend)
+npm run test:all
+
+# Tests backend uniquement (123 tests)
 npm run test
 
-# Tests backend uniquement
-npm run test
-
-# Tests frontend uniquement
+# Tests frontend uniquement (249 tests)
 npm run test:frontend
 
 # Tests avec couverture
 npm run test:coverage
+npm run test:frontend:coverage
 
 # Tests en mode watch
 npm run test:watch
+npm run test:frontend:watch
 ```
+
+> **📊 Pour plus de détails**: Voir [tests/README.md](../tests/README.md) et [.github/TESTS_STATUS.md](../.github/TESTS_STATUS.md)
 
 ### Qualité du Code
 
