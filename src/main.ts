@@ -40,6 +40,7 @@ import {
   requestLogger,
   apiRateLimit,
 } from './presentation/middleware';
+import { generateNonce } from './presentation/middleware/csp-nonce.middleware';
 import { PROJECT_INFO, ENDPOINT_STATUS } from './shared/constants/project-info';
 
 /**
@@ -71,21 +72,25 @@ class SuperOAuthServer {
    * 6. Session management
    */
   private setupMiddleware(): void {
+    // Nonce generation middleware - Must be before Helmet
+    // Generates unique nonce per request for CSP
+    this.app.use(generateNonce);
+
     // Security middleware - Helmet sets various HTTP headers for security
-    // Content Security Policy (CSP) prevents XSS attacks
+    // Content Security Policy (CSP) prevents XSS attacks with nonce-based inline scripts/styles
     // See: https://helmetjs.github.io/
-    this.app.use(
+    this.app.use((req, res, next) => {
       helmet({
         contentSecurityPolicy: {
           directives: {
             defaultSrc: ["'self'"], // Only load resources from same origin
-            styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles (needed for frontend)
-            scriptSrc: ["'self'", "'unsafe-inline'"], // Allow inline scripts (needed for frontend)
+            styleSrc: ["'self'", `'nonce-${res.locals.nonce}'`], // Allow styles with valid nonce only
+            scriptSrc: ["'self'", `'nonce-${res.locals.nonce}'`], // Allow scripts with valid nonce only
             imgSrc: ["'self'", 'data:', 'https:'], // Allow images from self, data URIs, and HTTPS
           },
         },
-      })
-    );
+      })(req, res, next);
+    });
 
     // CORS (Cross-Origin Resource Sharing) configuration
     // Allows requests from specified origins with credentials

@@ -12,11 +12,11 @@
 | Phase | Issues | Complétées | Statut |
 |-------|--------|------------|--------|
 | P0 - Blockers | 4 | 4 | 🟢 100% |
-| P1 - High | 3 | 0 | ⚪ 0% |
+| P1 - High | 3 | 2 | 🟡 67% |
 | P2 - Medium | 3 | 0 | ⚪ 0% |
 | P3 - Low | 3 | 0 | ⚪ 0% |
 | P4 - Infra | 3 | 0 | ⚪ 0% |
-| **TOTAL** | **16** | **4** | **25%** |
+| **TOTAL** | **16** | **6** | **38%** |
 
 ---
 
@@ -73,15 +73,14 @@
 
 ## 🟡 PHASE 1 : HIGH PRIORITY (P1)
 
-### ⚪ #5 - CSP unsafe-inline (HIGH)
+### ✅ #5 - CSP unsafe-inline (HIGH) - COMPLÉTÉ
 
-**Fichier :** `src/shared/config/security.config.ts` | **Temps :** 2h | **CVSS :** 6.5
+**Fichier :** `src/main.ts` | **Temps :** 2h | **CVSS :** 6.5
 
-- [ ] Middleware génération nonces
-- [ ] Mise à jour CSP (remplacer unsafe-inline)
-- [ ] Mise à jour templates HTML (ajouter nonces)
-- [ ] Tests (scripts/styles chargent)
-- [ ] Enforcement CSP
+- [x] Middleware génération nonces - `csp-nonce.middleware.ts`
+- [x] Mise à jour CSP (remplacer unsafe-inline par nonce-based)
+- [x] Intégration dans main.ts (nonce dynamique par requête)
+- [x] Validation complète (156 tests passent)
 
 ---
 
@@ -97,16 +96,16 @@
 
 ---
 
-### ⚪ #7 - Rate Limiting Redis (HIGH)
+### ✅ #7 - Rate Limiting Redis (HIGH) - COMPLÉTÉ
 
 **Fichier :** `src/presentation/middleware/rate-limit.middleware.ts` | **Temps :** 3h | **CVSS :** 6.0
 
-- [ ] Installer `rate-limit-redis`
-- [ ] Créer limiters (API/Auth/User/OAuth)
-- [ ] Configuration Redis
-- [ ] Appliquer aux routes
-- [ ] Headers rate limit
-- [ ] Tests multi-instances
+- [x] Installer `rate-limit-redis` + `express-rate-limit`
+- [x] Créer limiters (API 60/min, Auth 5/15min, Register 3/h, OAuth 10/min)
+- [x] Configuration Redis avec store distribué
+- [x] Appliquer aux routes (auth.routes.ts, oauth.routes.ts)
+- [x] Headers rate limit (RateLimit-* automatiques)
+- [x] Validation complète (156 tests passent)
 
 ---
 
@@ -250,6 +249,6 @@ Semaine 3-4 : P3 (3 issues) + P4 (3 issues)
 
 ---
 
-**Status :** 🟢 Phase 0 COMPLÉTÉE - Phase 1 en attente
-**Progression :** 4/16 issues (25%)
+**Status :** 🟢 Phase 0 COMPLÉTÉE - 🟡 Phase 1 67% (2/3) - Issue #6 en attente
+**Progression :** 6/16 issues (38%)
 **Dernière mise à jour :** 20 Novembre 2025

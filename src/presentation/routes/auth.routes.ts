@@ -3,6 +3,7 @@ import { authValidators } from '../validators/request.validators';
 import { validateBody, validateParams } from '../middleware/validation.middleware';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { csrfProtection, generateCsrfToken, csrfErrorHandler } from '../middleware/csrf.middleware';
+import { authRateLimit, registerRateLimit } from '../middleware/rate-limit.middleware';
 import { AuthController } from '../controllers/auth.controller';
 import { asyncHandler } from '../../shared/utils/async-handler.util';
 import Joi from 'joi';
@@ -37,23 +38,26 @@ router.get('/csrf-token', (req: Request, res: Response) => {
  * @desc Register new user with email/password
  * @access Public
  * @csrf Protected
+ * @ratelimit 3 requests per hour
  */
-router.post('/register', csrfProtection, validateBody(authValidators.register), asyncHandler(authController.register.bind(authController)));
+router.post('/register', registerRateLimit, csrfProtection, validateBody(authValidators.register), asyncHandler(authController.register.bind(authController)));
 
 /**
  * @route POST /auth/login
  * @desc Login user with email/password
  * @access Public
  * @csrf Protected
+ * @ratelimit 5 requests per 15 minutes
  */
-router.post('/login', csrfProtection, validateBody(authValidators.login), asyncHandler(authController.login.bind(authController)));
+router.post('/login', authRateLimit, csrfProtection, validateBody(authValidators.login), asyncHandler(authController.login.bind(authController)));
 
 /**
  * @route POST /auth/refresh
  * @desc Refresh access token
  * @access Public
+ * @ratelimit 5 requests per 15 minutes
  */
-router.post('/refresh', validateBody(authValidators.refreshToken), asyncHandler(authController.refreshToken.bind(authController)));
+router.post('/refresh', authRateLimit, validateBody(authValidators.refreshToken), asyncHandler(authController.refreshToken.bind(authController)));
 
 /**
  * @route POST /auth/logout
