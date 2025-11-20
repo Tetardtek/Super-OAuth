@@ -47,15 +47,15 @@
 
 ---
 
-### ❌ #3 - Vulnérabilités npm (12) (CRITICAL)
+### ✅ #3 - Vulnérabilités npm (12) (CRITICAL) - COMPLÉTÉ
 
 **Temps :** 3h | **CVSS :** 7.5
 
-- [ ] Mises à jour non-breaking : axios, typeorm, mysql2, typescript
-- [ ] Mises à jour breaking : happy-dom, nodemailer
-- [ ] `npm audit fix`
-- [ ] Validation : tests + build
-- [ ] `npm audit` → 0 vulnérabilités
+- [x] Mises à jour non-breaking : axios@1.13.2, typeorm@0.3.27, mysql2@3.15.3, typescript@5.9.3
+- [x] Mises à jour breaking : happy-dom@20.0.10, nodemailer@7.0.10, tsx@4.20.6, lint-staged@16.2.7
+- [x] `npm audit fix` (auto-fix restantes)
+- [x] Validation : 156 tests passent, build OK
+- [x] `npm audit` → 0 vulnérabilités ✅
 
 ---
 
