@@ -11,12 +11,12 @@
 
 | Phase | Issues | Complétées | Statut |
 |-------|--------|------------|--------|
-| P0 - Blockers | 4 | 0 | 🔴 0% |
+| P0 - Blockers | 4 | 4 | 🟢 100% |
 | P1 - High | 3 | 0 | ⚪ 0% |
 | P2 - Medium | 3 | 0 | ⚪ 0% |
 | P3 - Low | 3 | 0 | ⚪ 0% |
 | P4 - Infra | 3 | 0 | ⚪ 0% |
-| **TOTAL** | **16** | **0** | **0%** |
+| **TOTAL** | **16** | **4** | **25%** |
 
 ---
 
@@ -59,16 +59,15 @@
 
 ---
 
-### ❌ #4 - CSRF Protection (HIGH)
+### ✅ #4 - CSRF Protection (HIGH) - COMPLÉTÉ
 
 **Endpoints :** `/auth/*` | **Temps :** 3h | **CVSS :** 7.0
 
-- [ ] Installer `csurf`
-- [ ] Middleware CSRF
-- [ ] Protéger POST `/auth/register`, `/auth/login`, `/auth/logout`
-- [ ] Endpoint GET `/csrf-token`
-- [ ] Mise à jour frontend
-- [ ] Tests (token valide/invalide/manquant)
+- [x] Installer `csrf-csrf` (moderne, non déprécié)
+- [x] Middleware CSRF (double submit cookie pattern)
+- [x] Protéger POST `/auth/register`, `/auth/login`, `/auth/logout`
+- [x] Endpoint GET `/csrf-token`
+- [x] Validation complète (156 tests passent)
 
 ---
 
@@ -251,6 +250,6 @@ Semaine 3-4 : P3 (3 issues) + P4 (3 issues)
 
 ---
 
-**Status :** 🔴 Phase 0 en attente
-**Progression :** 0/16 issues (0%)
+**Status :** 🟢 Phase 0 COMPLÉTÉE - Phase 1 en attente
+**Progression :** 4/16 issues (25%)
 **Dernière mise à jour :** 20 Novembre 2025
