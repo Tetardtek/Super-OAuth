@@ -22,15 +22,15 @@
 
 ## 🔴 PHASE 0 : BLOCKERS (P0)
 
-### ❌ #1 - Crypto Dépréciées (CRITICAL)
+### ✅ #1 - Crypto Dépréciées (CRITICAL) - COMPLÉTÉ
 
 **Fichier :** `src/shared/utils/crypto.util.ts` | **Temps :** 4h | **CVSS :** 8.5
 
-- [ ] Implémenter `CryptoUtil` sécurisé (AES-256-GCM)
-- [ ] Tests unitaires (encrypt/decrypt/tampering)
-- [ ] Migrer code existant
-- [ ] Migration données si nécessaire
-- [ ] Validation complète
+- [x] Implémenter `CryptoUtil` sécurisé (AES-256-GCM)
+- [x] Tests unitaires (encrypt/decrypt/tampering) - 33 tests
+- [x] Migrer code existant
+- [x] Migration données si nécessaire (pas de données existantes)
+- [x] Validation complète (156 tests passent, build OK)
 
 ---
 
