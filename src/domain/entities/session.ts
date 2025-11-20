@@ -10,6 +10,7 @@ export interface SessionData {
   expiresAt: Date;
   ipAddress?: string | undefined;
   userAgent?: string | undefined;
+  deviceFingerprint?: string | undefined;
   isActive?: boolean;
   lastActivity?: Date;
   createdAt?: Date;
@@ -24,6 +25,7 @@ export class Session {
   private expiresAt: Date;
   private ipAddress: string | undefined;
   private userAgent: string | undefined;
+  private deviceFingerprint: string | undefined;
   private isActive: boolean;
   private lastActivity: Date;
   private readonly createdAt: Date;
@@ -39,6 +41,7 @@ export class Session {
     this.expiresAt = data.expiresAt;
     this.ipAddress = data.ipAddress;
     this.userAgent = data.userAgent;
+    this.deviceFingerprint = data.deviceFingerprint;
     this.isActive = data.isActive ?? true;
     this.lastActivity = data.lastActivity || new Date();
     this.createdAt = data.createdAt || new Date();
@@ -110,6 +113,10 @@ export class Session {
     return this.userAgent;
   }
 
+  getDeviceFingerprint(): string | undefined {
+    return this.deviceFingerprint;
+  }
+
   getIsActive(): boolean {
     return this.isActive;
   }
@@ -148,9 +155,10 @@ export class Session {
     this.touch();
   }
 
-  updateActivity(ipAddress?: string, userAgent?: string): void {
+  updateActivity(ipAddress?: string, userAgent?: string, deviceFingerprint?: string): void {
     this.ipAddress = ipAddress;
     this.userAgent = userAgent;
+    this.deviceFingerprint = deviceFingerprint;
     this.lastActivity = new Date();
     this.touch();
   }
@@ -198,6 +206,7 @@ export class Session {
       expiresAt: this.expiresAt.toISOString(),
       ipAddress: this.ipAddress,
       userAgent: this.userAgent,
+      deviceFingerprint: this.deviceFingerprint,
       isActive: this.isActive,
       lastActivity: this.lastActivity.toISOString(),
       createdAt: this.createdAt.toISOString(),

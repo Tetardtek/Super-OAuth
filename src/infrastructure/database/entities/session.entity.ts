@@ -37,6 +37,9 @@ export class SessionEntity {
   @Column({ type: 'text', nullable: true, name: 'user_agent' })
   userAgent?: string | null;
 
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'device_fingerprint' })
+  deviceFingerprint?: string | null;
+
   @Column({ type: 'boolean', default: true, name: 'is_active' })
   isActive!: boolean;
 

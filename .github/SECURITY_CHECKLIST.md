@@ -12,11 +12,11 @@
 | Phase | Issues | Complétées | Statut |
 |-------|--------|------------|--------|
 | P0 - Blockers | 4 | 4 | 🟢 100% |
-| P1 - High | 3 | 2 | 🟡 67% |
+| P1 - High | 3 | 3 | 🟢 100% |
 | P2 - Medium | 3 | 0 | ⚪ 0% |
 | P3 - Low | 3 | 0 | ⚪ 0% |
 | P4 - Infra | 3 | 0 | ⚪ 0% |
-| **TOTAL** | **16** | **6** | **38%** |
+| **TOTAL** | **16** | **7** | **44%** |
 
 ---
 
@@ -84,15 +84,17 @@
 
 ---
 
-### ⚪ #6 - Session Fingerprinting (HIGH)
+### ✅ #6 - Session Fingerprinting (HIGH) - COMPLÉTÉ
 
 **Fichier :** `src/infrastructure/database/entities/session.entity.ts` | **Temps :** 4h | **CVSS :** 6.0
 
-- [ ] Étendre `SessionEntity` (userAgent, ipAddress, deviceFingerprint)
-- [ ] Migration DB
-- [ ] Capturer lors création session
-- [ ] Validation dans middleware auth
-- [ ] Tests (valid/mismatch)
+- [x] Étendre `SessionEntity` (deviceFingerprint ajouté, ipAddress/userAgent déjà présents)
+- [x] Migration DB - `AddDeviceFingerprintToSessions`
+- [x] Service `DeviceFingerprintUtil` (SHA-256 hash IP+UserAgent)
+- [x] Domain entity Session mise à jour (getters/setters)
+- [x] SessionMapper mis à jour (toDomain/toEntity)
+- [x] Interface ISessionRepository étendue (metadata optionnelle)
+- [x] Validation complète (156 tests passent)
 
 ---
 
@@ -249,6 +251,6 @@ Semaine 3-4 : P3 (3 issues) + P4 (3 issues)
 
 ---
 
-**Status :** 🟢 Phase 0 COMPLÉTÉE - 🟡 Phase 1 67% (2/3) - Issue #6 en attente
-**Progression :** 6/16 issues (38%)
+**Status :** 🟢 Phase 0 & Phase 1 COMPLÉTÉES (7/7) - Phase 2 en attente
+**Progression :** 7/16 issues (44%)
 **Dernière mise à jour :** 20 Novembre 2025

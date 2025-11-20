@@ -12,6 +12,7 @@ export class SessionMapper {
       expiresAt: entity.expiresAt,
       ipAddress: entity.ipAddress || undefined,
       userAgent: entity.userAgent || undefined,
+      deviceFingerprint: entity.deviceFingerprint || undefined,
       isActive: entity.isActive,
       lastActivity: entity.lastActivity,
       createdAt: entity.createdAt,
@@ -34,6 +35,7 @@ export class SessionMapper {
     entity.expiresAt = session.getExpiresAt();
     entity.ipAddress = session.getIpAddress() || null;
     entity.userAgent = session.getUserAgent() || null;
+    entity.deviceFingerprint = session.getDeviceFingerprint() || null;
     entity.isActive = session.getIsActive();
     entity.lastActivity = session.getLastActivity();
     entity.createdAt = session.getCreatedAt();

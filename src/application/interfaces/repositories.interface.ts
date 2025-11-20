@@ -10,8 +10,13 @@ export interface IUserRepository {
 }
 
 export interface ISessionRepository {
-  create(userId: string, refreshToken: string, expiresAt: Date): Promise<void>;
-  findByRefreshToken(refreshToken: string): Promise<{ userId: string; expiresAt: Date } | null>;
+  create(
+    userId: string,
+    refreshToken: string,
+    expiresAt: Date,
+    metadata?: { ipAddress?: string; userAgent?: string; deviceFingerprint?: string }
+  ): Promise<void>;
+  findByRefreshToken(refreshToken: string): Promise<{ userId: string; expiresAt: Date; deviceFingerprint?: string } | null>;
   deleteByRefreshToken(refreshToken: string): Promise<void>;
   deleteByUserId(userId: string): Promise<void>;
   deleteExpired(): Promise<void>;
