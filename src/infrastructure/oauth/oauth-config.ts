@@ -124,15 +124,7 @@ export function isProviderSupported(provider: string): boolean {
   return getSupportedProviders().includes(provider);
 }
 
-/**
- * OAuth State Management
- */
-export interface OAuthState {
-  provider: string;
-  timestamp: number;
-  nonce: string;
-  redirectUrl?: string;
-}
+// OAuthState moved to src/infrastructure/redis/redis-state-storage.ts
 
 /**
  * OAuth Token Response

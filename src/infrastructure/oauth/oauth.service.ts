@@ -8,7 +8,6 @@ import crypto from 'crypto';
 import axios from 'axios';
 import {
   OAUTH_PROVIDERS,
-  OAuthState,
   OAuthTokenResponse,
   OAuthUserInfo,
   OAuthError,
@@ -23,10 +22,16 @@ import {
   ProviderRawData,
 } from './oauth-config';
 import { logger } from '../../shared/utils/logger.util';
+import { RedisStateStorage, IStateStorage, OAuthState } from '../redis';
 
 export class OAuthService {
-  private stateStorage = new Map<string, OAuthState>();
-  private readonly stateExpirationMs = 10 * 60 * 1000; // 10 minutes
+  private stateStorage: IStateStorage;
+  private readonly stateExpirationSeconds = 10 * 60; // 10 minutes (en secondes pour Redis TTL)
+
+  constructor(stateStorage?: IStateStorage) {
+    // Dependency injection pour faciliter les tests
+    this.stateStorage = stateStorage || new RedisStateStorage();
+  }
 
   /**
    * Generate OAuth authorization URL
@@ -52,7 +57,7 @@ export class OAuthService {
     }
 
     const config = getOAuthConfig(provider)!;
-    const state = this.generateState(provider, redirectUrl);
+    const state = await this.generateState(provider, redirectUrl);
 
     const params = new URLSearchParams({
       client_id: config.clientId,
@@ -109,8 +114,7 @@ export class OAuthService {
       // Get user info using token
       const userInfo = await this.getUserInfo(provider, tokenResponse.access_token);
 
-      // Cleanup state
-      this.stateStorage.delete(state);
+      // State déjà supprimé par validateState() (use-once pattern)
 
       logger.info(`✅ OAuth callback processed successfully for ${provider}`, {
         provider,
@@ -318,7 +322,7 @@ export class OAuthService {
   /**
    * Generate secure state for OAuth flow
    */
-  private generateState(provider: string, redirectUrl?: string): string {
+  private async generateState(provider: string, redirectUrl?: string): Promise<string> {
     const nonce = crypto.randomBytes(32).toString('hex');
     const state = crypto.randomBytes(16).toString('hex');
 
@@ -332,10 +336,8 @@ export class OAuthService {
       stateData.redirectUrl = redirectUrl;
     }
 
-    this.stateStorage.set(state, stateData);
-
-    // Cleanup expired states
-    this.cleanupExpiredStates();
+    // Sauvegarder avec TTL automatique (Redis gère l'expiration)
+    await this.stateStorage.save(state, stateData, this.stateExpirationSeconds);
 
     return state;
   }
@@ -343,16 +345,18 @@ export class OAuthService {
   /**
    * Validate OAuth state
    */
-  private validateState(state: string, expectedProvider: string): OAuthState | null {
-    const stateData = this.stateStorage.get(state);
+  private async validateState(state: string, expectedProvider: string): Promise<OAuthState | null> {
+    // get() supprime automatiquement le state (use-once pattern)
+    const stateData = await this.stateStorage.get(state);
 
     if (!stateData) {
       return null;
     }
 
-    // Check expiration
-    if (Date.now() - stateData.timestamp > this.stateExpirationMs) {
-      this.stateStorage.delete(state);
+    // Redis TTL gère l'expiration automatiquement
+    // Vérification additionnelle pour double sécurité
+    const expirationMs = this.stateExpirationSeconds * 1000;
+    if (Date.now() - stateData.timestamp > expirationMs) {
       return null;
     }
 
@@ -366,14 +370,11 @@ export class OAuthService {
 
   /**
    * Cleanup expired states
+   * Note: Redis gère automatiquement l'expiration via TTL
+   * Cette méthode est conservée pour monitoring/stats si nécessaire
    */
-  private cleanupExpiredStates(): void {
-    const now = Date.now();
-    for (const [state, data] of this.stateStorage.entries()) {
-      if (now - data.timestamp > this.stateExpirationMs) {
-        this.stateStorage.delete(state);
-      }
-    }
+  async cleanupExpiredStates(): Promise<number> {
+    return await this.stateStorage.cleanupExpired();
   }
 
   /**
