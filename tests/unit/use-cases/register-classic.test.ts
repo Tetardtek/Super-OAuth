@@ -21,6 +21,7 @@ describe('RegisterClassicUseCase', () => {
       generateAccessToken: jest.fn(),
       generateRefreshToken: jest.fn(),
       verifyAccessToken: jest.fn(),
+      decodeAccessToken: jest.fn(),
       getTokenExpiration: jest.fn(),
     };
 

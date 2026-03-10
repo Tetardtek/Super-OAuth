@@ -7,6 +7,7 @@ import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token.u
 import { LogoutUseCase } from '../../application/use-cases/logout.use-case';
 import { StartOAuthUseCase } from '../../application/use-cases/start-oauth.use-case';
 import { CompleteOAuthUseCase } from '../../application/use-cases/complete-oauth.use-case';
+import { TokenService } from '../../infrastructure/services/token.service';
 import { logger } from '../../shared/utils/logger.util';
 
 // Request body types
@@ -41,6 +42,7 @@ export class AuthController {
   private readonly logoutUseCase: LogoutUseCase;
   private readonly startOAuthUseCase: StartOAuthUseCase;
   private readonly completeOAuthUseCase: CompleteOAuthUseCase;
+  private readonly tokenService: TokenService;
 
   constructor() {
     const container = DIContainer.getInstance();
@@ -50,6 +52,7 @@ export class AuthController {
     this.logoutUseCase = container.getLogoutUseCase();
     this.startOAuthUseCase = container.getStartOAuthUseCase();
     this.completeOAuthUseCase = container.getCompleteOAuthUseCase();
+    this.tokenService = container.get<TokenService>('TokenService');
   }
 
   /**
@@ -283,14 +286,24 @@ export class AuthController {
         ip: req.ip,
       });
 
-      // For this implementation, we'll use refreshToken from request body
-      // In a more sophisticated setup, you might track refresh tokens differently
+      // Extraire le JTI de l'access token pour le révoquer immédiatement
+      // jwt.decode() sans vérification — le token est déjà validé par authenticateToken
+      const authHeader = req.headers.authorization;
+      const accessToken = authHeader?.split(' ')[1];
+      const tokenInfo = accessToken ? this.tokenService.decodeAccessToken(accessToken) : null;
+
       const refreshToken = (req.body as { refreshToken?: string } | undefined)?.refreshToken;
       if (refreshToken) {
-        await this.logoutUseCase.execute(refreshToken);
+        await this.logoutUseCase.execute(
+          refreshToken,
+          tokenInfo ? { jti: tokenInfo.jti, exp: tokenInfo.exp } : undefined
+        );
       } else {
-        // If no refresh token provided, logout from all sessions
-        await this.logoutUseCase.executeAllSessions(userId);
+        // Si pas de refresh token : logout de toutes les sessions
+        await this.logoutUseCase.executeAllSessions(
+          userId,
+          tokenInfo ? { jti: tokenInfo.jti, exp: tokenInfo.exp } : undefined
+        );
       }
 
       logger.info('User logged out successfully', {

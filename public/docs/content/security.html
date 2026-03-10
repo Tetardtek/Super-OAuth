@@ -190,6 +190,54 @@ class TokenService {
 }</div>
 </div>
 
+<div class="security-section">
+    <h4>🚫 Révocation des Access Tokens (Blacklist Redis)</h4>
+    <p>Les JWT sont stateless par nature : une fois émis, ils restent valides jusqu'à leur expiration même après un logout. Pour pallier ce problème, SuperOAuth implémente une blacklist Redis basée sur les <strong>JTI (JWT ID)</strong>.</p>
+
+    <div class="component-card">
+        <h5>Pourquoi les JTI et pas les tokens complets ?</h5>
+        <ul>
+            <li><strong>Économie mémoire</strong> : un JTI fait ~30 chars vs ~300 chars pour un token complet</li>
+            <li><strong>TTL automatique</strong> : Redis expire l'entrée exactement quand le token expire → pas de nettoyage manuel</li>
+            <li><strong>Sécurité</strong> : on ne stocke jamais le token en clair dans Redis</li>
+        </ul>
+    </div>
+
+    <div class="code-block">// 1. Chaque access token contient un JTI unique
+const accessTokenPayload = {
+  userId: user.id,
+  type: 'access',
+  jti: crypto.randomUUID(), // Identifiant unique du token
+};
+
+// 2. Au logout, on blackliste le JTI avec un TTL = durée restante
+const decoded = tokenService.decodeAccessToken(accessToken);
+const ttlSeconds = Math.max(0, decoded.exp - Math.floor(Date.now() / 1000));
+await tokenBlacklist.revoke(decoded.jti, ttlSeconds);
+// → Redis: SET blacklist:jti:&lt;jti&gt; 1 EX &lt;ttl&gt;
+
+// 3. Sur chaque requête, le middleware vérifie la blacklist
+const isRevoked = await tokenBlacklist.isRevoked(decoded.jti);
+if (isRevoked) {
+  return res.status(401).json({ error: 'TOKEN_REVOKED' });
+}</div>
+
+    <div class="attack-protection-grid">
+        <div class="protection-card">
+            <h5>🔒 Token Volé</h5>
+            <p>Un access token volé est invalide immédiatement après logout</p>
+        </div>
+        <div class="protection-card">
+            <h5>⚡ Performance</h5>
+            <p>Vérification Redis en O(1) — impact négligeable sur la latence</p>
+        </div>
+        <div class="protection-card">
+            <h5>🧹 Nettoyage Auto</h5>
+            <p>Les entrées Redis expirent avec le token, aucun cron nécessaire</p>
+        </div>
+    </div>
+</div>
+
 <h3>✅ Validation et Sanitisation</h3>
 
 <div class="security-section">

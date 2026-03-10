@@ -73,12 +73,6 @@ export class AuthService {
     };
   }
 
-  /**
-   * Revoke refresh token
-   */
-  async revokeToken(token: string): Promise<void> {
-    await tokenService.revokeToken(token);
-  }
 }
 
 export const authService = new AuthService();

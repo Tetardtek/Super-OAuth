@@ -32,7 +32,6 @@ const createRedisRateLimiter = async (options: Partial<Options>): Promise<RateLi
     skipSuccessfulRequests: false,
     skipFailedRequests: false,
     store: new RedisStore({
-      // @ts-expect-error - rate-limit-redis types incompatibles avec redis 4.x client
       sendCommand: (...args: string[]) => client.sendCommand(args),
       prefix: 'rl:', // Rate limit key prefix
     }),

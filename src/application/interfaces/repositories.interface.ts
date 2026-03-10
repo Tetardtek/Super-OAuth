@@ -25,8 +25,14 @@ export interface ISessionRepository {
 export interface ITokenService {
   generateAccessToken(userId: string): string;
   generateRefreshToken(): string;
-  verifyAccessToken(token: string): { userId: string } | null;
+  verifyAccessToken(token: string): { userId: string; jti: string } | null;
+  decodeAccessToken(token: string): { userId: string; jti: string; exp: number } | null;
   getTokenExpiration(): { accessToken: number; refreshToken: number };
+}
+
+export interface ITokenBlacklist {
+  revoke(jti: string, ttlSeconds: number): Promise<void>;
+  isRevoked(jti: string): Promise<boolean>;
 }
 
 export interface IPasswordService {

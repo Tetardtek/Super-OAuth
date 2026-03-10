@@ -32,6 +32,7 @@ describe('RefreshTokenUseCase', () => {
       generateAccessToken: jest.fn(),
       generateRefreshToken: jest.fn(),
       verifyAccessToken: jest.fn(),
+      decodeAccessToken: jest.fn(),
       getTokenExpiration: jest.fn().mockReturnValue({
         accessToken: 900000, // 15 min
         refreshToken: 604800000, // 7 days

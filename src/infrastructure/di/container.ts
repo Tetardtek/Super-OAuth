@@ -15,12 +15,14 @@ import {
   OAuthService,
   PasswordService,
 } from '../services';
+import { TokenBlacklistService } from '../services/token-blacklist.service';
 
 import {
   ITokenService,
   ISessionRepository,
   IUserRepository,
   IOAuthService,
+  ITokenBlacklist,
 } from '../../application/interfaces/repositories.interface';
 
 export class DIContainer {
@@ -45,6 +47,7 @@ export class DIContainer {
     this.services.set('UserRepository', new UserRepository());
     this.services.set('OAuthService', new OAuthService());
     this.services.set('PasswordService', new PasswordService());
+    this.services.set('TokenBlacklistService', new TokenBlacklistService());
 
     // Use Cases
     this.services.set(
@@ -75,7 +78,10 @@ export class DIContainer {
 
     this.services.set(
       'LogoutUseCase',
-      new LogoutUseCase(this.get<ISessionRepository>('SessionRepository'))
+      new LogoutUseCase(
+        this.get<ISessionRepository>('SessionRepository'),
+        this.get<ITokenBlacklist>('TokenBlacklistService')
+      )
     );
 
     this.services.set(
