@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import rateLimit, { Options } from 'express-rate-limit';
+import rateLimit, { Options, RateLimitRequestHandler } from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import { redisClientSingleton } from '../../infrastructure/redis/redis-client';
 import { logger } from '../../shared/utils/logger.util';
@@ -18,9 +18,12 @@ import { logger } from '../../shared/utils/logger.util';
  */
 
 /**
- * Crée un rate limiter avec store Redis
+ * Crée un rate limiter avec store Redis (initialisation lazy)
  */
-const createRedisRateLimiter = (options: Partial<Options>) => {
+const createRedisRateLimiter = async (options: Partial<Options>): Promise<RateLimitRequestHandler> => {
+  // Récupérer le client Redis de manière asynchrone
+  const client = await redisClientSingleton.getClient();
+
   return rateLimit({
     windowMs: options.windowMs || 15 * 60 * 1000, // 15 minutes par défaut
     max: options.max || 100,
@@ -30,7 +33,7 @@ const createRedisRateLimiter = (options: Partial<Options>) => {
     skipFailedRequests: false,
     store: new RedisStore({
       // @ts-expect-error - rate-limit-redis types incompatibles avec redis 4.x client
-      client: redisClientSingleton.getClient(),
+      sendCommand: (...args: string[]) => client.sendCommand(args),
       prefix: 'rl:', // Rate limit key prefix
     }),
     handler: (req: Request, res: Response) => {
@@ -53,46 +56,72 @@ const createRedisRateLimiter = (options: Partial<Options>) => {
   });
 };
 
+// Limiters initialisés de manière lazy
+let apiRateLimitInstance: RateLimitRequestHandler | null = null;
+let authRateLimitInstance: RateLimitRequestHandler | null = null;
+let registerRateLimitInstance: RateLimitRequestHandler | null = null;
+let oauthRateLimitInstance: RateLimitRequestHandler | null = null;
+
 /**
  * General API rate limiting
  * 60 requêtes par minute par IP
  */
-export const apiRateLimit = createRedisRateLimiter({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 60,
-  message: 'Too many API requests, please slow down',
-});
+export const apiRateLimit = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  if (!apiRateLimitInstance) {
+    apiRateLimitInstance = await createRedisRateLimiter({
+      windowMs: 1 * 60 * 1000, // 1 minute
+      max: 60,
+      message: 'Too many API requests, please slow down',
+    });
+  }
+  return apiRateLimitInstance(req, res, next);
+};
 
 /**
  * Auth endpoints rate limiting (login, refresh)
  * 5 tentatives par 15 minutes pour prévenir brute force
  */
-export const authRateLimit = createRedisRateLimiter({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
-  message: 'Too many authentication attempts, please try again later',
-  skipSuccessfulRequests: true, // Ne compter que les échecs
-});
+export const authRateLimit = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  if (!authRateLimitInstance) {
+    authRateLimitInstance = await createRedisRateLimiter({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 5,
+      message: 'Too many authentication attempts, please try again later',
+      skipSuccessfulRequests: true, // Ne compter que les échecs
+    });
+  }
+  return authRateLimitInstance(req, res, next);
+};
 
 /**
  * Registration rate limiting
  * 3 enregistrements par heure par IP pour prévenir spam
  */
-export const registerRateLimit = createRedisRateLimiter({
-  windowMs: 60 * 60 * 1000, // 1 heure
-  max: 3,
-  message: 'Too many registration attempts, please try again later',
-});
+export const registerRateLimit = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  if (!registerRateLimitInstance) {
+    registerRateLimitInstance = await createRedisRateLimiter({
+      windowMs: 60 * 60 * 1000, // 1 heure
+      max: 3,
+      message: 'Too many registration attempts, please try again later',
+    });
+  }
+  return registerRateLimitInstance(req, res, next);
+};
 
 /**
  * OAuth flow rate limiting
  * 10 OAuth initiations par minute
  */
-export const oauthRateLimit = createRedisRateLimiter({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 10,
-  message: 'Too many OAuth requests, please slow down',
-});
+export const oauthRateLimit = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  if (!oauthRateLimitInstance) {
+    oauthRateLimitInstance = await createRedisRateLimiter({
+      windowMs: 1 * 60 * 1000, // 1 minute
+      max: 10,
+      message: 'Too many OAuth requests, please slow down',
+    });
+  }
+  return oauthRateLimitInstance(req, res, next);
+};
 
 /**
  * Middleware pour injecter les headers de rate limit
