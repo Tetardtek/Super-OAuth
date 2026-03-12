@@ -10,24 +10,30 @@ export class SessionRepository implements ISessionRepository {
     this.repository = DatabaseConnection.getInstance().getRepository(SessionEntity);
   }
 
-  async create(userId: string, refreshToken: string, expiresAt: Date): Promise<void> {
+  async create(
+    userId: string,
+    refreshToken: string,
+    expiresAt: Date,
+    metadata?: { ipAddress?: string; userAgent?: string; deviceFingerprint?: string }
+  ): Promise<void> {
     const session = new SessionEntity();
     session.id = this.generateSessionId();
     session.userId = userId;
-    session.token = this.generateAccessToken(); // Generate unique access token
+    session.token = this.generateAccessToken();
     session.refreshToken = refreshToken;
     session.expiresAt = expiresAt;
     session.isActive = true;
     session.lastActivity = new Date();
-    session.createdAt = new Date();
-    session.updatedAt = new Date();
+    session.ipAddress = metadata?.ipAddress ?? null;
+    session.userAgent = metadata?.userAgent ?? null;
+    session.deviceFingerprint = metadata?.deviceFingerprint ?? null;
 
     await this.repository.save(session);
   }
 
   async findByRefreshToken(
     refreshToken: string
-  ): Promise<{ userId: string; expiresAt: Date } | null> {
+  ): Promise<{ userId: string; expiresAt: Date; deviceFingerprint?: string } | null> {
     const session = await this.repository.findOne({
       where: { refreshToken },
     });
@@ -39,6 +45,7 @@ export class SessionRepository implements ISessionRepository {
     return {
       userId: session.userId,
       expiresAt: session.expiresAt,
+      ...(session.deviceFingerprint && { deviceFingerprint: session.deviceFingerprint }),
     };
   }
 
