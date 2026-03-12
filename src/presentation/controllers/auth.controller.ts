@@ -8,6 +8,7 @@ import { LogoutUseCase } from '../../application/use-cases/logout.use-case';
 import { StartOAuthUseCase } from '../../application/use-cases/start-oauth.use-case';
 import { CompleteOAuthUseCase } from '../../application/use-cases/complete-oauth.use-case';
 import { TokenService } from '../../infrastructure/services/token.service';
+import { DeviceFingerprintUtil } from '../../shared/utils/device-fingerprint.util';
 import { logger } from '../../shared/utils/logger.util';
 
 // Request body types
@@ -231,6 +232,7 @@ export class AuthController {
 
       const result = await this.refreshTokenUseCase.execute({
         refreshToken,
+        deviceFingerprint: DeviceFingerprintUtil.generate(req),
       });
 
       logger.info('Token refreshed successfully', {
