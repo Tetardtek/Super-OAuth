@@ -29,6 +29,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import path from 'path';
 import { DatabaseConnection } from './infrastructure/database/config/database.config';
 import { getAppConfig, EnvironmentValidator } from './shared/config';
@@ -117,6 +118,10 @@ class SuperOAuthServer {
     // Limit set to 10mb to prevent memory exhaustion attacks
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true }));
+
+    // Cookie parsing middleware - Required for CSRF token validation
+    // Must be registered before csrf.middleware
+    this.app.use(cookieParser());
 
     // Simple session middleware for OAuth state management
     // Stores temporary OAuth state tokens to prevent CSRF attacks

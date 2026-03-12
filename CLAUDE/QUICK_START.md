@@ -223,6 +223,37 @@ import { User } from '../../../domain/entities/user.entity';
 2. Vérifier les credentials dans `.env`
 3. Créer la database: `CREATE DATABASE superoauth;`
 
+### Infrastructure MySQL — VPS (11/03/2026)
+
+MySQL natif supprimé du VPS. Deux containers Docker gérés via le Gestionnaire Docker Hostinger :
+
+| Container | Port | Usage |
+|-----------|------|-------|
+| `mysql-prod` | `127.0.0.1:3306` | Production |
+| `mysql-dev` | `127.0.0.1:3307` | Développement / tests |
+
+**Avant de redéployer Super-OAuth**, créer le user et la DB dans `mysql-prod` :
+```sql
+CREATE DATABASE auth_hybrid_dbts;
+CREATE USER 'superoauth'@'%' IDENTIFIED BY 'mot_de_passe';
+GRANT ALL PRIVILEGES ON auth_hybrid_dbts.* TO 'superoauth'@'%';
+FLUSH PRIVILEGES;
+```
+
+Puis lancer les migrations :
+```bash
+npm run migration:run
+```
+
+`.env` à configurer :
+```env
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306        # prod
+# MYSQL_PORT=3307      # dev
+MYSQL_DATABASE=auth_hybrid_dbts
+MYSQL_USERNAME=superoauth
+```
+
 ### Tests qui échouent
 
 **Solution:**
