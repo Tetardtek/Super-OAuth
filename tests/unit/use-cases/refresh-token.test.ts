@@ -8,6 +8,16 @@ import { User } from '../../../src/domain/entities';
 import { Email } from '../../../src/domain/value-objects/email.vo';
 import { Nickname } from '../../../src/domain/value-objects/nickname.vo';
 import { Password } from '../../../src/domain/value-objects/password.vo';
+import { logger } from '../../../src/shared/utils/logger.util';
+
+jest.mock('../../../src/shared/utils/logger.util', () => ({
+  logger: {
+    warn: jest.fn(),
+    info: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
 
 describe('RefreshTokenUseCase', () => {
   let useCase: RefreshTokenUseCase;
@@ -113,7 +123,8 @@ describe('RefreshTokenUseCase', () => {
       expect(mockSessionRepository.create).toHaveBeenCalledWith(
         'user-id-123',
         'new-refresh-token',
-        expect.any(Date)
+        expect.any(Date),
+        {}
       );
 
       // Verify new session has correct expiration
@@ -345,6 +356,88 @@ describe('RefreshTokenUseCase', () => {
 
       // Assert - Verify all sessions cleaned up
       expect(mockSessionRepository.deleteByUserId).toHaveBeenCalledWith('user-id-123');
+    });
+  });
+
+  describe('Device Fingerprint Validation', () => {
+    const sessionWithFingerprint = {
+      userId: 'user-id-123',
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      deviceFingerprint: 'fp-original-abc123',
+    };
+
+    beforeEach(() => {
+      mockUserRepository.findById.mockResolvedValue(mockUser);
+      mockTokenService.generateAccessToken.mockReturnValue('new-access-token');
+      mockTokenService.generateRefreshToken.mockReturnValue('new-refresh-token');
+      mockSessionRepository.deleteByRefreshToken.mockResolvedValue(undefined);
+      mockSessionRepository.create.mockResolvedValue(undefined);
+      (logger.warn as jest.Mock).mockClear();
+    });
+
+    it('should treat absent fingerprint as mismatch when session has one', async () => {
+      // Protection : un attaquant qui omet le champ deviceFingerprint ne doit pas
+      // bypasser silencieusement la vérification. L'absence = anomalie loggée.
+      const dto = { refreshToken: 'valid-token' }; // pas de deviceFingerprint
+
+      mockSessionRepository.findByRefreshToken.mockResolvedValue(sessionWithFingerprint);
+
+      // Act — ne doit PAS throw (soft check)
+      await expect(useCase.execute(dto)).resolves.toBeDefined();
+
+      // Assert — warning émis avec indication "absent"
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Device fingerprint mismatch or missing on token refresh',
+        expect.objectContaining({ requestFingerprint: 'absent' })
+      );
+    });
+
+    it('should log a warning on fingerprint mismatch but not reject (soft check)', async () => {
+      // Soft check intentionnel : mobile en roaming, changement de réseau.
+      // On log l'anomalie sans déconnecter l'utilisateur — mesure des faux positifs avant hard reject.
+      const dto = {
+        refreshToken: 'valid-token',
+        deviceFingerprint: 'fp-different-attacker',
+      };
+
+      mockSessionRepository.findByRefreshToken.mockResolvedValue(sessionWithFingerprint);
+
+      // Act — ne doit PAS throw
+      await expect(useCase.execute(dto)).resolves.toBeDefined();
+
+      // Assert — warning émis avec les deux fingerprints tronqués
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Device fingerprint mismatch or missing on token refresh',
+        expect.objectContaining({
+          sessionFingerprint: expect.stringMatching(/^fp-orig/),
+          requestFingerprint: expect.stringMatching(/^fp-diff/),
+        })
+      );
+    });
+
+    it('should preserve original fingerprint on mismatch — never store the suspicious one', async () => {
+      // Protection contre la migration silencieuse : un attaquant avec un refresh token volé
+      // ne peut pas faire migrer le fingerprint de la session vers son propre device.
+      const dto = {
+        refreshToken: 'valid-token',
+        deviceFingerprint: 'fp-attacker-device',
+      };
+
+      mockSessionRepository.findByRefreshToken.mockResolvedValue(sessionWithFingerprint);
+
+      // Act
+      await useCase.execute(dto);
+
+      // Assert — la nouvelle session contient le fingerprint ORIGINAL, pas celui de l'attaquant
+      expect(mockSessionRepository.create).toHaveBeenCalledWith(
+        'user-id-123',
+        'new-refresh-token',
+        expect.any(Date),
+        { deviceFingerprint: 'fp-original-abc123' } // original conservé
+      );
+      // Vérification inverse : le fingerprint de l'attaquant n'a pas été stocké
+      const createCall = (mockSessionRepository.create as jest.Mock).mock.calls[0];
+      expect(createCall[3]?.deviceFingerprint).not.toBe('fp-attacker-device');
     });
   });
 });
