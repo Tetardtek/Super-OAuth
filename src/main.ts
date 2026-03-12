@@ -29,6 +29,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import path from 'path';
 import { DatabaseConnection } from './infrastructure/database/config/database.config';
 import { getAppConfig, EnvironmentValidator } from './shared/config';
@@ -40,6 +41,7 @@ import {
   requestLogger,
   apiRateLimit,
 } from './presentation/middleware';
+import { generateNonce } from './presentation/middleware/csp-nonce.middleware';
 import { PROJECT_INFO, ENDPOINT_STATUS } from './shared/constants/project-info';
 
 /**
@@ -71,21 +73,25 @@ class SuperOAuthServer {
    * 6. Session management
    */
   private setupMiddleware(): void {
+    // Nonce generation middleware - Must be before Helmet
+    // Generates unique nonce per request for CSP
+    this.app.use(generateNonce);
+
     // Security middleware - Helmet sets various HTTP headers for security
-    // Content Security Policy (CSP) prevents XSS attacks
+    // Content Security Policy (CSP) prevents XSS attacks with nonce-based inline scripts/styles
     // See: https://helmetjs.github.io/
-    this.app.use(
+    this.app.use((req, res, next) => {
       helmet({
         contentSecurityPolicy: {
           directives: {
             defaultSrc: ["'self'"], // Only load resources from same origin
-            styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles (needed for frontend)
-            scriptSrc: ["'self'", "'unsafe-inline'"], // Allow inline scripts (needed for frontend)
+            styleSrc: ["'self'", `'nonce-${res.locals.nonce}'`], // Allow styles with valid nonce only
+            scriptSrc: ["'self'", `'nonce-${res.locals.nonce}'`], // Allow scripts with valid nonce only
             imgSrc: ["'self'", 'data:', 'https:'], // Allow images from self, data URIs, and HTTPS
           },
         },
-      })
-    );
+      })(req, res, next);
+    });
 
     // CORS (Cross-Origin Resource Sharing) configuration
     // Allows requests from specified origins with credentials
@@ -112,6 +118,10 @@ class SuperOAuthServer {
     // Limit set to 10mb to prevent memory exhaustion attacks
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true }));
+
+    // Cookie parsing middleware - Required for CSRF token validation
+    // Must be registered before csrf.middleware
+    this.app.use(cookieParser());
 
     // Simple session middleware for OAuth state management
     // Stores temporary OAuth state tokens to prevent CSRF attacks

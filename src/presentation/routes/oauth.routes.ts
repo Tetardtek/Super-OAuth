@@ -8,6 +8,7 @@ import { Router } from 'express';
 import { oauthController } from '../controllers/oauth.controller';
 import { asyncHandler } from '../../shared/utils/async-handler.util';
 import { authMiddleware } from '../../shared/middleware/auth.middleware';
+import { oauthRateLimit } from '../middleware/rate-limit.middleware';
 
 const router = Router();
 
@@ -33,16 +34,19 @@ router.get(
  * @route   GET /auth/oauth/:provider
  * @desc    Start OAuth authentication flow
  * @access  Public
+ * @ratelimit 10 requests per minute
  */
-router.get('/:provider', asyncHandler(oauthController.startOAuth.bind(oauthController)));
+router.get('/:provider', oauthRateLimit, asyncHandler(oauthController.startOAuth.bind(oauthController)));
 
 /**
  * @route   GET /auth/oauth/:provider/callback
  * @desc    Handle OAuth provider callback
  * @access  Public
+ * @ratelimit 10 requests per minute
  */
 router.get(
   '/:provider/callback',
+  oauthRateLimit,
   asyncHandler(oauthController.handleOAuthCallback.bind(oauthController))
 );
 

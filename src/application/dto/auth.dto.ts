@@ -13,6 +13,7 @@ export interface LoginClassicDto {
 
 export interface RefreshTokenDto {
   refreshToken: string;
+  deviceFingerprint?: string;
 }
 
 export interface AuthResponseDto {

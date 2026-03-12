@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { authValidators } from '../validators/request.validators';
 import { validateBody, validateParams } from '../middleware/validation.middleware';
 import { authenticateToken } from '../middleware/auth.middleware';
+import { csrfProtection, generateCsrfToken, csrfErrorHandler } from '../middleware/csrf.middleware';
+import { authRateLimit, registerRateLimit } from '../middleware/rate-limit.middleware';
 import { AuthController } from '../controllers/auth.controller';
 import { asyncHandler } from '../../shared/utils/async-handler.util';
 import Joi from 'joi';
@@ -17,32 +19,53 @@ const providerParamSchema = Joi.object({
 // Note: callbackQuerySchema will be used in future OAuth implementation
 
 /**
+ * @route GET /auth/csrf-token
+ * @desc Get CSRF token for client
+ * @access Public
+ */
+router.get('/csrf-token', (req: Request, res: Response) => {
+  const token = generateCsrfToken(req, res);
+  res.json({
+    success: true,
+    data: {
+      csrfToken: token,
+    },
+  });
+});
+
+/**
  * @route POST /auth/register
  * @desc Register new user with email/password
  * @access Public
+ * @csrf Protected
+ * @ratelimit 3 requests per hour
  */
-router.post('/register', validateBody(authValidators.register), asyncHandler(authController.register.bind(authController)));
+router.post('/register', registerRateLimit, csrfProtection, validateBody(authValidators.register), asyncHandler(authController.register.bind(authController)));
 
 /**
  * @route POST /auth/login
  * @desc Login user with email/password
  * @access Public
+ * @csrf Protected
+ * @ratelimit 5 requests per 15 minutes
  */
-router.post('/login', validateBody(authValidators.login), asyncHandler(authController.login.bind(authController)));
+router.post('/login', authRateLimit, csrfProtection, validateBody(authValidators.login), asyncHandler(authController.login.bind(authController)));
 
 /**
  * @route POST /auth/refresh
  * @desc Refresh access token
  * @access Public
+ * @ratelimit 5 requests per 15 minutes
  */
-router.post('/refresh', validateBody(authValidators.refreshToken), asyncHandler(authController.refreshToken.bind(authController)));
+router.post('/refresh', authRateLimit, validateBody(authValidators.refreshToken), asyncHandler(authController.refreshToken.bind(authController)));
 
 /**
  * @route POST /auth/logout
  * @desc Logout user
  * @access Private
+ * @csrf Protected
  */
-router.post('/logout', (req, res, next) => void authenticateToken(req, res, next), asyncHandler(authController.logout.bind(authController)));
+router.post('/logout', csrfProtection, (req, res, next) => void authenticateToken(req, res, next), asyncHandler(authController.logout.bind(authController)));
 
 /**
  * @route GET /auth/oauth/:provider
@@ -79,5 +102,8 @@ router.get('/me', (req, res, next) => void authenticateToken(req, res, next), (r
     },
   });
 });
+
+// CSRF error handler (doit être après les routes)
+router.use(csrfErrorHandler);
 
 export { router as authRoutes };

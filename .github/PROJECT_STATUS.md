@@ -1,6 +1,6 @@
 # 📊 Projet SuperOAuth - Statut
 
-**Dernière mise à jour** : 19 Novembre 2025
+**Dernière mise à jour** : 20 Novembre 2025
 
 ---
 
@@ -26,6 +26,8 @@ Système d'authentification OAuth basé sur DDD et Clean Architecture.
 | **ESLint** | ✅ 0 erreurs |
 | **Documentation** | ✅ 100% |
 | **CI/CD** | ⚠️ 30% |
+| **Sécurité** | 🔴 6.5/10 |
+| **Production Ready** | 🟡 70% |
 
 ---
 
@@ -110,21 +112,38 @@ src/
 
 ## 🚀 Prochaines Étapes
 
-### Immédiat
-1. **Créer PR** vers `main` (branche `refactor/code-quality-cleanup`)
-2. **Review** et merge
-3. **Push** vers production
+### ⚠️ URGENT - Security Hardening (Branche `feature/security-hardening`)
 
-### Court Terme
-- [ ] Account Merging OAuth
-- [ ] OAuth Analytics Dashboard
-- [ ] Refresh Token Management UI
+**Statut :** 🔴 Phase 0 en cours
+**Référence :** [AUDIT_REPORT.md](./.github/AUDIT_REPORT.md) | [SECURITY_ROADMAP.md](./.github/SECURITY_ROADMAP.md)
 
-### Moyen Terme
-- [ ] CI/CD pipeline (GitHub Actions)
-- [ ] Docker containerization
-- [ ] Monitoring (Prometheus/Grafana)
-- [ ] Security scanning automatisé
+#### Phase 0 : Blockers Production (Semaine 1)
+- [ ] **#1** Corriger méthodes crypto dépréciées (CRITICAL - 4h)
+- [ ] **#2** Migrer OAuth state vers Redis (CRITICAL - 6h)
+- [ ] **#3** Corriger 12 vulnérabilités npm (CRITICAL - 3h)
+- [ ] **#4** Implémenter protection CSRF (HIGH - 3h)
+
+#### Phase 1 : High Priority (Semaine 1)
+- [ ] **#5** CSP sans unsafe-inline (HIGH - 2h)
+- [ ] **#6** Session fingerprinting (HIGH - 4h)
+- [ ] **#7** Rate limiting distribué Redis (HIGH - 3h)
+
+#### Phase 2-4 : Medium/Low Priority (Semaines 2-4)
+- [ ] Token revocation, chiffrement OAuth tokens, SSL
+- [ ] Migrations DB, tests coverage 82%, monitoring
+- [ ] Docker, CI/CD complet, documentation API
+
+**Objectif :** 70% → 95% Production Ready | Score sécurité : 6.5 → 9.5/10
+
+---
+
+## 🔴 Issues Critiques Identifiées (Audit)
+
+- 🔴 **2 CRITICAL** : Crypto dépréciées, OAuth state en mémoire
+- 🔴 **5 HIGH** : CSRF, CSP, Session hijacking, Rate limiting, Vulnérabilités npm
+- 🟡 **6 MEDIUM** : Token revocation, OAuth tokens plaintext, SSL, etc.
+
+**Voir détails :** [AUDIT_REPORT.md](./.github/AUDIT_REPORT.md)
 
 ---
 
@@ -154,4 +173,8 @@ npm run db:reset         # Reset DB
 
 ---
 
-**Status** : ✅ Prêt pour Production
+**Status** : 🟡 70% Prêt - Security Hardening en cours
+
+**Branches actives :**
+- `main` : Code stable
+- `feature/security-hardening` : Corrections sécurité (ACTIVE)

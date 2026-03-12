@@ -3,7 +3,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import { getSecurityConfig } from '../../shared/config/security.config';
 import { logger } from '../../shared/utils/logger.util';
 import { DIContainer } from '../../infrastructure/di/container';
-import type { IUserRepository } from '../../application/interfaces/repositories.interface';
+import type { IUserRepository, ITokenBlacklist } from '../../application/interfaces/repositories.interface';
 
 export interface AuthenticatedUser {
   id: string;
@@ -15,6 +15,7 @@ export interface AuthenticatedUser {
 interface AccessTokenPayload extends JwtPayload {
   userId: string;
   type: 'access';
+  jti: string;
   email?: string;
   nickname?: string;
   isActive?: boolean;
@@ -63,6 +64,25 @@ export const authenticateToken = async (
         success: false,
         error: 'INVALID_TOKEN',
         message: 'Invalid token type',
+      });
+      return;
+    }
+
+    // Vérifier si le token a été révoqué (blacklist Redis)
+    // Pourquoi ici ? Le token peut être valide cryptographiquement mais révoqué après un logout.
+    const tokenBlacklist = DIContainer.getInstance().get<ITokenBlacklist>('TokenBlacklistService');
+    if (decoded.jti && await tokenBlacklist.isRevoked(decoded.jti)) {
+      logger.warn('Revoked token used', {
+        path: req.path,
+        method: req.method,
+        jti: decoded.jti,
+        ip: req.ip,
+      });
+
+      res.status(401).json({
+        success: false,
+        error: 'TOKEN_REVOKED',
+        message: 'Token has been revoked',
       });
       return;
     }

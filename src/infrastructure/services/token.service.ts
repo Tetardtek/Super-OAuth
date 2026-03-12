@@ -1,9 +1,11 @@
+import crypto from 'crypto';
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 import { ITokenService } from '../../application/interfaces/repositories.interface';
 
 interface AccessTokenPayload extends JwtPayload {
   userId: string;
   type: 'access';
+  jti: string; // Identifiant unique — nécessaire pour la blacklist de révocation
 }
 
 interface RefreshTokenPayload extends JwtPayload {
@@ -38,6 +40,7 @@ export class TokenService implements ITokenService {
     const payload = {
       userId,
       type: 'access',
+      jti: crypto.randomUUID(), // UUID v4 — unique par token, utilisé pour la blacklist
       iat: Math.floor(Date.now() / 1000),
     };
 
@@ -54,7 +57,7 @@ export class TokenService implements ITokenService {
   generateRefreshToken(): string {
     const payload = {
       type: 'refresh',
-      jti: this.generateJti(), // Unique identifier for the token
+      jti: crypto.randomUUID(),
       iat: Math.floor(Date.now() / 1000),
     };
 
@@ -68,19 +71,38 @@ export class TokenService implements ITokenService {
     return jwt.sign(payload, this.refreshTokenSecret, options);
   }
 
-  verifyAccessToken(token: string): { userId: string } | null {
+  verifyAccessToken(token: string): { userId: string; jti: string } | null {
     try {
       const decoded = jwt.verify(token, this.accessTokenSecret, {
         issuer: 'superoauth',
         audience: 'superoauth-users',
       }) as AccessTokenPayload;
 
-      if (decoded.type !== 'access' || !decoded.userId) {
+      if (decoded.type !== 'access' || !decoded.userId || !decoded.jti) {
         return null;
       }
 
-      return { userId: decoded.userId };
+      return { userId: decoded.userId, jti: decoded.jti };
     } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * Décode un access token sans vérifier la signature (jwt.decode).
+   * Utilisé au logout pour extraire le jti et exp sans risque d'erreur
+   * sur un token déjà expiré mais encore présent dans la requête.
+   */
+  decodeAccessToken(token: string): { userId: string; jti: string; exp: number } | null {
+    try {
+      const decoded = jwt.decode(token) as AccessTokenPayload | null;
+
+      if (!decoded || decoded.type !== 'access' || !decoded.userId || !decoded.jti || !decoded.exp) {
+        return null;
+      }
+
+      return { userId: decoded.userId, jti: decoded.jti, exp: decoded.exp };
+    } catch {
       return null;
     }
   }
@@ -123,19 +145,6 @@ export class TokenService implements ITokenService {
     };
 
     return value * multipliers[unit as keyof typeof multipliers];
-  }
-
-  private generateJti(): string {
-    // Generate a unique identifier for the token
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  /**
-   * Revoke a token (placeholder implementation)
-   */
-  async revokeToken(_token: string): Promise<void> {
-    // Implementation would depend on your token storage strategy
-    // Could be stored in Redis, database, or in-memory blacklist
   }
 }
 

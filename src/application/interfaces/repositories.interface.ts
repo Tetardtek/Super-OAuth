@@ -10,8 +10,13 @@ export interface IUserRepository {
 }
 
 export interface ISessionRepository {
-  create(userId: string, refreshToken: string, expiresAt: Date): Promise<void>;
-  findByRefreshToken(refreshToken: string): Promise<{ userId: string; expiresAt: Date } | null>;
+  create(
+    userId: string,
+    refreshToken: string,
+    expiresAt: Date,
+    metadata?: { ipAddress?: string; userAgent?: string; deviceFingerprint?: string }
+  ): Promise<void>;
+  findByRefreshToken(refreshToken: string): Promise<{ userId: string; expiresAt: Date; deviceFingerprint?: string } | null>;
   deleteByRefreshToken(refreshToken: string): Promise<void>;
   deleteByUserId(userId: string): Promise<void>;
   deleteExpired(): Promise<void>;
@@ -20,8 +25,14 @@ export interface ISessionRepository {
 export interface ITokenService {
   generateAccessToken(userId: string): string;
   generateRefreshToken(): string;
-  verifyAccessToken(token: string): { userId: string } | null;
+  verifyAccessToken(token: string): { userId: string; jti: string } | null;
+  decodeAccessToken(token: string): { userId: string; jti: string; exp: number } | null;
   getTokenExpiration(): { accessToken: number; refreshToken: number };
+}
+
+export interface ITokenBlacklist {
+  revoke(jti: string, ttlSeconds: number): Promise<void>;
+  isRevoked(jti: string): Promise<boolean>;
 }
 
 export interface IPasswordService {
