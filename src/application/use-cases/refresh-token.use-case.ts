@@ -31,15 +31,20 @@ export class RefreshTokenUseCase {
     // 3. Validate device fingerprint if session has one stored
     // Pourquoi ici et pas dans le middleware ? Le fingerprint implique un accès DB (session).
     // Le use case est le seul endroit qui charge la session — c'est la règle métier, pas un contrôle HTTP.
-    if (session.deviceFingerprint && dto.deviceFingerprint) {
-      if (session.deviceFingerprint !== dto.deviceFingerprint) {
-        logger.warn('Device fingerprint mismatch on token refresh', {
-          sessionFingerprint: session.deviceFingerprint.substring(0, 8) + '...',
-          requestFingerprint: dto.deviceFingerprint.substring(0, 8) + '...',
-        });
-        // Soft check : on log l'anomalie sans rejeter pour éviter les faux positifs
-        // (mobile en roaming, changement de réseau). Passer à hard reject après mesure en prod.
-      }
+    // Si la session a un fingerprint, le client DOIT en fournir un — l'absence est traitée comme anomalie.
+    const fingerprintMismatch =
+      !!session.deviceFingerprint &&
+      (!dto.deviceFingerprint || session.deviceFingerprint !== dto.deviceFingerprint);
+
+    if (fingerprintMismatch) {
+      logger.warn('Device fingerprint mismatch or missing on token refresh', {
+        sessionFingerprint: session.deviceFingerprint!.substring(0, 8) + '...',
+        requestFingerprint: dto.deviceFingerprint
+          ? dto.deviceFingerprint.substring(0, 8) + '...'
+          : 'absent',
+      });
+      // Soft check : on log l'anomalie sans rejeter pour éviter les faux positifs
+      // (mobile en roaming, changement de réseau). Passer à hard reject après mesure en prod.
     }
 
     // 4. Find user
@@ -61,11 +66,15 @@ export class RefreshTokenUseCase {
     const accessToken = this.tokenService.generateAccessToken(user.id);
     const newRefreshToken = this.tokenService.generateRefreshToken();
 
-    // 7. Update session with new refresh token (conserver le fingerprint courant)
+    // 7. Update session with new refresh token
+    // En cas de mismatch, on conserve le fingerprint original — jamais celui de la requête suspecte.
+    // Cela empêche un attaquant de "migrer" le fingerprint vers son device via des refreshes successifs.
     await this.sessionRepository.deleteByRefreshToken(dto.refreshToken);
     const tokenExpiration = this.tokenService.getTokenExpiration();
     const expiresAt = new Date(Date.now() + tokenExpiration.refreshToken);
-    const fingerprint = dto.deviceFingerprint ?? session.deviceFingerprint;
+    const fingerprint = fingerprintMismatch
+      ? session.deviceFingerprint
+      : (dto.deviceFingerprint ?? session.deviceFingerprint);
     await this.sessionRepository.create(user.id, newRefreshToken, expiresAt, {
       ...(fingerprint && { deviceFingerprint: fingerprint }),
     });
