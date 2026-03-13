@@ -15,7 +15,11 @@ export const AppDataSource = new DataSource({
   password: config.password,
   database: config.database,
   entities: [UserEntity, LinkedAccountEntity, SessionEntity],
-  migrations: ['src/infrastructure/database/migrations/*.ts'],
+  migrations: [
+    process.env.NODE_ENV === 'production'
+      ? 'dist/infrastructure/database/migrations/*.js'
+      : 'src/infrastructure/database/migrations/*.ts',
+  ],
   charset: 'utf8mb4',
   timezone: 'Z',
 });

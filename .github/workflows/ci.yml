@@ -201,7 +201,7 @@ jobs:
             git pull origin main
             npm ci
             npm run build
-            NODE_ENV=production npm run migration:run
+            npm run migration:run:prod
             # Reload 0-downtime — fonctionne grâce au cluster mode (2 instances)
             # Premier déploiement : pm2 start ecosystem.config.js --env production && pm2 save
             pm2 reload super-oauth --update-env
