@@ -29,7 +29,7 @@
     "typecheck": "tsc --noEmit",
     "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/data-source.ts",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/data-source.ts",
-    "migration:run:prod": "typeorm migration:run -d dist/data-source.js",
+    "migration:run:prod": "node --env-file=.env ./node_modules/.bin/typeorm migration:run -d dist/data-source.js",
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/data-source.ts",
     "db:reset": "node scripts/reset-database.js",
     "db:reset-force": "node scripts/reset-database.js --confirm"
