@@ -122,9 +122,12 @@ describe('CryptoUtil', () => {
     it('should detect tampering (modified ciphertext)', () => {
       const original = 'Secret';
       const encrypted = CryptoUtil.encrypt(original, testKey);
+      const parts = encrypted.split(':');
 
-      // Tamper with last character
-      const tampered = encrypted.slice(0, -1) + '0';
+      // Flip first hex char of ciphertext — guaranteed to differ regardless of random output
+      const firstChar = parts[2][0];
+      const tamperedFirst = firstChar === '0' ? '1' : '0';
+      const tampered = [parts[0], parts[1], tamperedFirst + parts[2].slice(1)].join(':');
 
       expect(() => {
         CryptoUtil.decrypt(tampered, testKey);
