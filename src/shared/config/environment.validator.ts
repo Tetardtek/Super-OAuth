@@ -52,10 +52,16 @@ const ENVIRONMENT_VARIABLES: EnvironmentVariable[] = [
     description: 'MySQL database password',
   },
   {
-    name: 'JWT_SECRET',
+    name: 'JWT_ACCESS_SECRET',
     required: true,
     validator: (value) => value.length >= 32,
-    description: 'JWT secret key (minimum 32 characters)',
+    description: 'JWT access token secret key (minimum 32 characters)',
+  },
+  {
+    name: 'JWT_REFRESH_SECRET',
+    required: true,
+    validator: (value) => value.length >= 32,
+    description: 'JWT refresh token secret key (minimum 32 characters)',
   },
   {
     name: 'JWT_ACCESS_EXPIRATION',
