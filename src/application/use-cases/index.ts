@@ -5,6 +5,7 @@ export { RefreshTokenUseCase } from './refresh-token.use-case';
 export { LogoutUseCase } from './logout.use-case';
 export { StartOAuthUseCase } from './start-oauth.use-case';
 export { CompleteOAuthUseCase } from './complete-oauth.use-case';
+export { ValidateTokenUseCase } from './validate-token.use-case';
 
 // DTOs re-exports
 export * from '../dto/auth.dto';

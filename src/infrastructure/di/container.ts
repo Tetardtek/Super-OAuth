@@ -6,6 +6,7 @@ import {
   LogoutUseCase,
   StartOAuthUseCase,
   CompleteOAuthUseCase,
+  ValidateTokenUseCase,
 } from '../../application/use-cases';
 
 import {
@@ -98,6 +99,15 @@ export class DIContainer {
         this.get<IOAuthService>('OAuthService')
       )
     );
+
+    this.services.set(
+      'ValidateTokenUseCase',
+      new ValidateTokenUseCase(
+        this.get<IUserRepository>('UserRepository'),
+        this.get<ITokenService>('TokenService'),
+        this.get<ITokenBlacklist>('TokenBlacklistService')
+      )
+    );
   }
 
   get<T>(serviceName: string): T {
@@ -131,5 +141,9 @@ export class DIContainer {
 
   getCompleteOAuthUseCase(): CompleteOAuthUseCase {
     return this.get<CompleteOAuthUseCase>('CompleteOAuthUseCase');
+  }
+
+  getValidateTokenUseCase(): ValidateTokenUseCase {
+    return this.get<ValidateTokenUseCase>('ValidateTokenUseCase');
   }
 }

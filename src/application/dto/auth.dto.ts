@@ -50,3 +50,17 @@ export interface LinkProviderDto {
   userId: string;
   provider: OAuthProviderDto;
 }
+
+export interface ValidateTokenDto {
+  token: string;
+}
+
+export interface TokenValidationResponseDto {
+  user: {
+    id: string;
+    email: string | null;
+    nickname: string;
+    isActive: boolean;
+    linkedProviders: string[];
+  };
+}

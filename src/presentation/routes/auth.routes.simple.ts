@@ -250,6 +250,48 @@ router.post('/logout', (req, res, next) => void authenticateToken(req, res, next
 }));
 
 /**
+ * POST /auth/token/validate
+ * Token introspection — for service-to-service authentication.
+ * Allows external apps to verify a SuperOAuth-issued token without sharing the JWT secret.
+ */
+router.post('/token/validate', asyncHandler(async (req: Request, res: Response) => {
+  const { token } = req.body as { token?: string };
+
+  if (!token) {
+    res.status(400).json({
+      success: false,
+      error: 'MISSING_TOKEN',
+      message: 'token is required',
+    });
+    return;
+  }
+
+  try {
+    const validateTokenUseCase = container.getValidateTokenUseCase();
+    const result = await validateTokenUseCase.execute({ token });
+
+    res.status(200).json({
+      success: true,
+      data: { valid: true, user: result.user },
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'INVALID_TOKEN';
+
+    const statusMap: Record<string, number> = {
+      INVALID_TOKEN: 401,
+      TOKEN_REVOKED: 401,
+      USER_NOT_FOUND: 401,
+    };
+
+    res.status(statusMap[errorMessage] ?? 401).json({
+      success: false,
+      data: { valid: false },
+      error: errorMessage,
+    });
+  }
+}));
+
+/**
  * GET /auth/oauth/:provider
  * Start OAuth flow for provider
  */
