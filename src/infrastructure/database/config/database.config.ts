@@ -25,7 +25,7 @@ export class DatabaseConnection {
         migrationsRun: process.env.NODE_ENV !== 'production',
         synchronize: process.env.NODE_ENV === 'development',
         logging: process.env.NODE_ENV === 'development',
-        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+        ssl: process.env.MYSQL_SSL === 'true' ? { rejectUnauthorized: false } : false,
         extra: {
           connectionLimit: config.connectionLimit,
         },
