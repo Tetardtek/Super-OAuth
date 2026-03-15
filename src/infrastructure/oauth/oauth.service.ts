@@ -18,6 +18,7 @@ import {
   DiscordUser,
   GoogleUser,
   GitHubUser,
+  GitHubEmailEntry,
   TwitchUserResponse,
   ProviderRawData,
 } from './oauth-config';
@@ -220,7 +221,13 @@ export class OAuthService {
 
     try {
       const response = await axios.get(config.userInfoUrl, { headers });
-      const userData = response.data;
+      let userData: ProviderRawData = response.data;
+
+      // GitHub: fetch /user/emails for accurate primary + verified email
+      if (provider === 'github') {
+        const emailsResponse = await axios.get('https://api.github.com/user/emails', { headers });
+        userData = [response.data, emailsResponse.data] as [GitHubUser, GitHubEmailEntry[]];
+      }
 
       // Normalize user data based on provider
       const userInfo = this.normalizeUserData(provider, userData);
@@ -306,13 +313,14 @@ export class OAuthService {
       }
 
       case 'github': {
-        const githubData = rawData as GitHubUser;
+        // rawData is a tuple: [GitHubUser, GitHubEmailEntry[]]
+        const [githubData, githubEmails] = rawData as [GitHubUser, GitHubEmailEntry[]];
+        const primaryEmail = githubEmails.find((e) => e.primary && e.verified);
         normalized = {
           id: githubData.id.toString(),
-          email: githubData.email,
-          // GitHub mandates email verification — email present = verified
-          // Deeper verification via /user/emails is a Tier 2 improvement
-          emailVerified: !!githubData.email,
+          email: primaryEmail?.email ?? githubData.email,
+          // Only verified if /user/emails confirms primary + verified
+          emailVerified: !!primaryEmail,
           nickname: githubData.name || githubData.login,
           avatar: githubData.avatar_url,
           provider: 'github',

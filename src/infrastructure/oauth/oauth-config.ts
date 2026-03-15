@@ -171,6 +171,13 @@ export interface GitHubUser {
   location?: string;
 }
 
+export interface GitHubEmailEntry {
+  email: string;
+  primary: boolean;
+  verified: boolean;
+  visibility: string | null;
+}
+
 export interface TwitchUser {
   id: string;
   login: string;
@@ -184,7 +191,7 @@ export interface TwitchUserResponse {
   data: TwitchUser[];
 }
 
-export type ProviderRawData = DiscordUser | GoogleUser | GitHubUser | TwitchUserResponse;
+export type ProviderRawData = DiscordUser | GoogleUser | GitHubUser | TwitchUserResponse | GitHubEmailEntry[];
 
 /**
  * Normalized OAuth User Info

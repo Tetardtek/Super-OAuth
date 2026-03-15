@@ -5,6 +5,7 @@ import { authValidators } from '../validators/request.validators';
 import { DIContainer } from '../../infrastructure/di/container';
 import { logger } from '../../shared/utils/logger.util';
 import { asyncHandler } from '../../shared/utils/async-handler.util';
+import { authRateLimit } from '../middleware/rate-limit.middleware';
 import Joi from 'joi';
 
 interface AuthenticatedRequest extends ValidatedRequest {
@@ -254,7 +255,7 @@ router.post('/logout', (req, res, next) => void authenticateToken(req, res, next
  * Token introspection — for service-to-service authentication.
  * Allows external apps to verify a SuperOAuth-issued token without sharing the JWT secret.
  */
-router.post('/token/validate', asyncHandler(async (req: Request, res: Response) => {
+router.post('/token/validate', authRateLimit, asyncHandler(async (req: Request, res: Response) => {
   const { token } = req.body as { token?: string };
 
   if (!token) {
