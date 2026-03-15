@@ -7,6 +7,10 @@ export interface OAuthState {
   nonce: string;
   tenantId: string;
   redirectUrl?: string;
+  /** Flow mode — 'auth' (default) or 'link' (link from settings) */
+  mode?: 'auth' | 'link';
+  /** userId of the authenticated user initiating a link flow [SG5] — never set from callback */
+  linkingUserId?: string;
 }
 
 /**
