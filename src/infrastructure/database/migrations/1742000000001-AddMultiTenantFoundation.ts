@@ -23,13 +23,13 @@ export class AddMultiTenantFoundation1742000000001 implements MigrationInterface
     // 1. Add tenant_id column
     await queryRunner.query(`
       ALTER TABLE \`users\`
-      ADD COLUMN IF NOT EXISTS \`tenant_id\` VARCHAR(50) NOT NULL DEFAULT 'origins'
+      ADD COLUMN \`tenant_id\` VARCHAR(50) NOT NULL DEFAULT 'origins'
     `);
 
     // 2. Add email_source column
     await queryRunner.query(`
       ALTER TABLE \`users\`
-      ADD COLUMN IF NOT EXISTS \`email_source\` VARCHAR(50) DEFAULT NULL
+      ADD COLUMN \`email_source\` VARCHAR(50) DEFAULT NULL
     `);
 
     // 3. Drop old unique index on email (name varies by TypeORM version — query info_schema)
@@ -106,7 +106,7 @@ export class AddMultiTenantFoundation1742000000001 implements MigrationInterface
     // 6. Add tenant_id to linked_accounts
     await queryRunner.query(`
       ALTER TABLE \`linked_accounts\`
-      ADD COLUMN IF NOT EXISTS \`tenant_id\` VARCHAR(50) NOT NULL DEFAULT 'origins'
+      ADD COLUMN \`tenant_id\` VARCHAR(50) NOT NULL DEFAULT 'origins'
     `);
 
     // 7. Drop old unique index on (provider, provider_id)
@@ -154,10 +154,9 @@ export class AddMultiTenantFoundation1742000000001 implements MigrationInterface
     // ── Restore Tier 0 schema ──────────────────────────────────────────────────
 
     // linked_accounts: restore old unique index, drop tenant_id
-    await queryRunner.query(`
-      ALTER TABLE \`linked_accounts\`
-      DROP INDEX IF EXISTS \`idx_linked_accounts_tenant_provider_id\`
-    `).catch(() => {});
+    await queryRunner.query(
+      `ALTER TABLE \`linked_accounts\` DROP INDEX \`idx_linked_accounts_tenant_provider_id\``
+    ).catch(() => {});
 
     await queryRunner.query(`
       SELECT COUNT(*) as cnt FROM information_schema.STATISTICS
@@ -173,11 +172,11 @@ export class AddMultiTenantFoundation1742000000001 implements MigrationInterface
       }
     });
 
-    await queryRunner.query(`ALTER TABLE \`linked_accounts\` DROP COLUMN IF EXISTS \`tenant_id\``);
+    await queryRunner.query(`ALTER TABLE \`linked_accounts\` DROP COLUMN \`tenant_id\``).catch(() => {});
 
     // users: restore old unique indexes, drop tenant_id + email_source
-    await queryRunner.query(`DROP INDEX IF EXISTS \`idx_users_tenant_email\` ON \`users\``).catch(() => {});
-    await queryRunner.query(`DROP INDEX IF EXISTS \`idx_users_tenant_nickname\` ON \`users\``).catch(() => {});
+    await queryRunner.query(`ALTER TABLE \`users\` DROP INDEX \`idx_users_tenant_email\``).catch(() => {});
+    await queryRunner.query(`ALTER TABLE \`users\` DROP INDEX \`idx_users_tenant_nickname\``).catch(() => {});
 
     await queryRunner.query(`
       SELECT COUNT(*) as cnt FROM information_schema.STATISTICS
@@ -203,7 +202,7 @@ export class AddMultiTenantFoundation1742000000001 implements MigrationInterface
       }
     });
 
-    await queryRunner.query(`ALTER TABLE \`users\` DROP COLUMN IF EXISTS \`email_source\``);
-    await queryRunner.query(`ALTER TABLE \`users\` DROP COLUMN IF EXISTS \`tenant_id\``);
+    await queryRunner.query(`ALTER TABLE \`users\` DROP COLUMN \`email_source\``).catch(() => {});
+    await queryRunner.query(`ALTER TABLE \`users\` DROP COLUMN \`tenant_id\``).catch(() => {});
   }
 }
