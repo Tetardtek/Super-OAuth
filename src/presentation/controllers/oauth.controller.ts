@@ -27,6 +27,7 @@ import { tokenService } from '../../infrastructure/services/token.service';
 import { TokenBlacklistService } from '../../infrastructure/services/token-blacklist.service';
 import { DatabaseConnection } from '../../infrastructure/database/config/database.config';
 import { AuthenticatedRequest } from '../../shared/middleware/auth.middleware';
+import { getWebhookService } from '../../infrastructure/services/webhook.service';
 
 // [SG1] Hardcoded whitelist for Tier 1 — Tier 2 will move this to DB-backed config
 const VALID_TENANTS = new Set(['origins', 'tetardpg']);
@@ -393,6 +394,11 @@ export class OAuthController {
       });
 
       logger.info('✅ Accounts merged successfully', { userId, tenantId });
+
+      getWebhookService().dispatch(tenantId, 'user.merged', {
+        userId,
+        linkedProviders: result.linkedProviders,
+      });
 
       res.json(ApiResponse.success(result));
     } catch (error) {

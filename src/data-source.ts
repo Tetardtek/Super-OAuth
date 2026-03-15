@@ -4,6 +4,7 @@ import { getDatabaseConfig } from './shared/config/database.config';
 import { UserEntity } from './infrastructure/database/entities/user.entity';
 import { LinkedAccountEntity } from './infrastructure/database/entities/linked-account.entity';
 import { SessionEntity } from './infrastructure/database/entities/session.entity';
+import { WebhookDeliveryEntity } from './infrastructure/database/entities/webhook-delivery.entity';
 
 const config = getDatabaseConfig();
 
@@ -14,7 +15,7 @@ export const AppDataSource = new DataSource({
   username: config.username,
   password: config.password,
   database: config.database,
-  entities: [UserEntity, LinkedAccountEntity, SessionEntity],
+  entities: [UserEntity, LinkedAccountEntity, SessionEntity, WebhookDeliveryEntity],
   migrations: [
     process.env.NODE_ENV === 'production'
       ? 'dist/infrastructure/database/migrations/*.js'

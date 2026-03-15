@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { UserEntity } from '../entities/user.entity';
 import { LinkedAccountEntity } from '../entities/linked-account.entity';
 import { SessionEntity } from '../entities/session.entity';
+import { WebhookDeliveryEntity } from '../entities/webhook-delivery.entity';
 import { getDatabaseConfig } from '@shared/config/database.config';
 import { logger } from '@shared/utils/logger.util';
 
@@ -20,7 +21,7 @@ export class DatabaseConnection {
         username: config.username,
         password: config.password,
         database: config.database,
-        entities: [UserEntity, LinkedAccountEntity, SessionEntity],
+        entities: [UserEntity, LinkedAccountEntity, SessionEntity, WebhookDeliveryEntity],
         migrations: ['dist/infrastructure/database/migrations/*.js'],
         migrationsRun: process.env.NODE_ENV !== 'production',
         synchronize: process.env.NODE_ENV === 'development',

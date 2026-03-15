@@ -5,7 +5,9 @@
  */
 
 import { User } from '../../domain/entities/user.entity';
+import { Email } from '../../domain/value-objects';
 import { userRepository } from '../../infrastructure/services/user.repository';
+import { getWebhookService } from '../../infrastructure/services/webhook.service';
 import { logger } from '../../shared/utils/logger.util';
 import { OAuthUserInfo } from '../../infrastructure/oauth/oauth-config';
 
@@ -79,6 +81,12 @@ export class UserService {
       email: user.email,
     });
 
+    getWebhookService().dispatch(tenantId, 'user.created', {
+      userId: user.id,
+      provider: oauthUserInfo.provider,
+      email: user.email?.toString() ?? null,
+    });
+
     return user;
   }
 
@@ -116,6 +124,11 @@ export class UserService {
       provider,
       providerId: oauthUserInfo.id,
     });
+
+    getWebhookService().dispatch(tenantId, 'user.linked', {
+      userId,
+      provider,
+    });
   }
 
   /**
@@ -132,15 +145,20 @@ export class UserService {
       providerId: oauthUserInfo.id,
     });
 
-    const updateData = {
-      email: oauthUserInfo.email,
-      nickname: oauthUserInfo.nickname,
-      avatar: oauthUserInfo.avatar,
+    await userRepository.updateOAuthInfo(userId, provider, oauthUserInfo.id, {
       lastLoginAt: new Date(),
       raw: oauthUserInfo.raw,
-    };
+    });
 
-    await userRepository.updateOAuthInfo(userId, provider, oauthUserInfo.id, updateData);
+    // Staleness gate — ADR-008: only update users.email if provider returns verified email
+    // AND emailSource matches this provider (the original source of the email)
+    if (oauthUserInfo.emailVerified && oauthUserInfo.email) {
+      const user = await userRepository.findById(userId);
+      if (user) {
+        user.updateEmailFromProvider(Email.create(oauthUserInfo.email), `provider:${provider}`);
+        await userRepository.save(user);
+      }
+    }
 
     logger.info('✅ OAuth info updated successfully', {
       userId,
