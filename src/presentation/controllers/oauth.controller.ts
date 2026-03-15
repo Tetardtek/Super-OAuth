@@ -29,7 +29,7 @@ import { DatabaseConnection } from '../../infrastructure/database/config/databas
 import { AuthenticatedRequest } from '../../shared/middleware/auth.middleware';
 
 // [SG1] Hardcoded whitelist for Tier 1 — Tier 2 will move this to DB-backed config
-const VALID_TENANTS = new Set(['origins']);
+const VALID_TENANTS = new Set(['origins', 'tetardpg']);
 
 interface ExtendedRequest extends Request {
   user?: { id: string; email?: string } | undefined;
