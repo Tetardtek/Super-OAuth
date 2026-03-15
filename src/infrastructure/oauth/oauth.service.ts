@@ -36,11 +36,15 @@ export class OAuthService {
 
   /**
    * Generate OAuth authorization URL
+   * @param mode 'auth' (default) or 'link' — link flow stores linkingUserId in Redis [SG5]
+   * @param linkingUserId userId of the authenticated user initiating a link (mode='link' only)
    */
   async generateAuthUrl(
     provider: string,
+    tenantId: string = 'origins',
     redirectUrl?: string,
-    tenantId: string = 'origins'
+    mode: 'auth' | 'link' = 'auth',
+    linkingUserId?: string
   ): Promise<{ authUrl: string; state: string }> {
     logger.info(`🔗 Generating OAuth URL for ${provider}`);
 
@@ -59,7 +63,7 @@ export class OAuthService {
     }
 
     const config = getOAuthConfig(provider)!;
-    const state = await this.generateState(provider, tenantId, redirectUrl);
+    const state = await this.generateState(provider, tenantId, redirectUrl, mode, linkingUserId);
 
     const params = new URLSearchParams({
       client_id: config.clientId,
@@ -87,13 +91,13 @@ export class OAuthService {
 
   /**
    * Handle OAuth callback and exchange code for token
-   * Returns userInfo and tenantId read from Redis state (SG4 — not re-provided by client)
+   * Returns userInfo and state metadata read from Redis (SG4 — not re-provided by client)
    */
   async handleCallback(
     provider: string,
     code: string,
     state: string
-  ): Promise<{ userInfo: OAuthUserInfo; tenantId: string }> {
+  ): Promise<{ userInfo: OAuthUserInfo; tenantId: string; mode: 'auth' | 'link'; linkingUserId?: string }> {
     logger.info(`🔄 Processing OAuth callback for ${provider}`);
 
     if (!isProviderSupported(provider)) {
@@ -115,6 +119,8 @@ export class OAuthService {
     }
 
     const tenantId = stateData.tenantId;
+    const mode = stateData.mode ?? 'auth';
+    const linkingUserId = stateData.linkingUserId;
 
     try {
       // Exchange code for token
@@ -129,9 +135,10 @@ export class OAuthService {
         email: userInfo.email,
         emailVerified: userInfo.emailVerified,
         tenantId,
+        mode,
       });
 
-      return { userInfo, tenantId };
+      return { userInfo, tenantId, mode, linkingUserId };
     } catch (error) {
       logger.error(
         `❌ OAuth callback failed for ${provider}`,
@@ -351,7 +358,9 @@ export class OAuthService {
   private async generateState(
     provider: string,
     tenantId: string,
-    redirectUrl?: string
+    redirectUrl?: string,
+    mode: 'auth' | 'link' = 'auth',
+    linkingUserId?: string
   ): Promise<string> {
     const nonce = crypto.randomBytes(32).toString('hex');
     const state = crypto.randomBytes(16).toString('hex');
@@ -361,10 +370,16 @@ export class OAuthService {
       timestamp: Date.now(),
       nonce,
       tenantId,
+      mode,
     };
 
     if (redirectUrl) {
       stateData.redirectUrl = redirectUrl;
+    }
+
+    // [SG5] linkingUserId stored in Redis state — never re-provided by client at callback
+    if (mode === 'link' && linkingUserId) {
+      stateData.linkingUserId = linkingUserId;
     }
 
     // Sauvegarder avec TTL automatique (Redis gère l'expiration)
