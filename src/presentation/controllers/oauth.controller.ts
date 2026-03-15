@@ -1,12 +1,16 @@
 /**
- * OAuth Controller — Tier 1 Multi-tenant
+ * OAuth Controller — Tier 2 Multi-tenant
  * Supports Discord, Twitch, Google, and GitHub
  *
  * Security gates applied (ADR-008):
- *   [SG1] tenantId whitelist validated server-side (not trusting client input)
- *   [SG2] emailVerified defaults to false — never to true (safe default)
- *   [SG3] emailSource NULL → conservative (no overwrite of classic email)
- *   [SG4] tenantId read from Redis state in callback — not re-provided by client
+ *   [SG1]  tenantId whitelist validated server-side (not trusting client input)
+ *   [SG2]  emailVerified defaults to false — never to true (safe default)
+ *   [SG3]  emailSource NULL → conservative (no overwrite of classic email)
+ *   [SG4]  tenantId read from Redis state in callback — not re-provided by client
+ *   [SG5]  linkingUserId stored in Redis state at link initiation — never from callback
+ *   [SG6]  oauthRateLimit applied on POST /:provider/link route (see routes)
+ *   [SG9]  self-merge check delegated to MergeAccountsUseCase
+ *   [SG10] PROVIDER_CONFLICT does not leak account existence
  */
 
 import { Request, Response } from 'express';
@@ -16,6 +20,13 @@ import { authService } from '../../application/services/auth.service';
 import { logger } from '../../shared/utils/logger.util';
 import { ApiResponse } from '../../shared/utils/response.util';
 import { OAuthError, OAuthErrorType } from '../../infrastructure/oauth/oauth-config';
+import { LinkProviderUseCase } from '../../application/use-cases/link-provider.use-case';
+import { MergeAccountsUseCase } from '../../application/use-cases/merge-accounts.use-case';
+import { userRepository } from '../../infrastructure/services/user.repository';
+import { tokenService } from '../../infrastructure/services/token.service';
+import { TokenBlacklistService } from '../../infrastructure/services/token-blacklist.service';
+import { DatabaseConnection } from '../../infrastructure/database/config/database.config';
+import { AuthenticatedRequest } from '../../shared/middleware/auth.middleware';
 
 // [SG1] Hardcoded whitelist for Tier 1 — Tier 2 will move this to DB-backed config
 const VALID_TENANTS = new Set(['origins']);
@@ -40,6 +51,10 @@ interface OAuthCallbackQuery {
   error?: string;
 }
 
+interface MergeBody {
+  targetToken?: string;
+}
+
 export class OAuthController {
   /**
    * Start OAuth authentication flow
@@ -60,7 +75,7 @@ export class OAuthController {
       logger.info(`🚀 Starting OAuth flow for ${provider}`, { provider, tenantId, redirectUrl });
 
       // tenantId stored in Redis state — not relied on at callback via client [SG4]
-      const { authUrl, state } = await oauthService.generateAuthUrl(provider, redirectUrl, tenantId);
+      const { authUrl, state } = await oauthService.generateAuthUrl(provider, tenantId, redirectUrl);
 
       if (req.session) {
         req.session.oauthState = state;
@@ -91,8 +106,71 @@ export class OAuthController {
   }
 
   /**
+   * Start OAuth link flow (from settings) — returns authUrl as JSON for frontend redirect
+   * POST /api/v1/oauth/:provider/link
+   * Requires: authMiddleware, oauthRateLimit [SG6]
+   */
+  async startLink(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const { provider } = req.params as unknown as OAuthParams;
+    const userId = req.user?.id;
+    const tenantId = req.tenantId;
+
+    if (!userId || !tenantId) {
+      res.status(401).json(ApiResponse.error('Authentication required', 'UNAUTHORIZED'));
+      return;
+    }
+
+    // [SG1] Validate tenantId from JWT against whitelist
+    if (!VALID_TENANTS.has(tenantId)) {
+      res.status(400).json(ApiResponse.error('Unknown tenant', 'INVALID_TENANT'));
+      return;
+    }
+
+    try {
+      logger.info(`🔗 Starting OAuth link flow for ${provider}`, { userId, provider, tenantId });
+
+      // [SG5] userId stored in Redis state as linkingUserId — NOT sent back at callback
+      const { authUrl, state } = await oauthService.generateAuthUrl(
+        provider,
+        tenantId,
+        undefined,
+        'link',
+        userId
+      );
+
+      logger.info(`✅ OAuth link URL generated for ${provider}`, { userId, provider, tenantId });
+
+      // Return JSON — the frontend is responsible for the redirect
+      res.json(ApiResponse.success({ authUrl, state, provider }));
+    } catch (error) {
+      logger.error(
+        `❌ Failed to start OAuth link for ${provider}`,
+        error instanceof Error ? error : undefined,
+        { userId, provider }
+      );
+
+      if (error instanceof OAuthError) {
+        switch (error.type) {
+          case OAuthErrorType.INVALID_PROVIDER:
+            res.status(400).json(ApiResponse.error('Provider not supported', 'INVALID_PROVIDER'));
+            return;
+          default:
+            res.status(500).json(ApiResponse.error('OAuth link initialization failed', 'OAUTH_LINK_INIT_FAILED'));
+            return;
+        }
+      }
+
+      res.status(500).json(ApiResponse.error('Internal server error', 'INTERNAL_ERROR'));
+    }
+  }
+
+  /**
    * Handle OAuth callback
    * GET /api/v1/oauth/:provider/callback?code=xxx&state=yyy
+   *
+   * Bifurcates based on mode read from Redis state:
+   *   - mode='auth'  → standard auth flow (existing behaviour)
+   *   - mode='link'  → LinkProviderUseCase [SG5]
    */
   async handleOAuthCallback(req: ExtendedRequest, res: Response): Promise<void> {
     const { provider } = req.params as unknown as OAuthParams;
@@ -122,18 +200,59 @@ export class OAuthController {
         return;
       }
 
-      // [SG4] tenantId is read from Redis state — NOT from the callback query params
-      // This prevents tenantId forgery at the callback stage
-      const { userInfo: oauthUserInfo, tenantId } = await oauthService.handleCallback(provider, code, state);
+      // [SG4] All metadata (tenantId, mode, linkingUserId) read from Redis state
+      const {
+        userInfo: oauthUserInfo,
+        tenantId,
+        mode,
+        linkingUserId,
+      } = await oauthService.handleCallback(provider, code, state);
 
       logger.info(`👤 OAuth user info received for ${provider}`, {
         provider,
         userId: oauthUserInfo.id,
         emailVerified: oauthUserInfo.emailVerified,
         tenantId,
+        mode,
       });
 
-      // Check if user already exists with this provider + tenant
+      // ── Link flow bifurcation ──────────────────────────────────────────────
+      if (mode === 'link') {
+        if (!linkingUserId) {
+          logger.error('Link callback missing linkingUserId in Redis state', { provider });
+          res.redirect(
+            `${process.env.FRONTEND_URL}/settings/error?error=link_state_invalid&provider=${provider}`
+          );
+          return;
+        }
+
+        const linkUseCase = new LinkProviderUseCase(userRepository);
+        try {
+          await linkUseCase.execute({ linkingUserId, tenantId, provider, oauthUserInfo });
+        } catch (linkError) {
+          const msg = linkError instanceof Error ? linkError.message : 'LINK_FAILED';
+          logger.warn(`⚠️ LinkProvider failed for ${provider}`, { provider, userId: linkingUserId, error: msg });
+          res.redirect(
+            `${process.env.FRONTEND_URL}/settings/error?error=${encodeURIComponent(msg)}&provider=${provider}`
+          );
+          return;
+        }
+
+        if (req.session?.oauthState) {
+          delete req.session.oauthState;
+        }
+
+        logger.info(`✅ OAuth provider linked successfully for ${provider}`, {
+          userId: linkingUserId,
+          provider,
+          tenantId,
+        });
+
+        res.redirect(`${process.env.FRONTEND_URL}/settings/linked?provider=${provider}`);
+        return;
+      }
+
+      // ── Standard auth flow ─────────────────────────────────────────────────
       let user = await userService.findByOAuthProvider(provider, oauthUserInfo.id, tenantId);
 
       if (user) {
@@ -235,6 +354,68 @@ export class OAuthController {
       }
 
       res.redirect(`${process.env.FRONTEND_URL}/auth/error?error=internal_error&provider=${provider}`);
+    }
+  }
+
+  /**
+   * Merge two accounts — absorb target into current
+   * POST /api/v1/account/merge
+   * Requires: authMiddleware
+   * Body: { targetToken: string }
+   */
+  async handleMerge(req: AuthenticatedRequest, res: Response): Promise<void> {
+    const userId = req.user?.id;
+    const tenantId = req.tenantId;
+    const { targetToken } = req.body as MergeBody;
+
+    if (!userId || !tenantId) {
+      res.status(401).json(ApiResponse.error('Authentication required', 'UNAUTHORIZED'));
+      return;
+    }
+
+    if (!targetToken) {
+      res.status(400).json(ApiResponse.error('targetToken is required', 'MISSING_TARGET_TOKEN'));
+      return;
+    }
+
+    try {
+      const mergeUseCase = new MergeAccountsUseCase(
+        userRepository,
+        tokenService,
+        new TokenBlacklistService(),
+        DatabaseConnection.getDataSource()
+      );
+
+      const result = await mergeUseCase.execute({
+        currentUserId: userId,
+        targetToken,
+        tenantId,
+      });
+
+      logger.info('✅ Accounts merged successfully', { userId, tenantId });
+
+      res.json(ApiResponse.success(result));
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'MERGE_FAILED';
+      logger.error('❌ Merge failed', error instanceof Error ? error : undefined, { userId });
+
+      switch (msg) {
+        case 'INVALID_TARGET_TOKEN':
+          res.status(400).json(ApiResponse.error('Invalid or expired target token', 'INVALID_TARGET_TOKEN'));
+          return;
+        case 'SELF_MERGE_FORBIDDEN':
+          res.status(400).json(ApiResponse.error('Cannot merge account with itself', 'SELF_MERGE_FORBIDDEN'));
+          return;
+        case 'CURRENT_USER_NOT_FOUND':
+        case 'TARGET_USER_NOT_FOUND':
+          res.status(404).json(ApiResponse.error('User not found', 'USER_NOT_FOUND'));
+          return;
+        case 'CROSS_TENANT_MERGE_FORBIDDEN':
+          res.status(403).json(ApiResponse.error('Cross-tenant merge is not allowed', 'CROSS_TENANT_MERGE_FORBIDDEN'));
+          return;
+        default:
+          res.status(500).json(ApiResponse.error('Merge failed', 'MERGE_FAILED'));
+      }
     }
   }
 
