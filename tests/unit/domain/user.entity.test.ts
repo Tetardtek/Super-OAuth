@@ -11,6 +11,7 @@ import { UserId } from '../../../src/domain/value-objects/user-id';
 function makeLinkedAccount(provider: 'google' | 'github' | 'discord' = 'google'): LinkedAccount {
   return LinkedAccount.create({
     userId: UserId.generate(),
+    tenantId: 'test-tenant',
     provider,
     providerId: `${provider}-id-123`,
     displayName: 'Test User',
@@ -25,7 +26,8 @@ describe('User Entity', () => {
         'user-id-1',
         Email.create('alice@example.com'),
         Nickname.create('alice'),
-        Password.create('Secure123!')
+        Password.create('Secure123!'),
+        'test-tenant'
       );
 
       expect(user.id).toBe('user-id-1');
@@ -41,7 +43,8 @@ describe('User Entity', () => {
         'id',
         Email.create('bob@example.com'),
         Nickname.create('bob'),
-        Password.create('Secure123!')
+        Password.create('Secure123!'),
+        'test-tenant'
       );
 
       expect(user.emailVerified).toBe(false);
@@ -53,7 +56,8 @@ describe('User Entity', () => {
         'id',
         Email.create('carol@example.com'),
         Nickname.create('carol'),
-        Password.create(plain)
+        Password.create(plain),
+        'test-tenant'
       );
 
       // getPasswordHash() existe pour la couche persistance uniquement
@@ -67,7 +71,8 @@ describe('User Entity', () => {
         'id',
         Email.create('dave@example.com'),
         Nickname.create('dave'),
-        Password.create('Secure123!')
+        Password.create('Secure123!'),
+        'test-tenant'
       );
 
       expect(user.linkedProviders).toEqual([]);
@@ -81,6 +86,7 @@ describe('User Entity', () => {
         'oauth-id',
         Nickname.create('oauthuser'),
         account,
+        'test-tenant',
         Email.create('oauth@example.com')
       );
 
@@ -95,7 +101,9 @@ describe('User Entity', () => {
         'id',
         Nickname.create('user'),
         makeLinkedAccount('google'),
-        Email.create('verified@example.com')
+        'test-tenant',
+        Email.create('verified@example.com'),
+        true
       );
 
       expect(user.emailVerified).toBe(true);
@@ -105,7 +113,8 @@ describe('User Entity', () => {
       const user = User.createWithProvider(
         'id',
         Nickname.create('anon'),
-        makeLinkedAccount('discord')
+        makeLinkedAccount('discord'),
+        'test-tenant'
         // pas d'email
       );
 
@@ -153,7 +162,8 @@ describe('User Entity', () => {
         'id',
         Email.create('link@example.com'),
         Nickname.create('linkuser'),
-        Password.create('Secure123!')
+        Password.create('Secure123!'),
+        'test-tenant'
       );
 
       user.linkAccount(makeLinkedAccount('github'));
@@ -163,7 +173,7 @@ describe('User Entity', () => {
     });
 
     it('should throw if provider is already linked', () => {
-      const user = User.createWithProvider('id', Nickname.create('us'), makeLinkedAccount('google'));
+      const user = User.createWithProvider('id', Nickname.create('us'), makeLinkedAccount('google'), 'test-tenant');
 
       expect(() => user.linkAccount(makeLinkedAccount('google'))).toThrow(
         'google account already linked'
@@ -171,7 +181,7 @@ describe('User Entity', () => {
     });
 
     it('should throw if more than 5 providers are linked', () => {
-      const user = User.createWithProvider('id', Nickname.create('us'), makeLinkedAccount('google'));
+      const user = User.createWithProvider('id', Nickname.create('us'), makeLinkedAccount('google'), 'test-tenant');
       user.linkAccount(makeLinkedAccount('github'));
       user.linkAccount(makeLinkedAccount('discord'));
 
@@ -199,7 +209,8 @@ describe('User Entity', () => {
         'id',
         Email.create('pw@example.com'),
         Nickname.create('pwuser'),
-        Password.create('Correct123!')
+        Password.create('Correct123!'),
+        'test-tenant'
       );
 
       expect(user.verifyPassword('Correct123!')).toBe(true);
@@ -210,7 +221,8 @@ describe('User Entity', () => {
         'id',
         Email.create('pw@example.com'),
         Nickname.create('pwuser'),
-        Password.create('Correct123!')
+        Password.create('Correct123!'),
+        'test-tenant'
       );
 
       expect(user.verifyPassword('WrongPassword!')).toBe(false);
@@ -220,7 +232,8 @@ describe('User Entity', () => {
       const user = User.createWithProvider(
         'id',
         Nickname.create('oauthonly'),
-        makeLinkedAccount('google')
+        makeLinkedAccount('google'),
+        'test-tenant'
       );
 
       expect(user.verifyPassword('anything')).toBe(false);
@@ -233,7 +246,8 @@ describe('User Entity', () => {
         'id',
         Email.create('login@example.com'),
         Nickname.create('loginuser'),
-        Password.create('Secure123!')
+        Password.create('Secure123!'),
+        'test-tenant'
       );
 
       expect(user.loginCount).toBe(0);
@@ -255,7 +269,8 @@ describe('User Entity', () => {
         'id',
         Email.create('deactivate@example.com'),
         Nickname.create('deactivate'),
-        Password.create('Secure123!')
+        Password.create('Secure123!'),
+        'test-tenant'
       );
 
       expect(user.isActive).toBe(true);
@@ -266,7 +281,7 @@ describe('User Entity', () => {
 
   describe('canUnlinkProvider', () => {
     it('should return true when multiple providers are linked', () => {
-      const user = User.createWithProvider('id', Nickname.create('us'), makeLinkedAccount('google'));
+      const user = User.createWithProvider('id', Nickname.create('us'), makeLinkedAccount('google'), 'test-tenant');
       user.linkAccount(makeLinkedAccount('github'));
 
       expect(user.canUnlinkProvider('google')).toBe(true);
@@ -276,7 +291,8 @@ describe('User Entity', () => {
       const user = User.createWithProvider(
         'id',
         Nickname.create('us'),
-        makeLinkedAccount('google')
+        makeLinkedAccount('google'),
+        'test-tenant'
         // pas d'email → emailVerified=false, pas de password
       );
 

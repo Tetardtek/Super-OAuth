@@ -61,7 +61,7 @@ describe('RefreshTokenUseCase', () => {
     const email = Email.create('test@example.com');
     const nickname = Nickname.create('testuser');
     const password = Password.create('Test123!@#');
-    mockUser = User.createWithEmail('user-id-123', email, nickname, password);
+    mockUser = User.createWithEmail('user-id-123', email, nickname, password, 'test-tenant');
 
     // Create valid session
     validSession = {
@@ -96,7 +96,7 @@ describe('RefreshTokenUseCase', () => {
       // Assert
       expect(mockSessionRepository.findByRefreshToken).toHaveBeenCalledWith('valid-refresh-token');
       expect(mockUserRepository.findById).toHaveBeenCalledWith('user-id-123');
-      expect(mockTokenService.generateAccessToken).toHaveBeenCalledWith('user-id-123');
+      expect(mockTokenService.generateAccessToken).toHaveBeenCalledWith('user-id-123', 'test-tenant');
       expect(mockTokenService.generateRefreshToken).toHaveBeenCalled();
       expect(result.accessToken).toBe('new-access-token');
       expect(result.refreshToken).toBe('new-refresh-token');
@@ -161,6 +161,7 @@ describe('RefreshTokenUseCase', () => {
         createdAt: expect.any(Date),
         lastLogin: null,
         loginCount: 0,
+        tenantId: 'test-tenant',
       });
     });
   });

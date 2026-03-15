@@ -19,7 +19,8 @@ describe('CompleteOAuthUseCase', () => {
   let mockOAuthResult: {
     accessToken: string;
     refreshToken?: string;
-    userInfo: { id: string; email?: string; nickname: string };
+    tenantId: string;
+    userInfo: { id: string; email?: string; emailVerified: boolean; nickname: string };
   };
 
   beforeEach(() => {
@@ -53,7 +54,7 @@ describe('CompleteOAuthUseCase', () => {
     };
 
     mockOAuthService = {
-      getAuthUrl: jest.fn(),
+      generateAuthUrl: jest.fn(),
       exchangeCodeForTokens: jest.fn(),
     };
 
@@ -61,9 +62,11 @@ describe('CompleteOAuthUseCase', () => {
     mockOAuthResult = {
       accessToken: 'oauth-access-token',
       refreshToken: 'oauth-refresh-token',
+      tenantId: 'test-tenant',
       userInfo: {
         id: 'google-user-123',
         email: 'oauth@example.com',
+        emailVerified: false,
         nickname: 'oauthuser',
       },
     };
@@ -110,7 +113,7 @@ describe('CompleteOAuthUseCase', () => {
 
       // Assert
       expect(mockOAuthService.exchangeCodeForTokens).toHaveBeenCalledWith('google', 'auth-code-123', 'state-token');
-      expect(mockUserRepository.findByProvider).toHaveBeenCalledWith('google', 'google-user-123');
+      expect(mockUserRepository.findByProvider).toHaveBeenCalledWith('google', 'google-user-123', 'test-tenant');
       expect(mockUserRepository.save).toHaveBeenCalledWith(existingUser);
       expect(result.accessToken).toBe('jwt-access-token');
       expect(result.refreshToken).toBe('jwt-refresh-token');
@@ -197,6 +200,7 @@ describe('CompleteOAuthUseCase', () => {
         userInfo: {
           id: 'discord-user-123',
           email: 'discord@example.com',
+          emailVerified: false,
           nickname: 'discorduser',
         },
       };
@@ -230,9 +234,12 @@ describe('CompleteOAuthUseCase', () => {
       const email = Email.create('oauth@example.com');
       const nickname = Nickname.create('existinguser');
       const password = Password.create('Test123!@#');
-      const existingUser = User.createWithEmail('550e8400-e29b-41d4-a716-446655440000', email, nickname, password);
+      const existingUser = User.createWithEmail('550e8400-e29b-41d4-a716-446655440000', email, nickname, password, 'test-tenant');
 
-      mockOAuthService.exchangeCodeForTokens.mockResolvedValue(mockOAuthResult);
+      mockOAuthService.exchangeCodeForTokens.mockResolvedValue({
+        ...mockOAuthResult,
+        userInfo: { ...mockOAuthResult.userInfo, emailVerified: true },
+      });
       mockUserRepository.findByProvider.mockResolvedValue(null); // No OAuth user
       mockUserRepository.findByEmail.mockResolvedValue(existingUser); // But email exists
       mockUserRepository.save.mockResolvedValue(existingUser);
@@ -243,7 +250,7 @@ describe('CompleteOAuthUseCase', () => {
       const result = await useCase.execute(dto);
 
       // Assert
-      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith('oauth@example.com');
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith('oauth@example.com', 'test-tenant');
       expect(existingUser.linkedProviders).toContain('google');
       expect(mockUserRepository.save).toHaveBeenCalledWith(existingUser);
       expect(result.user.linkedProviders).toContain('google');
@@ -361,6 +368,7 @@ describe('CompleteOAuthUseCase', () => {
 
       const oauthResultNoRefresh = {
         accessToken: 'oauth-access-only',
+        tenantId: 'test-tenant',
         userInfo: mockOAuthResult.userInfo,
         // No refreshToken
       };
@@ -392,13 +400,14 @@ describe('CompleteOAuthUseCase', () => {
       const email = Email.create('multi@example.com');
       const nickname = Nickname.create('multiuser');
       const password = Password.create('Test123!@#');
-      const existingUser = User.createWithEmail('660e8400-e29b-41d4-a716-446655440000', email, nickname, password);
+      const existingUser = User.createWithEmail('660e8400-e29b-41d4-a716-446655440000', email, nickname, password, 'test-tenant');
 
       const githubOAuthResult = {
         ...mockOAuthResult,
         userInfo: {
           id: 'github-user-123',
           email: 'multi@example.com',
+          emailVerified: true,
           nickname: 'multiuser',
         },
       };

@@ -7,7 +7,10 @@ describe('StartOAuthUseCase', () => {
 
   beforeEach(() => {
     mockOAuthService = {
-      getAuthUrl: jest.fn().mockReturnValue('https://provider.example/oauth/authorize?...'),
+      generateAuthUrl: jest.fn().mockResolvedValue({
+        authUrl: 'https://provider.example/oauth/authorize?...',
+        state: 'mock-state-32chars-xxxxxxxxxx',
+      }),
       exchangeCodeForTokens: jest.fn(),
     };
 
@@ -16,79 +19,78 @@ describe('StartOAuthUseCase', () => {
 
   describe('Happy Path', () => {
     it('should return authUrl and state for a valid provider', async () => {
-      const result = await useCase.execute({ provider: 'google' });
+      const result = await useCase.execute({ provider: 'google', tenantId: 'test-tenant' });
 
       expect(result.authUrl).toBeDefined();
       expect(result.state).toBeDefined();
-      expect(mockOAuthService.getAuthUrl).toHaveBeenCalledTimes(1);
+      expect(mockOAuthService.generateAuthUrl).toHaveBeenCalledTimes(1);
     });
 
     it.each(['google', 'github', 'discord', 'twitch'])(
       'should support provider "%s"',
       async (provider) => {
-        await expect(useCase.execute({ provider })).resolves.toBeDefined();
+        await expect(useCase.execute({ provider, tenantId: 'test-tenant' })).resolves.toBeDefined();
       }
     );
 
-    it('should pass the generated state to oauthService.getAuthUrl', async () => {
-      const result = await useCase.execute({ provider: 'github' });
+    it('should pass provider and tenantId to oauthService.generateAuthUrl', async () => {
+      await useCase.execute({ provider: 'github', tenantId: 'my-tenant' });
 
-      const [, stateArg] = mockOAuthService.getAuthUrl.mock.calls[0];
-      expect(stateArg).toBe(result.state);
+      expect(mockOAuthService.generateAuthUrl).toHaveBeenCalledWith('github', 'my-tenant', undefined);
     });
 
     it('should normalize provider to lowercase before calling oauthService', async () => {
-      await useCase.execute({ provider: 'Google' });
+      await useCase.execute({ provider: 'Google', tenantId: 'test-tenant' });
 
-      const [providerArg] = mockOAuthService.getAuthUrl.mock.calls[0];
+      const [providerArg] = (mockOAuthService.generateAuthUrl as jest.Mock).mock.calls[0];
       expect(providerArg).toBe('google');
     });
 
     it('should return the authUrl produced by oauthService', async () => {
-      mockOAuthService.getAuthUrl.mockReturnValue('https://accounts.google.com/o/oauth2/auth?...');
+      mockOAuthService.generateAuthUrl.mockResolvedValue({
+        authUrl: 'https://accounts.google.com/o/oauth2/auth?...',
+        state: 'mock-state',
+      });
 
-      const result = await useCase.execute({ provider: 'google' });
+      const result = await useCase.execute({ provider: 'google', tenantId: 'test-tenant' });
 
       expect(result.authUrl).toBe('https://accounts.google.com/o/oauth2/auth?...');
     });
-  });
 
-  describe('State generation', () => {
-    it('should generate a 32-character alphanumeric state', async () => {
-      const result = await useCase.execute({ provider: 'discord' });
+    it('should return the state produced by oauthService', async () => {
+      mockOAuthService.generateAuthUrl.mockResolvedValue({
+        authUrl: 'https://accounts.google.com/o/oauth2/auth?...',
+        state: 'service-generated-state',
+      });
 
-      expect(result.state).toHaveLength(32);
-      expect(result.state).toMatch(/^[A-Za-z0-9]{32}$/);
+      const result = await useCase.execute({ provider: 'google', tenantId: 'test-tenant' });
+
+      expect(result.state).toBe('service-generated-state');
     });
 
-    it('should generate a unique state on each call', async () => {
-      const [r1, r2, r3] = await Promise.all([
-        useCase.execute({ provider: 'github' }),
-        useCase.execute({ provider: 'github' }),
-        useCase.execute({ provider: 'github' }),
-      ]);
+    it('should forward optional redirectUri to oauthService', async () => {
+      const redirectUri = 'https://myapp.com/callback';
+      await useCase.execute({ provider: 'google', tenantId: 'test-tenant', redirectUri });
 
-      // Collision sur 32 chars alphanumériques est astronomiquement improbable
-      expect(r1.state).not.toBe(r2.state);
-      expect(r2.state).not.toBe(r3.state);
+      expect(mockOAuthService.generateAuthUrl).toHaveBeenCalledWith('google', 'test-tenant', redirectUri);
     });
   });
 
   describe('Error Cases', () => {
     it('should throw for an unsupported provider', async () => {
-      await expect(useCase.execute({ provider: 'facebook' })).rejects.toThrow(
+      await expect(useCase.execute({ provider: 'facebook', tenantId: 'test-tenant' })).rejects.toThrow(
         'Unsupported OAuth provider: facebook'
       );
-      expect(mockOAuthService.getAuthUrl).not.toHaveBeenCalled();
+      expect(mockOAuthService.generateAuthUrl).not.toHaveBeenCalled();
     });
 
     it('should throw for an empty provider string', async () => {
-      await expect(useCase.execute({ provider: '' })).rejects.toThrow();
-      expect(mockOAuthService.getAuthUrl).not.toHaveBeenCalled();
+      await expect(useCase.execute({ provider: '', tenantId: 'test-tenant' })).rejects.toThrow();
+      expect(mockOAuthService.generateAuthUrl).not.toHaveBeenCalled();
     });
 
     it('should throw for a provider with only spaces', async () => {
-      await expect(useCase.execute({ provider: '   ' })).rejects.toThrow();
+      await expect(useCase.execute({ provider: '   ', tenantId: 'test-tenant' })).rejects.toThrow();
     });
   });
 });

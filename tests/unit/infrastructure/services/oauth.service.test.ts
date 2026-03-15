@@ -22,95 +22,94 @@ describe('OAuthService', () => {
     service = new OAuthService();
   });
 
-  describe('getAuthUrl', () => {
-    it('should generate valid Google OAuth URL', () => {
+  describe('generateAuthUrl', () => {
+    it('should generate valid Google OAuth URL', async () => {
       // Arrange
       const provider = 'google';
-      const state = 'test-state-123';
 
       // Act
-      const url = service.getAuthUrl(provider, state);
+      const result = await service.generateAuthUrl(provider, 'test-tenant');
 
       // Assert
-      expect(url).toContain('https://accounts.google.com/o/oauth2/v2/auth');
-      expect(url).toContain('client_id=test-google-client-id');
-      expect(url).toContain('state=test-state-123');
-      expect(url).toContain('response_type=code');
-      expect(url).toContain('scope=');
-      expect(url).toContain('redirect_uri=');
+      expect(result.authUrl).toContain('https://accounts.google.com/o/oauth2/v2/auth');
+      expect(result.authUrl).toContain('client_id=test-google-client-id');
+      expect(result.authUrl).toContain('state=');
+      expect(result.authUrl).toContain('response_type=code');
+      expect(result.authUrl).toContain('scope=');
+      expect(result.authUrl).toContain('redirect_uri=');
+      expect(result.state).toBeTruthy();
     });
 
-    it('should generate valid GitHub OAuth URL', () => {
+    it('should generate valid GitHub OAuth URL', async () => {
       // Arrange
       const provider = 'github';
-      const state = 'github-state-456';
 
       // Act
-      const url = service.getAuthUrl(provider, state);
+      const result = await service.generateAuthUrl(provider, 'test-tenant');
 
       // Assert
-      expect(url).toContain('https://github.com/login/oauth/authorize');
-      expect(url).toContain('client_id=test-github-client-id');
-      expect(url).toContain('state=github-state-456');
-      expect(url).toContain('response_type=code');
+      expect(result.authUrl).toContain('https://github.com/login/oauth/authorize');
+      expect(result.authUrl).toContain('client_id=test-github-client-id');
+      expect(result.authUrl).toContain('state=');
+      expect(result.authUrl).toContain('response_type=code');
+      expect(result.state).toBeTruthy();
     });
 
-    it('should generate valid Discord OAuth URL', () => {
+    it('should generate valid Discord OAuth URL', async () => {
       // Arrange
       const provider = 'discord';
-      const state = 'discord-state-789';
 
       // Act
-      const url = service.getAuthUrl(provider, state);
+      const result = await service.generateAuthUrl(provider, 'test-tenant');
 
       // Assert
-      expect(url).toContain('https://discord.com/api/oauth2/authorize');
-      expect(url).toContain('client_id=test-discord-client-id');
-      expect(url).toContain('state=discord-state-789');
+      expect(result.authUrl).toContain('https://discord.com/api/oauth2/authorize');
+      expect(result.authUrl).toContain('client_id=test-discord-client-id');
+      expect(result.authUrl).toContain('state=');
+      expect(result.state).toBeTruthy();
     });
 
-    it('should include Google-specific parameters', () => {
+    it('should include Google-specific parameters', async () => {
       // Arrange
       const provider = 'google';
-      const state = 'state-123';
 
       // Act
-      const url = service.getAuthUrl(provider, state);
+      const result = await service.generateAuthUrl(provider, 'test-tenant');
 
       // Assert
-      expect(url).toContain('access_type=offline');
-      expect(url).toContain('prompt=consent');
+      expect(result.authUrl).toContain('access_type=offline');
+      expect(result.authUrl).toContain('prompt=consent');
     });
 
-    it('should throw error for unsupported provider', () => {
+    it('should throw error for unsupported provider', async () => {
       // Arrange
       const provider = 'unsupported-provider';
-      const state = 'state-123';
 
       // Act & Assert
-      expect(() => service.getAuthUrl(provider, state)).toThrow('Unsupported OAuth provider');
+      await expect(service.generateAuthUrl(provider, 'test-tenant')).rejects.toThrow('Unsupported OAuth provider');
     });
 
-    it('should URL-encode state parameter', () => {
+    it('should generate a unique state on each call', async () => {
       // Arrange
       const provider = 'google';
-      const state = 'state with spaces & special=chars';
 
       // Act
-      const url = service.getAuthUrl(provider, state);
+      const r1 = await service.generateAuthUrl(provider, 'test-tenant');
+      const r2 = await service.generateAuthUrl(provider, 'test-tenant');
 
-      // Assert
-      expect(url).toContain('state=state+with+spaces');
+      // Assert — state is generated internally, must be unique per call
+      expect(r1.state).toBeTruthy();
+      expect(r2.state).toBeTruthy();
+      expect(r1.state).not.toBe(r2.state);
     });
 
-    it('should throw error for non-whitelisted redirect URI', () => {
+    it('should throw error for non-whitelisted redirect URI', async () => {
       // Arrange
       const provider = 'google';
-      const state = 'state-123';
       const redirectUri = 'https://evil.com/callback';
 
       // Act & Assert
-      expect(() => service.getAuthUrl(provider, state, redirectUri)).toThrow(
+      await expect(service.generateAuthUrl(provider, 'test-tenant', redirectUri)).rejects.toThrow(
         'redirect_uri non autorisé'
       );
     });
@@ -189,7 +188,7 @@ describe('OAuthService', () => {
       // Arrange
       const provider = 'github';
       const code = 'github-code-456';
-      const state = 'state-456';
+      const state = 'state-123';
 
       // Mock token exchange
       mockedAxios.post.mockResolvedValueOnce({
@@ -224,7 +223,7 @@ describe('OAuthService', () => {
       // Arrange
       const provider = 'github';
       const code = 'code-789';
-      const state = 'state-789';
+      const state = 'state-123';
 
       mockedAxios.post.mockResolvedValueOnce({
         data: {
@@ -256,7 +255,7 @@ describe('OAuthService', () => {
       // Arrange
       const provider = 'discord';
       const code = 'discord-code-999';
-      const state = 'state-999';
+      const state = 'state-123';
 
       // Mock token exchange
       mockedAxios.post.mockResolvedValueOnce({
@@ -358,34 +357,30 @@ describe('OAuthService', () => {
   });
 
   describe('Integration - Multiple Providers', () => {
-    it('should support all providers (google, github, discord)', () => {
+    it('should support all providers (google, github, discord)', async () => {
       // Arrange
       const providers = ['google', 'github', 'discord'];
-      const state = 'test-state';
 
       // Act & Assert
-      providers.forEach((provider) => {
-        expect(() => service.getAuthUrl(provider, state)).not.toThrow();
-      });
+      for (const provider of providers) {
+        await expect(service.generateAuthUrl(provider, 'test-tenant')).resolves.toBeDefined();
+      }
     });
 
-    it('should generate different URLs for different providers', () => {
-      // Arrange
-      const state = 'same-state';
-
+    it('should generate different URLs for different providers', async () => {
       // Act
-      const googleUrl = service.getAuthUrl('google', state);
-      const githubUrl = service.getAuthUrl('github', state);
-      const discordUrl = service.getAuthUrl('discord', state);
+      const googleResult = await service.generateAuthUrl('google', 'test-tenant');
+      const githubResult = await service.generateAuthUrl('github', 'test-tenant');
+      const discordResult = await service.generateAuthUrl('discord', 'test-tenant');
 
       // Assert
-      expect(googleUrl).not.toBe(githubUrl);
-      expect(githubUrl).not.toBe(discordUrl);
-      expect(googleUrl).not.toBe(discordUrl);
+      expect(googleResult.authUrl).not.toBe(githubResult.authUrl);
+      expect(githubResult.authUrl).not.toBe(discordResult.authUrl);
+      expect(googleResult.authUrl).not.toBe(discordResult.authUrl);
 
-      expect(googleUrl).toContain('google');
-      expect(githubUrl).toContain('github');
-      expect(discordUrl).toContain('discord');
+      expect(googleResult.authUrl).toContain('google');
+      expect(githubResult.authUrl).toContain('github');
+      expect(discordResult.authUrl).toContain('discord');
     });
   });
 });

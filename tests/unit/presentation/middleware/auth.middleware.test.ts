@@ -77,7 +77,7 @@ describe('authenticateToken Middleware', () => {
     const email = Email.create('test@example.com');
     const nickname = Nickname.create('testuser');
     const password = Password.create('Test123!@#');
-    mockUser = User.createWithEmail('user-id-123', email, nickname, password);
+    mockUser = User.createWithEmail('user-id-123', email, nickname, password, 'test-tenant');
   });
 
   afterEach(() => {

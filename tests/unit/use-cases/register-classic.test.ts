@@ -33,7 +33,8 @@ describe('RegisterClassicUseCase', () => {
     const dto = {
       email: 'test@example.com',
       password: 'Test123!@#',
-      nickname: 'testuser'
+      nickname: 'testuser',
+      tenantId: 'test-tenant'
     };
 
     const mockUser = {
@@ -57,7 +58,7 @@ describe('RegisterClassicUseCase', () => {
     const result = await useCase.execute(dto);
 
     // Assert
-    expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(dto.email);
+    expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(dto.email, dto.tenantId);
     expect(mockUserRepository.save).toHaveBeenCalled();
     expect(mockTokenService.generateAccessToken).toHaveBeenCalled();
     expect(mockTokenService.generateRefreshToken).toHaveBeenCalled();
@@ -73,10 +74,11 @@ describe('RegisterClassicUseCase', () => {
     const dto = {
       email: 'test@example.com',
       password: 'Test123!@#',
-      nickname: 'testuser'
+      nickname: 'testuser',
+      tenantId: 'test-tenant'
     };
 
-    mockUserRepository.findByEmail.mockResolvedValue({} as User); // User exists
+    mockUserRepository.findByEmail.mockResolvedValue({ emailVerified: true } as User); // User exists
 
     // Act & Assert
     await expect(useCase.execute(dto)).rejects.toThrow('User with this email already exists');
@@ -87,7 +89,8 @@ describe('RegisterClassicUseCase', () => {
     const dto = {
       email: 'invalid-email',
       password: 'Test123!@#',
-      nickname: 'testuser'
+      nickname: 'testuser',
+      tenantId: 'test-tenant'
     };
 
     // Act & Assert
@@ -99,7 +102,8 @@ describe('RegisterClassicUseCase', () => {
     const dto = {
       email: 'test@example.com',
       password: 'weak',
-      nickname: 'testuser'
+      nickname: 'testuser',
+      tenantId: 'test-tenant'
     };
 
     // Act & Assert

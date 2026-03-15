@@ -51,7 +51,7 @@ describe('LoginClassicUseCase', () => {
     const nickname = Nickname.create('testuser');
     const password = Password.create('Test123!@#');
 
-    mockUser = User.createWithEmail('user-id-123', email, nickname, password);
+    mockUser = User.createWithEmail('user-id-123', email, nickname, password, 'test-tenant');
 
     useCase = new LoginClassicUseCase(
       mockUserRepository,
@@ -66,6 +66,7 @@ describe('LoginClassicUseCase', () => {
       const dto = {
         email: 'test@example.com',
         password: 'Test123!@#',
+        tenantId: 'test-tenant',
       };
 
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
@@ -78,9 +79,9 @@ describe('LoginClassicUseCase', () => {
       const result = await useCase.execute(dto);
 
       // Assert
-      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(dto.email);
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(dto.email, dto.tenantId);
       expect(mockUserRepository.save).toHaveBeenCalledWith(mockUser);
-      expect(mockTokenService.generateAccessToken).toHaveBeenCalledWith('user-id-123');
+      expect(mockTokenService.generateAccessToken).toHaveBeenCalledWith('user-id-123', 'test-tenant');
       expect(mockTokenService.generateRefreshToken).toHaveBeenCalled();
       expect(mockSessionRepository.create).toHaveBeenCalled();
       expect(result.accessToken).toBe('mock-access-token');
@@ -95,6 +96,7 @@ describe('LoginClassicUseCase', () => {
       const dto = {
         email: 'test@example.com',
         password: 'Test123!@#',
+        tenantId: 'test-tenant',
       };
 
       const initialLoginCount = mockUser.loginCount;
@@ -118,6 +120,7 @@ describe('LoginClassicUseCase', () => {
       const dto = {
         email: 'test@example.com',
         password: 'Test123!@#',
+        tenantId: 'test-tenant',
       };
 
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
@@ -151,6 +154,7 @@ describe('LoginClassicUseCase', () => {
       const dto = {
         email: 'nonexistent@example.com',
         password: 'Test123!@#',
+        tenantId: 'test-tenant',
       };
 
       mockUserRepository.findByEmail.mockResolvedValue(null);
@@ -166,6 +170,7 @@ describe('LoginClassicUseCase', () => {
       const dto = {
         email: 'test@example.com',
         password: 'WrongPassword123!',
+        tenantId: 'test-tenant',
       };
 
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
@@ -181,11 +186,13 @@ describe('LoginClassicUseCase', () => {
       const dtoUserNotFound = {
         email: 'nonexistent@example.com',
         password: 'Test123!@#',
+        tenantId: 'test-tenant',
       };
 
       const dtoWrongPassword = {
         email: 'test@example.com',
         password: 'WrongPassword123!',
+        tenantId: 'test-tenant',
       };
 
       mockUserRepository.findByEmail.mockResolvedValueOnce(null); // User not found
@@ -203,6 +210,7 @@ describe('LoginClassicUseCase', () => {
       const dto = {
         email: 'test@example.com',
         password: 'Test123!@#',
+        tenantId: 'test-tenant',
       };
 
       // Deactivate user
@@ -220,6 +228,7 @@ describe('LoginClassicUseCase', () => {
       const dto = {
         email: 'oauth@example.com',
         password: 'Test123!@#',
+        tenantId: 'test-tenant',
       };
 
       // Create OAuth-only user (no password)
@@ -253,6 +262,7 @@ describe('LoginClassicUseCase', () => {
       const dto = {
         email: 'invalid-email',
         password: 'Test123!@#',
+        tenantId: 'test-tenant',
       };
 
       // Act & Assert
@@ -265,6 +275,7 @@ describe('LoginClassicUseCase', () => {
       const dto = {
         email: '',
         password: 'Test123!@#',
+        tenantId: 'test-tenant',
       };
 
       // Act & Assert
@@ -277,6 +288,7 @@ describe('LoginClassicUseCase', () => {
       const dto = {
         email: 'test@example.com',
         password: '',
+        tenantId: 'test-tenant',
       };
 
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
@@ -292,6 +304,7 @@ describe('LoginClassicUseCase', () => {
       const dto = {
         email: 'test@example.com',
         password: 'Test123!@#',
+        tenantId: 'test-tenant',
       };
 
       // Create user with null email (OAuth user who later set password)
@@ -326,6 +339,7 @@ describe('LoginClassicUseCase', () => {
       const dto = {
         email: 'test@example.com',
         password: 'Test123!@#',
+        tenantId: 'test-tenant',
       };
 
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
@@ -350,6 +364,7 @@ describe('LoginClassicUseCase', () => {
       const dtoNonExistent = {
         email: 'nonexistent@example.com',
         password: 'Test123!@#',
+        tenantId: 'test-tenant',
       };
 
       mockUserRepository.findByEmail.mockResolvedValue(null);
@@ -366,6 +381,7 @@ describe('LoginClassicUseCase', () => {
       const dtoWrongPassword = {
         email: 'test@example.com',
         password: 'WrongPassword123!',
+        tenantId: 'test-tenant',
       };
 
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
