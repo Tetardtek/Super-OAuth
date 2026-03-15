@@ -11,8 +11,9 @@ import { ApiResponse } from '../utils/response.util';
 import { logger } from '../utils/logger.util';
 import { User } from '../../domain/entities/user.entity';
 
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
   user?: User;
+  tenantId?: string;
 }
 
 /**
@@ -54,8 +55,9 @@ export const authMiddleware = async (
       return;
     }
 
-    // Add user to request object
+    // Add user and tenantId to request object
     req.user = user;
+    req.tenantId = payload.tenantId;
 
     next();
   } catch (error) {
