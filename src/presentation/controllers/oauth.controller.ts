@@ -219,7 +219,7 @@ export class OAuthController {
       // ── Link flow bifurcation ──────────────────────────────────────────────
       if (mode === 'link') {
         if (!linkingUserId) {
-          logger.error('Link callback missing linkingUserId in Redis state', { provider });
+          logger.error('Link callback missing linkingUserId in Redis state', undefined, { provider });
           res.redirect(
             `${process.env.FRONTEND_URL}/settings/error?error=link_state_invalid&provider=${provider}`
           );

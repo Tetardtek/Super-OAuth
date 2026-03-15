@@ -38,7 +38,7 @@ export class AuthService {
   /**
    * Verify access token
    */
-  async verifyAccessToken(token: string): Promise<{ userId: string } | null> {
+  async verifyAccessToken(token: string): Promise<{ userId: string; jti: string; tenantId: string } | null> {
     return tokenService.verifyAccessToken(token);
   }
 

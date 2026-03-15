@@ -32,11 +32,14 @@ interface OAuthTokenResponse {
 
 const STATE_TTL_SECONDS = 600; // 10 minutes
 
+import { IStateStorage } from '../redis';
+
 export class OAuthService implements IOAuthService {
   private providers: Record<string, OAuthProvider>;
-  private stateStorage = new RedisStateStorage();
+  private stateStorage: IStateStorage;
 
-  constructor() {
+  constructor(stateStorage?: IStateStorage) {
+    this.stateStorage = stateStorage || new RedisStateStorage();
     this.providers = {
       discord: {
         clientId: process.env.DISCORD_CLIENT_ID || '',

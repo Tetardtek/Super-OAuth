@@ -191,7 +191,7 @@ export interface TwitchUserResponse {
   data: TwitchUser[];
 }
 
-export type ProviderRawData = DiscordUser | GoogleUser | GitHubUser | TwitchUserResponse | GitHubEmailEntry[];
+export type ProviderRawData = DiscordUser | GoogleUser | GitHubUser | TwitchUserResponse | GitHubEmailEntry[] | [GitHubUser, GitHubEmailEntry[]];
 
 /**
  * Normalized OAuth User Info

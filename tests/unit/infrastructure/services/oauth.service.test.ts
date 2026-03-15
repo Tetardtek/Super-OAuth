@@ -1,4 +1,5 @@
 import { OAuthService } from '../../../../src/infrastructure/services/oauth.service';
+import { IStateStorage } from '../../../../src/infrastructure/redis';
 import axios from 'axios';
 
 // Mock axios
@@ -7,9 +8,18 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('OAuthService', () => {
   let service: OAuthService;
+  let mockStateStorage: jest.Mocked<IStateStorage>;
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // In-memory mock — no Redis connection required in unit tests
+    mockStateStorage = {
+      save: jest.fn().mockResolvedValue(undefined),
+      get: jest.fn().mockResolvedValue(null),
+      delete: jest.fn().mockResolvedValue(undefined),
+      cleanupExpired: jest.fn().mockResolvedValue(0),
+    } as jest.Mocked<IStateStorage>;
 
     // Set minimal env vars for testing BEFORE instantiating service
     process.env.GOOGLE_CLIENT_ID = 'test-google-client-id';
@@ -19,7 +29,7 @@ describe('OAuthService', () => {
     process.env.DISCORD_CLIENT_ID = 'test-discord-client-id';
     process.env.DISCORD_CLIENT_SECRET = 'test-discord-secret';
 
-    service = new OAuthService();
+    service = new OAuthService(mockStateStorage);
   });
 
   describe('generateAuthUrl', () => {

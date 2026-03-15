@@ -63,11 +63,11 @@ export class LinkProviderUseCase {
       tenantId,
       provider,
       providerId: oauthUserInfo.id,
-      email: oauthUserInfo.email,
-      nickname: oauthUserInfo.nickname,
-      avatar: oauthUserInfo.avatar,
+      ...(oauthUserInfo.email !== undefined && { email: oauthUserInfo.email }),
+      ...(oauthUserInfo.nickname !== undefined && { nickname: oauthUserInfo.nickname }),
+      ...(oauthUserInfo.avatar !== undefined && { avatar: oauthUserInfo.avatar }),
       linkedAt: new Date(),
-      raw: oauthUserInfo.raw,
+      ...(oauthUserInfo.raw !== undefined && { raw: oauthUserInfo.raw as unknown }),
     });
 
     logger.info('✅ LinkProviderUseCase: provider linked successfully', {

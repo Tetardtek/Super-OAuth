@@ -138,7 +138,7 @@ export class OAuthService {
         mode,
       });
 
-      return { userInfo, tenantId, mode, linkingUserId };
+      return { userInfo, tenantId, mode, ...(linkingUserId !== undefined && { linkingUserId }) };
     } catch (error) {
       logger.error(
         `❌ OAuth callback failed for ${provider}`,
