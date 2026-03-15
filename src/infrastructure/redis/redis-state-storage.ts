@@ -5,6 +5,7 @@ export interface OAuthState {
   provider: string;
   timestamp: number;
   nonce: string;
+  tenantId: string;
   redirectUrl?: string;
 }
 

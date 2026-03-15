@@ -46,7 +46,7 @@ router.post('/register', validateBody(authValidators.register), asyncHandler(asy
     logger.info('User registration attempt', { email, nickname, ip: req.ip });
 
     const registerUseCase = container.getRegisterClassicUseCase();
-    const result = await registerUseCase.execute({ email, password, nickname });
+    const result = await registerUseCase.execute({ email, password, nickname, tenantId: (req.query.tenantId as string | undefined) || 'origins' });
 
     logger.info('User registered successfully', {
       userId: result.user.id,
@@ -103,7 +103,7 @@ router.post('/login', validateBody(authValidators.login), asyncHandler(async (re
     logger.info('User login attempt', { email, ip: req.ip });
 
     const loginUseCase = container.getLoginClassicUseCase();
-    const result = await loginUseCase.execute({ email, password });
+    const result = await loginUseCase.execute({ email, password, tenantId: (req.query.tenantId as string | undefined) || 'origins' });
 
     logger.info('User logged in successfully', {
       userId: result.user.id,
@@ -308,6 +308,7 @@ router.get(
       const startOAuthUseCase = container.getStartOAuthUseCase();
       const result = await startOAuthUseCase.execute({
         provider: provider as 'discord' | 'twitch' | 'google' | 'github',
+        tenantId: (req.query.tenantId as string | undefined) || 'origins',
         redirectUri,
       });
 

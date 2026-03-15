@@ -38,7 +38,8 @@ export class OAuthService {
    */
   async generateAuthUrl(
     provider: string,
-    redirectUrl?: string
+    redirectUrl?: string,
+    tenantId: string = 'origins'
   ): Promise<{ authUrl: string; state: string }> {
     logger.info(`🔗 Generating OAuth URL for ${provider}`);
 
@@ -57,7 +58,7 @@ export class OAuthService {
     }
 
     const config = getOAuthConfig(provider)!;
-    const state = await this.generateState(provider, redirectUrl);
+    const state = await this.generateState(provider, tenantId, redirectUrl);
 
     const params = new URLSearchParams({
       client_id: config.clientId,
@@ -85,8 +86,13 @@ export class OAuthService {
 
   /**
    * Handle OAuth callback and exchange code for token
+   * Returns userInfo and tenantId read from Redis state (SG4 — not re-provided by client)
    */
-  async handleCallback(provider: string, code: string, state: string): Promise<OAuthUserInfo> {
+  async handleCallback(
+    provider: string,
+    code: string,
+    state: string
+  ): Promise<{ userInfo: OAuthUserInfo; tenantId: string }> {
     logger.info(`🔄 Processing OAuth callback for ${provider}`);
 
     if (!isProviderSupported(provider)) {
@@ -97,8 +103,8 @@ export class OAuthService {
       );
     }
 
-    // Validate state
-    const stateData = this.validateState(state, provider);
+    // Validate state — reads and deletes from Redis (use-once pattern)
+    const stateData = await this.validateState(state, provider);
     if (!stateData) {
       throw new OAuthError(
         OAuthErrorType.INVALID_STATE,
@@ -107,6 +113,8 @@ export class OAuthService {
       );
     }
 
+    const tenantId = stateData.tenantId;
+
     try {
       // Exchange code for token
       const tokenResponse = await this.exchangeCodeForToken(provider, code);
@@ -114,15 +122,15 @@ export class OAuthService {
       // Get user info using token
       const userInfo = await this.getUserInfo(provider, tokenResponse.access_token);
 
-      // State déjà supprimé par validateState() (use-once pattern)
-
       logger.info(`✅ OAuth callback processed successfully for ${provider}`, {
         provider,
         userId: userInfo.id,
         email: userInfo.email,
+        emailVerified: userInfo.emailVerified,
+        tenantId,
       });
 
-      return userInfo;
+      return { userInfo, tenantId };
     } catch (error) {
       logger.error(
         `❌ OAuth callback failed for ${provider}`,
@@ -250,6 +258,8 @@ export class OAuthService {
         normalized = {
           id: discordData.id,
           email: discordData.email,
+          // Discord returns explicit verified flag — SG2: default false if absent
+          emailVerified: discordData.verified ?? false,
           nickname: discordData.username,
           provider: 'discord',
           raw: discordData,
@@ -269,6 +279,9 @@ export class OAuthService {
         normalized = {
           id: twitchUser.id,
           email: twitchUser.email,
+          // Twitch only returns email when verified + user:read:email scope granted
+          // SG2: emailVerified = true only if email is present
+          emailVerified: !!twitchUser.email,
           nickname: twitchUser.display_name || twitchUser.login,
           avatar: twitchUser.profile_image_url,
           provider: 'twitch',
@@ -282,6 +295,8 @@ export class OAuthService {
         normalized = {
           id: googleData.id,
           email: googleData.email,
+          // Google returns explicit verified_email flag — SG2: default false if absent
+          emailVerified: googleData.verified_email ?? false,
           nickname: googleData.name || googleData.given_name || googleData.email?.split('@')[0] || 'User',
           avatar: googleData.picture,
           provider: 'google',
@@ -295,6 +310,9 @@ export class OAuthService {
         normalized = {
           id: githubData.id.toString(),
           email: githubData.email,
+          // GitHub mandates email verification — email present = verified
+          // Deeper verification via /user/emails is a Tier 2 improvement
+          emailVerified: !!githubData.email,
           nickname: githubData.name || githubData.login,
           avatar: githubData.avatar_url,
           provider: 'github',
@@ -322,7 +340,11 @@ export class OAuthService {
   /**
    * Generate secure state for OAuth flow
    */
-  private async generateState(provider: string, redirectUrl?: string): Promise<string> {
+  private async generateState(
+    provider: string,
+    tenantId: string,
+    redirectUrl?: string
+  ): Promise<string> {
     const nonce = crypto.randomBytes(32).toString('hex');
     const state = crypto.randomBytes(16).toString('hex');
 
@@ -330,6 +352,7 @@ export class OAuthService {
       provider,
       timestamp: Date.now(),
       nonce,
+      tenantId,
     };
 
     if (redirectUrl) {

@@ -15,24 +15,33 @@ export class User {
     private _updatedAt: Date,
     private _lastLogin: Date | null,
     private _loginCount: number,
-    private _linkedAccounts: LinkedAccount[] = []
-  ) {
-    // Remove unused _sessions parameter for now
-  }
+    private _linkedAccounts: LinkedAccount[] = [],
+    private readonly _tenantId: string = 'origins',
+    private _emailSource: string | null = null
+  ) {}
 
   // Factory Methods
-  static createWithEmail(id: string, email: Email, nickname: Nickname, password: Password): User {
+  static createWithEmail(
+    id: string,
+    email: Email,
+    nickname: Nickname,
+    password: Password,
+    tenantId: string
+  ): User {
     return new User(
       id,
       email,
       nickname,
       password.hash(),
-      false, // Email not verified initially
+      false,
       true,
       new Date(),
       new Date(),
       null,
-      0
+      0,
+      [],
+      tenantId,
+      'classic'
     );
   }
 
@@ -40,19 +49,26 @@ export class User {
     id: string,
     nickname: Nickname,
     linkedAccount: LinkedAccount,
-    email?: Email
+    tenantId: string,
+    email?: Email,
+    emailVerified?: boolean
   ): User {
+    const verified = email ? (emailVerified ?? false) : false;
+    const emailSource = email && verified ? `provider:${linkedAccount.getProvider()}` : null;
     const user = new User(
       id,
       email || null,
       nickname,
-      null, // No password for OAuth users
-      email ? true : false, // Email verified if provided by trusted provider
+      null,
+      verified,
       true,
       new Date(),
       new Date(),
       null,
-      0
+      0,
+      [],
+      tenantId,
+      emailSource
     );
     user._linkedAccounts.push(linkedAccount);
     return user;
@@ -70,7 +86,9 @@ export class User {
     updatedAt: Date,
     lastLogin: Date | null,
     loginCount: number,
-    linkedAccounts: LinkedAccount[] = []
+    linkedAccounts: LinkedAccount[] = [],
+    tenantId: string = 'origins',
+    emailSource: string | null = null
   ): User {
     return new User(
       id,
@@ -83,7 +101,9 @@ export class User {
       updatedAt,
       lastLogin,
       loginCount,
-      linkedAccounts
+      linkedAccounts,
+      tenantId,
+      emailSource
     );
   }
 
@@ -144,6 +164,14 @@ export class User {
     this._updatedAt = new Date();
   }
 
+  /** Update email when the original provider source sends a new verified email (staleness — ADR-008) */
+  updateEmailFromProvider(email: Email, source: string): void {
+    if (this._emailSource === source) {
+      this._email = email;
+      this._updatedAt = new Date();
+    }
+  }
+
   // Validation Methods
   canUnlinkProvider(provider: string): boolean {
     const isLastProvider = this._linkedAccounts.length === 1;
@@ -195,6 +223,14 @@ export class User {
   }
   get linkedProviders(): string[] {
     return this._linkedAccounts.map((acc) => acc.getProvider());
+  }
+
+  get tenantId(): string {
+    return this._tenantId;
+  }
+
+  get emailSource(): string | null {
+    return this._emailSource;
   }
 
   /**

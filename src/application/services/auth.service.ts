@@ -19,10 +19,11 @@ export class AuthService {
   /**
    * Generate JWT token pair for user
    */
-  async generateTokens(user: User): Promise<TokenPair> {
+  async generateTokens(user: User, tenantIdOverride?: string): Promise<TokenPair> {
     logger.info('🔑 Generating tokens for user', { userId: user.id });
 
-    const accessToken = tokenService.generateAccessToken(user.id);
+    const tenantId = tenantIdOverride ?? user.tenantId;
+    const accessToken = tokenService.generateAccessToken(user.id, tenantId);
     const refreshToken = tokenService.generateRefreshToken();
 
     logger.info('✅ Tokens generated successfully', { userId: user.id });

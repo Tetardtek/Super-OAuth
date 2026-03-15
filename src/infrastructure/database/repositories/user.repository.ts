@@ -26,33 +26,45 @@ export class UserRepository implements IUserRepository {
     return userEntity ? UserMapper.toDomain(userEntity) : null;
   }
 
-  async findByEmail(email: string): Promise<User | null> {
+  async findByEmail(email: string, tenantId: string): Promise<User | null> {
     const userEntity = await this.repository.findOne({
-      where: { email },
+      where: { email, tenantId },
       relations: ['linkedAccounts', 'sessions'],
     });
 
     return userEntity ? UserMapper.toDomain(userEntity) : null;
   }
 
-  async findByNickname(nickname: string): Promise<User | null> {
+  async findByNickname(nickname: string, tenantId: string): Promise<User | null> {
     const userEntity = await this.repository.findOne({
-      where: { nickname },
+      where: { nickname, tenantId },
       relations: ['linkedAccounts', 'sessions'],
     });
 
     return userEntity ? UserMapper.toDomain(userEntity) : null;
   }
 
-  async findByEmailOrNickname(emailOrNickname: string): Promise<User | null> {
-    // Try to determine if it's an email or nickname
+  async findByEmailOrNickname(emailOrNickname: string, tenantId: string): Promise<User | null> {
     const isEmail = emailOrNickname.includes('@');
 
     if (isEmail) {
-      return this.findByEmail(emailOrNickname);
+      return this.findByEmail(emailOrNickname, tenantId);
     } else {
-      return this.findByNickname(emailOrNickname);
+      return this.findByNickname(emailOrNickname, tenantId);
     }
+  }
+
+  async findByProvider(provider: string, providerId: string, tenantId: string): Promise<User | null> {
+    const userEntity = await this.repository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.linkedAccounts', 'linkedAccount')
+      .where('user.tenantId = :tenantId', { tenantId })
+      .andWhere('linkedAccount.tenantId = :tenantId', { tenantId })
+      .andWhere('linkedAccount.provider = :provider', { provider })
+      .andWhere('linkedAccount.providerId = :providerId', { providerId })
+      .getOne();
+
+    return userEntity ? UserMapper.toDomain(userEntity) : null;
   }
 
   async delete(id: string): Promise<void> {
@@ -64,13 +76,13 @@ export class UserRepository implements IUserRepository {
     return count > 0;
   }
 
-  async existsByEmail(email: string): Promise<boolean> {
-    const count = await this.repository.count({ where: { email } });
+  async existsByEmail(email: string, tenantId: string): Promise<boolean> {
+    const count = await this.repository.count({ where: { email, tenantId } });
     return count > 0;
   }
 
-  async existsByNickname(nickname: string): Promise<boolean> {
-    const count = await this.repository.count({ where: { nickname } });
+  async existsByNickname(nickname: string, tenantId: string): Promise<boolean> {
+    const count = await this.repository.count({ where: { nickname, tenantId } });
     return count > 0;
   }
 }

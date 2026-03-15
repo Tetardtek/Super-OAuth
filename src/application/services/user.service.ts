@@ -27,34 +27,36 @@ export class UserService {
   }
 
   /**
-   * Find user by email
+   * Find user by email (scoped by tenant)
    */
-  async findByEmail(email: string): Promise<User | null> {
-    return await userRepository.findByEmail(email);
+  async findByEmail(email: string, tenantId: string): Promise<User | null> {
+    return await userRepository.findByEmail(email, tenantId);
   }
 
   /**
-   * Find user by OAuth provider
+   * Find user by OAuth provider (scoped by tenant)
    */
-  async findByOAuthProvider(provider: string, providerId: string): Promise<User | null> {
-    return await userRepository.findByOAuthProvider(provider, providerId);
+  async findByOAuthProvider(provider: string, providerId: string, tenantId: string): Promise<User | null> {
+    return await userRepository.findByOAuthProvider(provider, providerId, tenantId);
   }
 
   /**
    * Create user from OAuth information
    */
-  async createFromOAuth(oauthUserInfo: OAuthUserInfo): Promise<User> {
+  async createFromOAuth(oauthUserInfo: OAuthUserInfo, tenantId: string): Promise<User> {
     logger.info('👤 Creating new user from OAuth', {
       provider: oauthUserInfo.provider,
       email: oauthUserInfo.email,
       nickname: oauthUserInfo.nickname,
+      tenantId,
     });
 
     const userData = {
+      tenantId,
       email: oauthUserInfo.email,
       nickname: oauthUserInfo.nickname,
       avatar: oauthUserInfo.avatar,
-      isVerified: !!oauthUserInfo.email, // Email verified by OAuth provider
+      emailVerified: oauthUserInfo.emailVerified,
       authProvider: oauthUserInfo.provider,
       linkedAccounts: [
         {
@@ -86,15 +88,18 @@ export class UserService {
   async linkOAuthAccount(
     userId: string,
     provider: string,
-    oauthUserInfo: OAuthUserInfo
+    oauthUserInfo: OAuthUserInfo,
+    tenantId: string
   ): Promise<void> {
     logger.info('🔗 Linking OAuth account to user', {
       userId,
       provider,
       providerId: oauthUserInfo.id,
+      tenantId,
     });
 
     const oauthData = {
+      tenantId,
       provider,
       providerId: oauthUserInfo.id,
       email: oauthUserInfo.email,

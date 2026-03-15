@@ -54,6 +54,7 @@ export class ValidateTokenUseCase {
     return {
       user: {
         id: user.id,
+        tenantId: user.tenantId,
         email: user.email?.toString() ?? null,
         nickname: user.nickname.toString(),
         isActive: user.isActive,

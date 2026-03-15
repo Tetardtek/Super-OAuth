@@ -5,7 +5,9 @@ const REDIRECT_URI_WHITELIST: Record<string, string[]> = {
   google: process.env.REDIRECT_URIS_GOOGLE?.split(',') || [],
   github: process.env.REDIRECT_URIS_GITHUB?.split(',') || [],
 };
+import crypto from 'crypto';
 import { IOAuthService } from '../../application/interfaces/repositories.interface';
+import { RedisStateStorage } from '../redis/redis-state-storage';
 import axios from 'axios';
 
 interface OAuthProvider {
@@ -28,8 +30,11 @@ interface OAuthTokenResponse {
   error_description?: string | undefined;
 }
 
+const STATE_TTL_SECONDS = 600; // 10 minutes
+
 export class OAuthService implements IOAuthService {
   private providers: Record<string, OAuthProvider>;
+  private stateStorage = new RedisStateStorage();
 
   constructor() {
     this.providers = {
@@ -76,45 +81,62 @@ export class OAuthService implements IOAuthService {
     };
   }
 
-  getAuthUrl(provider: string, state: string, redirectUri?: string): string {
+  async generateAuthUrl(
+    provider: string,
+    tenantId: string,
+    redirectUri?: string
+  ): Promise<{ authUrl: string; state: string }> {
     const config = this.providers[provider];
     if (!config) {
       throw new Error(`Unsupported OAuth provider: ${provider}`);
     }
+
     let effectiveRedirectUri = config.redirectUri;
     if (redirectUri) {
-      // Sécurité : n'accepte que les URLs whitelisted
       if (!REDIRECT_URI_WHITELIST[provider]?.includes(redirectUri)) {
         throw new Error('redirect_uri non autorisé');
       }
       effectiveRedirectUri = redirectUri;
     }
+
+    const state = crypto.randomBytes(16).toString('hex');
+    const nonce = crypto.randomBytes(32).toString('hex');
+
+    await this.stateStorage.save(
+      state,
+      { provider, tenantId, timestamp: Date.now(), nonce },
+      STATE_TTL_SECONDS
+    );
+
     const params = new URLSearchParams({
       client_id: config.clientId,
       redirect_uri: effectiveRedirectUri,
       scope: config.scope,
-      state: state,
+      state,
       response_type: 'code',
     });
-    // Provider-specific parameters
+
     if (provider === 'google') {
       params.append('access_type', 'offline');
       params.append('prompt', 'consent');
     }
-    return `${config.authUrl}?${params.toString()}`;
+
+    return { authUrl: `${config.authUrl}?${params.toString()}`, state };
   }
 
   async exchangeCodeForTokens(
     provider: string,
     code: string,
-    _state: string,
+    state: string,
     redirectUri?: string
   ): Promise<{
     accessToken: string;
     refreshToken?: string;
+    tenantId: string;
     userInfo: {
       id: string;
       email?: string;
+      emailVerified: boolean;
       nickname: string;
     };
   }> {
@@ -122,6 +144,10 @@ export class OAuthService implements IOAuthService {
     if (!config) {
       throw new Error(`Unsupported OAuth provider: ${provider}`);
     }
+
+    // Retrieve tenantId from Redis state (use-once)
+    const stateData = await this.stateStorage.get(state);
+    const tenantId = stateData?.tenantId ?? 'origins';
 
     // Exchange code for tokens
     const tokenResponse = await this.exchangeCode(config, code, redirectUri);
@@ -132,9 +158,11 @@ export class OAuthService implements IOAuthService {
     return {
       accessToken: tokenResponse.access_token,
       ...(tokenResponse.refresh_token && { refreshToken: tokenResponse.refresh_token }),
+      tenantId,
       userInfo: {
         id: userInfo.id,
         ...(userInfo.email && { email: userInfo.email }),
+        emailVerified: userInfo.emailVerified,
         nickname: userInfo.nickname,
       },
     };
@@ -174,25 +202,25 @@ export class OAuthService implements IOAuthService {
   ): Promise<{
     id: string;
     email?: string;
+    emailVerified: boolean;
     nickname: string;
   }> {
     const headers: Record<string, string> = {
       Authorization: `Bearer ${accessToken}`,
     };
 
-    // Twitch requires Client-ID header
     if (provider === 'twitch') {
       headers['Client-ID'] = config.clientId;
     }
 
     const response = await axios.get(config.userInfoUrl, { headers });
 
-    // Parse response based on provider
     switch (provider) {
       case 'discord':
         return {
           id: response.data.id,
           email: response.data.email,
+          emailVerified: response.data.verified ?? false,
           nickname: response.data.username,
         };
 
@@ -201,6 +229,7 @@ export class OAuthService implements IOAuthService {
         return {
           id: twitchUser.id,
           email: twitchUser.email,
+          emailVerified: !!twitchUser.email,
           nickname: twitchUser.display_name || twitchUser.login,
         };
       }
@@ -209,6 +238,7 @@ export class OAuthService implements IOAuthService {
         return {
           id: response.data.id,
           email: response.data.email,
+          emailVerified: response.data.verified_email ?? false,
           nickname: response.data.name || response.data.given_name,
         };
 
@@ -216,6 +246,7 @@ export class OAuthService implements IOAuthService {
         return {
           id: String(response.data.id),
           email: response.data.email,
+          emailVerified: !!response.data.email,
           nickname: response.data.login,
         };
 

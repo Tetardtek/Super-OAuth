@@ -7,6 +7,7 @@ export class LinkedAccountMapper {
     return LinkedAccount.createFromData({
       id: new LinkedAccountId(entity.id),
       userId: new UserId(entity.userId),
+      tenantId: entity.tenantId,
       provider: entity.provider as OAuthProvider,
       providerId: entity.providerId,
       displayName: entity.displayName,
@@ -28,6 +29,7 @@ export class LinkedAccountMapper {
     }
 
     entity.userId = linkedAccount.getUserId().getValue();
+    entity.tenantId = linkedAccount.getTenantId();
     entity.provider = linkedAccount.getProvider();
     entity.providerId = linkedAccount.getProviderId();
     entity.displayName = linkedAccount.getDisplayName();

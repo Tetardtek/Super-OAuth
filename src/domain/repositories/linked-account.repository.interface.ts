@@ -5,7 +5,7 @@ export interface ILinkedAccountRepository {
   findById(id: string): Promise<LinkedAccount | null>;
   findByUserId(userId: string): Promise<LinkedAccount[]>;
   findByProvider(provider: string): Promise<LinkedAccount[]>;
-  findByProviderAndProviderId(provider: string, providerId: string): Promise<LinkedAccount | null>;
+  findByProviderAndProviderId(provider: string, providerId: string, tenantId: string): Promise<LinkedAccount | null>;
   findByUserIdAndProvider(userId: string, provider: string): Promise<LinkedAccount | null>;
   delete(id: string): Promise<void>;
   deleteByUserId(userId: string): Promise<void>;

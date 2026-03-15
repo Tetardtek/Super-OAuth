@@ -43,10 +43,12 @@ export class LinkedAccountRepository implements ILinkedAccountRepository {
 
   async findByProviderAccount(
     provider: OAuthProvider,
-    providerId: string
+    providerId: string,
+    tenantId: string
   ): Promise<LinkedAccount | null> {
     const entity = await this.repository.findOne({
       where: {
+        tenantId,
         provider,
         providerId,
       },
@@ -86,9 +88,14 @@ export class LinkedAccountRepository implements ILinkedAccountRepository {
     return count > 0;
   }
 
-  async existsByProviderAccount(provider: OAuthProvider, providerId: string): Promise<boolean> {
+  async existsByProviderAccount(
+    provider: OAuthProvider,
+    providerId: string,
+    tenantId: string
+  ): Promise<boolean> {
     const count = await this.repository.count({
       where: {
+        tenantId,
         provider,
         providerId,
       },

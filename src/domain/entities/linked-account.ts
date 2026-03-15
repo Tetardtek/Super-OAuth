@@ -2,11 +2,12 @@ import { LinkedAccountId } from '../value-objects/linked-account-id';
 import { UserId } from '../value-objects';
 import { ValidationError } from '../errors/domain-error';
 
-export type OAuthProvider = 'discord' | 'google' | 'github';
+export type OAuthProvider = 'discord' | 'google' | 'github' | 'twitch';
 
 export interface LinkedAccountData {
   id?: LinkedAccountId;
   userId: UserId;
+  tenantId: string;
   provider: OAuthProvider;
   providerId: string;
   displayName: string;
@@ -20,6 +21,7 @@ export interface LinkedAccountData {
 export class LinkedAccount {
   private id: LinkedAccountId | undefined;
   private readonly userId: UserId;
+  private readonly tenantId: string;
   private readonly provider: OAuthProvider;
   private readonly providerId: string;
   private displayName: string;
@@ -34,6 +36,7 @@ export class LinkedAccount {
 
     this.id = data.id;
     this.userId = data.userId;
+    this.tenantId = data.tenantId;
     this.provider = data.provider;
     this.providerId = data.providerId;
     this.displayName = data.displayName;
@@ -49,11 +52,15 @@ export class LinkedAccount {
       throw new ValidationError('LinkedAccount must have a user ID');
     }
 
+    if (!data.tenantId || data.tenantId.trim().length === 0) {
+      throw new ValidationError('LinkedAccount must have a tenant ID');
+    }
+
     if (!data.provider) {
       throw new ValidationError('LinkedAccount must have a provider');
     }
 
-    if (!['discord', 'google', 'github'].includes(data.provider)) {
+    if (!['discord', 'google', 'github', 'twitch'].includes(data.provider)) {
       throw new ValidationError('Invalid OAuth provider');
     }
 
@@ -97,6 +104,10 @@ export class LinkedAccount {
 
   getUserId(): UserId {
     return this.userId;
+  }
+
+  getTenantId(): string {
+    return this.tenantId;
   }
 
   getProvider(): OAuthProvider {
@@ -181,6 +192,7 @@ export class LinkedAccount {
     return {
       id: this.id?.getValue(),
       userId: this.userId.getValue(),
+      tenantId: this.tenantId,
       provider: this.provider,
       providerId: this.providerId,
       displayName: this.displayName,

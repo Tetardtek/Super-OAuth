@@ -35,6 +35,7 @@ export class AuthController {
         email,
         password,
         nickname,
+        tenantId: (req.query.tenantId as string | undefined) || 'origins',
       });
 
       logger.info('User registered successfully', {
@@ -111,6 +112,7 @@ export class AuthController {
       const result = await loginUseCase.execute({
         email,
         password,
+        tenantId: (req.query.tenantId as string | undefined) || 'origins',
       });
 
       logger.info('User logged in successfully', {
@@ -298,6 +300,7 @@ export class AuthController {
       const startOAuthUseCase = this.container.getStartOAuthUseCase();
       const result = await startOAuthUseCase.execute({
         provider: provider as 'discord' | 'twitch' | 'google' | 'github',
+        tenantId: (req.query.tenantId as string | undefined) || 'origins',
         redirectUri,
       });
 

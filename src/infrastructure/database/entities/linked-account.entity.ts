@@ -11,12 +11,15 @@ import {
 import type { UserEntity } from './user.entity';
 
 @Entity('linked_accounts')
+@Index('idx_linked_accounts_tenant_provider_id', ['tenantId', 'provider', 'providerId'], { unique: true })
 @Index('idx_linked_accounts_user_provider', ['userId', 'provider'], { unique: true })
-@Index('idx_linked_accounts_provider_id', ['provider', 'providerId'], { unique: true })
 @Index('idx_linked_accounts_user_id', ['userId'])
 export class LinkedAccountEntity {
   @PrimaryColumn('uuid')
   id!: string;
+
+  @Column({ type: 'varchar', length: 50, name: 'tenant_id', default: 'origins' })
+  tenantId!: string;
 
   @Column({ type: 'uuid', name: 'user_id' })
   userId!: string;

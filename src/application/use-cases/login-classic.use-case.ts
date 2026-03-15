@@ -59,9 +59,8 @@ export class LoginClassicUseCase {
     // This ensures the email format is valid before querying the database
     Email.create(dto.email);
 
-    // 2. Find user by email
-    // Return generic error to prevent email enumeration attacks
-    const user = await this.userRepository.findByEmail(dto.email);
+    // 2. Find user by email — scoped by tenant (ADR-008)
+    const user = await this.userRepository.findByEmail(dto.email, dto.tenantId);
     if (!user) {
       throw new Error('Invalid credentials');
     }
@@ -94,7 +93,7 @@ export class LoginClassicUseCase {
     // 7. Generate JWT tokens
     // Access token: short-lived (15 min), used for API authentication
     // Refresh token: long-lived (7 days), used to obtain new access tokens
-    const accessToken = this.tokenService.generateAccessToken(user.id);
+    const accessToken = this.tokenService.generateAccessToken(user.id, user.tenantId);
     const refreshToken = this.tokenService.generateRefreshToken();
 
     // 8. Store refresh token in session database
@@ -126,6 +125,7 @@ export class LoginClassicUseCase {
   private mapUserToDto(user: User): UserDto {
     return {
       id: user.id,
+      tenantId: user.tenantId,
       email: user.email?.toString() || null,
       nickname: user.nickname.toString(),
       emailVerified: user.emailVerified,

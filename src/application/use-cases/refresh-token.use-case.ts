@@ -63,7 +63,7 @@ export class RefreshTokenUseCase {
     }
 
     // 6. Generate new tokens
-    const accessToken = this.tokenService.generateAccessToken(user.id);
+    const accessToken = this.tokenService.generateAccessToken(user.id, user.tenantId);
     const newRefreshToken = this.tokenService.generateRefreshToken();
 
     // 7. Update session with new refresh token
@@ -90,6 +90,7 @@ export class RefreshTokenUseCase {
   private mapUserToDto(user: User): UserDto {
     return {
       id: user.id,
+      tenantId: user.tenantId,
       email: user.email?.toString() || null,
       nickname: user.nickname.toString(),
       emailVerified: user.emailVerified,

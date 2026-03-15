@@ -23,38 +23,44 @@ export class CompleteOAuthUseCase {
   ) {}
 
   async execute(dto: CompleteOAuthDto): Promise<AuthResponseDto> {
-    // 1. Exchange code for tokens and user info
+    // 1. Exchange code — tenantId recovered from Redis state
     const oauthResult = await this.oauthService.exchangeCodeForTokens(
       dto.provider,
       dto.code,
       dto.state
     );
 
-    // 2. Check if user already exists with this provider
-    let user = await this.userRepository.findByProvider(dto.provider, oauthResult.userInfo.id);
+    const { tenantId, userInfo } = oauthResult;
+    const providerSource = `provider:${dto.provider}`;
+
+    // 2. Check if user already exists with this provider (scoped by tenant)
+    let user = await this.userRepository.findByProvider(dto.provider, userInfo.id, tenantId);
 
     if (user) {
-      // Existing user - just login
       if (!user.isActive) {
         throw new Error('Account is deactivated');
       }
 
-      // Record login
+      // Staleness update — ADR-008 decision 3
+      if (userInfo.emailVerified && userInfo.email) {
+        user.updateEmailFromProvider(Email.create(userInfo.email), providerSource);
+      }
+
       user.recordLogin();
       await this.userRepository.save(user);
     } else {
-      // Check if user exists with same email
-      if (oauthResult.userInfo.email) {
-        const existingEmailUser = await this.userRepository.findByEmail(oauthResult.userInfo.email);
+      // Check if user exists with same email — only auto-link if email is verified
+      if (userInfo.email && userInfo.emailVerified) {
+        const existingEmailUser = await this.userRepository.findByEmail(userInfo.email, tenantId);
 
         if (existingEmailUser) {
-          // Link this provider to existing user
           const linkedAccount = LinkedAccount.create({
             userId: new UserId(existingEmailUser.id),
+            tenantId,
             provider: dto.provider as OAuthProvider,
-            providerId: oauthResult.userInfo.id,
-            displayName: oauthResult.userInfo.nickname,
-            email: oauthResult.userInfo.email || '',
+            providerId: userInfo.id,
+            displayName: userInfo.nickname,
+            email: userInfo.email,
             avatarUrl: undefined,
             metadata: {
               accessToken: oauthResult.accessToken,
@@ -69,19 +75,18 @@ export class CompleteOAuthUseCase {
       }
 
       if (!user) {
-        // Create new user
+        // Create new user — emailVerified from provider gates emailSource
         const userId = UserId.generate();
-        const nickname = Nickname.create(oauthResult.userInfo.nickname);
-        const email = oauthResult.userInfo.email
-          ? Email.create(oauthResult.userInfo.email)
-          : undefined;
+        const nickname = Nickname.create(userInfo.nickname);
+        const email = userInfo.email ? Email.create(userInfo.email) : undefined;
 
         const linkedAccount = LinkedAccount.create({
-          userId: userId,
+          userId,
+          tenantId,
           provider: dto.provider as OAuthProvider,
-          providerId: oauthResult.userInfo.id,
-          displayName: oauthResult.userInfo.nickname,
-          email: oauthResult.userInfo.email || '',
+          providerId: userInfo.id,
+          displayName: userInfo.nickname,
+          email: userInfo.email || '',
           avatarUrl: undefined,
           metadata: {
             accessToken: oauthResult.accessToken,
@@ -89,15 +94,22 @@ export class CompleteOAuthUseCase {
           },
         });
 
-        user = User.createWithProvider(userId.toString(), nickname, linkedAccount, email);
+        user = User.createWithProvider(
+          userId.toString(),
+          nickname,
+          linkedAccount,
+          tenantId,
+          email,
+          userInfo.emailVerified
+        );
 
         user.recordLogin();
         await this.userRepository.save(user);
       }
     }
 
-    // 3. Generate tokens
-    const accessToken = this.tokenService.generateAccessToken(user.id);
+    // 3. Generate tokens (tenantId embedded in JWT)
+    const accessToken = this.tokenService.generateAccessToken(user.id, user.tenantId);
     const refreshToken = this.tokenService.generateRefreshToken();
 
     // 4. Store refresh token in session
@@ -105,7 +117,6 @@ export class CompleteOAuthUseCase {
     const expiresAt = new Date(Date.now() + tokenExpiration.refreshToken);
     await this.sessionRepository.create(user.id, refreshToken, expiresAt);
 
-    // 5. Return authentication response
     return {
       accessToken,
       refreshToken,
@@ -116,6 +127,7 @@ export class CompleteOAuthUseCase {
   private mapUserToDto(user: User): UserDto {
     return {
       id: user.id,
+      tenantId: user.tenantId,
       email: user.email?.toString() || null,
       nickname: user.nickname.toString(),
       emailVerified: user.emailVerified,

@@ -2,8 +2,8 @@ import { User } from '../../domain/entities';
 
 export interface IUserRepository {
   findById(id: string): Promise<User | null>;
-  findByEmail(email: string): Promise<User | null>;
-  findByProvider(provider: string, providerId: string): Promise<User | null>;
+  findByEmail(email: string, tenantId: string): Promise<User | null>;
+  findByProvider(provider: string, providerId: string, tenantId: string): Promise<User | null>;
   save(user: User): Promise<User>;
   delete(id: string): Promise<void>;
   exists(id: string): Promise<boolean>;
@@ -23,10 +23,10 @@ export interface ISessionRepository {
 }
 
 export interface ITokenService {
-  generateAccessToken(userId: string): string;
+  generateAccessToken(userId: string, tenantId: string): string;
   generateRefreshToken(): string;
-  verifyAccessToken(token: string): { userId: string; jti: string } | null;
-  decodeAccessToken(token: string): { userId: string; jti: string; exp: number } | null;
+  verifyAccessToken(token: string): { userId: string; jti: string; tenantId: string } | null;
+  decodeAccessToken(token: string): { userId: string; jti: string; exp: number; tenantId: string } | null;
   getTokenExpiration(): { accessToken: number; refreshToken: number };
 }
 
@@ -41,7 +41,11 @@ export interface IPasswordService {
 }
 
 export interface IOAuthService {
-  getAuthUrl(provider: string, state: string): string;
+  generateAuthUrl(
+    provider: string,
+    tenantId: string,
+    redirectUri?: string
+  ): Promise<{ authUrl: string; state: string }>;
   exchangeCodeForTokens(
     provider: string,
     code: string,
@@ -49,9 +53,11 @@ export interface IOAuthService {
   ): Promise<{
     accessToken: string;
     refreshToken?: string;
+    tenantId: string;
     userInfo: {
       id: string;
       email?: string;
+      emailVerified: boolean;
       nickname: string;
     };
   }>;

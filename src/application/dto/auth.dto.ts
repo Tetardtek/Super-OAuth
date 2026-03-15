@@ -4,11 +4,13 @@ export interface RegisterClassicDto {
   email: string;
   password: string;
   nickname: string;
+  tenantId: string;
 }
 
 export interface LoginClassicDto {
   email: string;
   password: string;
+  tenantId: string;
 }
 
 export interface RefreshTokenDto {
@@ -26,6 +28,7 @@ export interface AuthResponseDto {
 
 export interface UserDto {
   id: string;
+  tenantId: string;
   email: string | null;
   nickname: string;
   emailVerified: boolean;
@@ -58,6 +61,7 @@ export interface ValidateTokenDto {
 export interface TokenValidationResponseDto {
   user: {
     id: string;
+    tenantId: string;
     email: string | null;
     nickname: string;
     isActive: boolean;

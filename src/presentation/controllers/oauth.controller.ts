@@ -1,7 +1,12 @@
 /**
- * OAuth Controller - Handles OAuth authentication flows
+ * OAuth Controller — Tier 1 Multi-tenant
  * Supports Discord, Twitch, Google, and GitHub
- * @version 1.0.0
+ *
+ * Security gates applied (ADR-008):
+ *   [SG1] tenantId whitelist validated server-side (not trusting client input)
+ *   [SG2] emailVerified defaults to false — never to true (safe default)
+ *   [SG3] emailSource NULL → conservative (no overwrite of classic email)
+ *   [SG4] tenantId read from Redis state in callback — not re-provided by client
  */
 
 import { Request, Response } from 'express';
@@ -12,7 +17,9 @@ import { logger } from '../../shared/utils/logger.util';
 import { ApiResponse } from '../../shared/utils/response.util';
 import { OAuthError, OAuthErrorType } from '../../infrastructure/oauth/oauth-config';
 
-// Extended Request interfaces
+// [SG1] Hardcoded whitelist for Tier 1 — Tier 2 will move this to DB-backed config
+const VALID_TENANTS = new Set(['origins']);
+
 interface ExtendedRequest extends Request {
   user?: { id: string; email?: string } | undefined;
   session?: { oauthState?: string } & Record<string, unknown> | undefined;
@@ -22,8 +29,12 @@ interface OAuthParams {
   provider: string;
 }
 
-interface OAuthQuery {
+interface OAuthStartQuery {
   redirectUrl?: string;
+  tenantId?: string;
+}
+
+interface OAuthCallbackQuery {
   code?: string;
   state?: string;
   error?: string;
@@ -32,29 +43,30 @@ interface OAuthQuery {
 export class OAuthController {
   /**
    * Start OAuth authentication flow
-   * GET /auth/oauth/:provider
+   * GET /api/v1/oauth/:provider?tenantId=origins&redirectUrl=...
    */
   async startOAuth(req: ExtendedRequest, res: Response): Promise<void> {
     const { provider } = req.params as unknown as OAuthParams;
-    const { redirectUrl } = req.query as unknown as OAuthQuery;
+    const { redirectUrl, tenantId: rawTenantId } = req.query as unknown as OAuthStartQuery;
+
+    // [SG1] Validate tenantId against whitelist — reject unknown tenants early
+    const tenantId = rawTenantId || 'origins';
+    if (!VALID_TENANTS.has(tenantId)) {
+      res.status(400).json(ApiResponse.error('Unknown tenant', 'INVALID_TENANT'));
+      return;
+    }
 
     try {
-      logger.info(`🚀 Starting OAuth flow for ${provider}`, { provider, redirectUrl });
+      logger.info(`🚀 Starting OAuth flow for ${provider}`, { provider, tenantId, redirectUrl });
 
-      // Generate OAuth URL and state
-      const { authUrl, state } = await oauthService.generateAuthUrl(
-        provider,
-        redirectUrl
-      );
+      // tenantId stored in Redis state — not relied on at callback via client [SG4]
+      const { authUrl, state } = await oauthService.generateAuthUrl(provider, redirectUrl, tenantId);
 
-      // Store state in session for additional security
       if (req.session) {
         req.session.oauthState = state;
       }
 
-      logger.info(`✅ OAuth URL generated for ${provider}`, { provider });
-
-      // Redirect to OAuth provider
+      logger.info(`✅ OAuth URL generated for ${provider}`, { provider, tenantId });
       res.redirect(authUrl);
     } catch (error) {
       logger.error(
@@ -69,9 +81,7 @@ export class OAuthController {
             res.status(400).json(ApiResponse.error('Provider not supported', 'INVALID_PROVIDER'));
             return;
           default:
-            res
-              .status(500)
-              .json(ApiResponse.error('OAuth initialization failed', 'OAUTH_INIT_FAILED'));
+            res.status(500).json(ApiResponse.error('OAuth initialization failed', 'OAUTH_INIT_FAILED'));
             return;
         }
       }
@@ -82,11 +92,11 @@ export class OAuthController {
 
   /**
    * Handle OAuth callback
-   * GET /auth/oauth/:provider/callback
+   * GET /api/v1/oauth/:provider/callback?code=xxx&state=yyy
    */
   async handleOAuthCallback(req: ExtendedRequest, res: Response): Promise<void> {
     const { provider } = req.params as unknown as OAuthParams;
-    const { code, state, error: oauthError } = req.query as unknown as OAuthQuery;
+    const { code, state, error: oauthError } = req.query as unknown as OAuthCallbackQuery;
 
     try {
       logger.info(`🔄 Processing OAuth callback for ${provider}`, {
@@ -95,94 +105,91 @@ export class OAuthController {
         hasState: !!state,
       });
 
-      // Check for OAuth errors
       if (oauthError) {
         logger.warn(`⚠️ OAuth error from ${provider}`, { provider, error: oauthError });
-        res.redirect(
-          `${process.env.FRONTEND_URL}/auth/error?error=access_denied&provider=${provider}`
-        );
+        res.redirect(`${process.env.FRONTEND_URL}/auth/error?error=access_denied&provider=${provider}`);
         return;
       }
 
-      // Validate required parameters
       if (!code || !state) {
-        logger.warn(`⚠️ Missing OAuth parameters for ${provider}`, {
-          provider,
-          hasCode: !!code,
-          hasState: !!state,
-        });
-        res.redirect(
-          `${process.env.FRONTEND_URL}/auth/error?error=invalid_request&provider=${provider}`
-        );
+        res.redirect(`${process.env.FRONTEND_URL}/auth/error?error=invalid_request&provider=${provider}`);
         return;
       }
 
-      // Validate state matches session
       if (req.session?.oauthState !== state) {
-        logger.warn(`⚠️ OAuth state mismatch for ${provider}`, {
-          provider,
-          sessionState: req.session?.oauthState,
-          receivedState: state,
-        });
-        res.redirect(
-          `${process.env.FRONTEND_URL}/auth/error?error=state_mismatch&provider=${provider}`
-        );
+        logger.warn(`⚠️ OAuth state mismatch for ${provider}`, { provider });
+        res.redirect(`${process.env.FRONTEND_URL}/auth/error?error=state_mismatch&provider=${provider}`);
         return;
       }
 
-      // Process OAuth callback (code and state are validated above)
-      const oauthUserInfo = await oauthService.handleCallback(
-        provider,
-        code,
-        state
-      );
+      // [SG4] tenantId is read from Redis state — NOT from the callback query params
+      // This prevents tenantId forgery at the callback stage
+      const { userInfo: oauthUserInfo, tenantId } = await oauthService.handleCallback(provider, code, state);
 
       logger.info(`👤 OAuth user info received for ${provider}`, {
         provider,
         userId: oauthUserInfo.id,
-        email: oauthUserInfo.email,
+        emailVerified: oauthUserInfo.emailVerified,
+        tenantId,
       });
 
-      // Check if user exists with this OAuth provider
-      let user = await userService.findByOAuthProvider(provider, oauthUserInfo.id);
+      // Check if user already exists with this provider + tenant
+      let user = await userService.findByOAuthProvider(provider, oauthUserInfo.id, tenantId);
 
       if (user) {
-        // Existing user - sign them in
-        logger.info(`🔄 Existing user login via ${provider}`, { userId: user.id, provider });
-
-        // Update OAuth info if needed
+        // Existing linked account — login
+        logger.info(`🔄 Existing user login via ${provider}`, { userId: user.id, provider, tenantId });
         await userService.updateOAuthInfo(user.id, provider, oauthUserInfo);
       } else {
-        // Check if user exists with this email
+        // Check if a user with the same email exists in this tenant
         if (oauthUserInfo.email) {
-          user = await userService.findByEmail(oauthUserInfo.email);
+          const existingEmailUser = await userService.findByEmail(oauthUserInfo.email, tenantId);
 
-          if (user) {
-            // Link OAuth account to existing user
-            logger.info(`🔗 Linking ${provider} account to existing user`, {
-              userId: user.id,
-              provider,
-              email: oauthUserInfo.email,
-            });
-            await userService.linkOAuthAccount(user.id, provider, oauthUserInfo);
+          if (existingEmailUser) {
+            // [SG2] Only auto-link if provider returned verified email
+            if (!oauthUserInfo.emailVerified) {
+              logger.warn(`⚠️ Email exists but unverified — not auto-linking`, {
+                provider,
+                tenantId,
+              });
+              // ADR-008: EMAIL_UNVERIFIED_EXISTS — do not link, create new account without email
+              user = await userService.createFromOAuth(
+                { ...oauthUserInfo, email: undefined, emailVerified: false },
+                tenantId
+              );
+            } else if (!existingEmailUser.emailVerified) {
+              // Existing user has unverified email — return EMAIL_UNVERIFIED_EXISTS
+              logger.warn(`⚠️ Existing user email unverified — not auto-linking`, {
+                provider,
+                tenantId,
+              });
+              res.redirect(
+                `${process.env.FRONTEND_URL}/auth/error?error=EMAIL_UNVERIFIED_EXISTS&provider=${provider}`
+              );
+              return;
+            } else {
+              // Both sides verified — link this provider to existing user
+              logger.info(`🔗 Linking ${provider} to existing verified user`, {
+                userId: existingEmailUser.id,
+                provider,
+                tenantId,
+              });
+              await userService.linkOAuthAccount(existingEmailUser.id, provider, oauthUserInfo, tenantId);
+              user = existingEmailUser;
+            }
           }
         }
 
         if (!user) {
-          // Create new user
-          logger.info(`👤 Creating new user via ${provider}`, {
-            provider,
-            email: oauthUserInfo.email,
-          });
-
-          user = await userService.createFromOAuth(oauthUserInfo);
+          // No existing user — create new
+          logger.info(`👤 Creating new user via ${provider}`, { provider, tenantId });
+          user = await userService.createFromOAuth(oauthUserInfo, tenantId);
         }
       }
 
-      // Generate JWT tokens
-      const tokens = await authService.generateTokens(user);
+      // Generate tokens — tenantId included in JWT payload
+      const tokens = await authService.generateTokens(user, tenantId);
 
-      // Clear OAuth state from session
       if (req.session?.oauthState) {
         delete req.session.oauthState;
       }
@@ -190,12 +197,10 @@ export class OAuthController {
       logger.info(`✅ OAuth authentication successful for ${provider}`, {
         userId: user.id,
         provider,
-        isNewUser: !user.lastLogin,
+        tenantId,
       });
 
-      // Redirect to frontend with tokens
-      const redirectUrl =
-        req.session?.oauthRedirectUrl || `${process.env.FRONTEND_URL}/auth/success`;
+      const redirectUrl = req.session?.oauthRedirectUrl || `${process.env.FRONTEND_URL}/auth/success`;
       if (req.session?.oauthRedirectUrl) {
         delete req.session.oauthRedirectUrl;
       }
@@ -211,7 +216,6 @@ export class OAuthController {
 
       if (error instanceof OAuthError) {
         let errorCode = 'oauth_failed';
-
         switch (error.type) {
           case OAuthErrorType.INVALID_STATE:
             errorCode = 'invalid_state';
@@ -226,22 +230,17 @@ export class OAuthController {
             errorCode = 'account_link_failed';
             break;
         }
-
-        res.redirect(
-          `${process.env.FRONTEND_URL}/auth/error?error=${errorCode}&provider=${provider}`
-        );
+        res.redirect(`${process.env.FRONTEND_URL}/auth/error?error=${errorCode}&provider=${provider}`);
         return;
       }
 
-      res.redirect(
-        `${process.env.FRONTEND_URL}/auth/error?error=internal_error&provider=${provider}`
-      );
+      res.redirect(`${process.env.FRONTEND_URL}/auth/error?error=internal_error&provider=${provider}`);
     }
   }
 
   /**
    * Unlink OAuth provider from user account
-   * DELETE /auth/oauth/:provider/unlink
+   * DELETE /api/v1/oauth/:provider/unlink
    */
   async unlinkOAuthProvider(req: ExtendedRequest, res: Response): Promise<void> {
     const { provider } = req.params;
@@ -253,9 +252,6 @@ export class OAuthController {
     }
 
     try {
-      logger.info(`🔗 Unlinking ${provider} from user`, { userId, provider });
-
-      // Check if user can unlink this provider (must have password or other OAuth)
       const user = await userService.findById(userId);
       if (!user) {
         res.status(404).json(ApiResponse.error('User not found', 'USER_NOT_FOUND'));
@@ -264,124 +260,67 @@ export class OAuthController {
 
       const canUnlink = await userService.canUnlinkOAuthProvider(userId, provider);
       if (!canUnlink) {
-        res
-          .status(400)
-          .json(
-            ApiResponse.error(
-              'Cannot unlink last authentication method. Please set a password first.',
-              'CANNOT_UNLINK_LAST_AUTH'
-            )
-          );
+        res.status(400).json(
+          ApiResponse.error(
+            'Cannot unlink last authentication method. Please set a password first.',
+            'CANNOT_UNLINK_LAST_AUTH'
+          )
+        );
         return;
       }
 
       await userService.unlinkOAuthProvider(userId, provider);
 
-      logger.info(`✅ Successfully unlinked ${provider} from user`, { userId, provider });
-
-      res.json(
-        ApiResponse.success({
-          message: `Successfully unlinked ${provider} account`,
-          provider,
-        })
-      );
+      res.json(ApiResponse.success({ message: `Successfully unlinked ${provider} account`, provider }));
     } catch (error) {
       logger.error(
         `❌ Failed to unlink ${provider} from user`,
         error instanceof Error ? error : undefined,
-        { userId, provider }
+        { userId }
       );
       res.status(500).json(ApiResponse.error('Failed to unlink OAuth provider', 'UNLINK_FAILED'));
     }
   }
 
-  /**
-   * Get OAuth provider info
-   * GET /auth/oauth/providers
-   */
   async getProviders(_req: Request, res: Response): Promise<void> {
     try {
       const providers = oauthService.getAllProvidersInfo();
-
-      res.json(
-        ApiResponse.success({
-          providers,
-          count: providers.length,
-        })
-      );
+      res.json(ApiResponse.success({ providers, count: providers.length }));
     } catch (error) {
       logger.error('❌ Failed to get OAuth providers', error instanceof Error ? error : undefined);
       res.status(500).json(ApiResponse.error('Failed to get providers', 'PROVIDERS_FAILED'));
     }
   }
 
-  /**
-   * Get specific OAuth provider info
-   * GET /auth/oauth/providers/:provider
-   */
   async getProviderInfo(req: Request, res: Response): Promise<void> {
     const { provider } = req.params;
-
     try {
       const providerInfo = oauthService.getProviderInfo(provider);
-
       if (!providerInfo) {
         res.status(404).json(ApiResponse.error('Provider not found', 'PROVIDER_NOT_FOUND'));
         return;
       }
-
-      res.json(
-        ApiResponse.success({
-          provider,
-          ...providerInfo,
-        })
-      );
+      res.json(ApiResponse.success({ provider, ...providerInfo }));
     } catch (error) {
-      logger.error(
-        `❌ Failed to get ${provider} info`,
-        error instanceof Error ? error : undefined,
-        { provider }
-      );
-      res
-        .status(500)
-        .json(ApiResponse.error('Failed to get provider info', 'PROVIDER_INFO_FAILED'));
+      logger.error(`❌ Failed to get ${provider} info`, error instanceof Error ? error : undefined, { provider });
+      res.status(500).json(ApiResponse.error('Failed to get provider info', 'PROVIDER_INFO_FAILED'));
     }
   }
 
-  /**
-   * Get user's linked OAuth accounts
-   * GET /auth/oauth/linked
-   */
   async getLinkedAccounts(req: ExtendedRequest, res: Response): Promise<void> {
     const userId = req.user?.id;
-
     if (!userId) {
       res.status(401).json(ApiResponse.error('Authentication required', 'UNAUTHORIZED'));
       return;
     }
-
     try {
       const linkedAccounts = await userService.getLinkedOAuthAccounts(userId);
-
-      res.json(
-        ApiResponse.success({
-          linkedAccounts,
-          count: linkedAccounts.length,
-        })
-      );
+      res.json(ApiResponse.success({ linkedAccounts, count: linkedAccounts.length }));
     } catch (error) {
-      logger.error(
-        '❌ Failed to get linked OAuth accounts',
-        error instanceof Error ? error : undefined,
-        { userId }
-      );
-      res
-        .status(500)
-        .json(ApiResponse.error('Failed to get linked accounts', 'LINKED_ACCOUNTS_FAILED'));
+      logger.error('❌ Failed to get linked OAuth accounts', error instanceof Error ? error : undefined, { userId });
+      res.status(500).json(ApiResponse.error('Failed to get linked accounts', 'LINKED_ACCOUNTS_FAILED'));
     }
   }
 }
 
 export const oauthController = new OAuthController();
-
-// OAuth Controller is ready for use

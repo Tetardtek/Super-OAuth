@@ -4,6 +4,7 @@ import { ITokenService } from '../../application/interfaces/repositories.interfa
 
 interface AccessTokenPayload extends JwtPayload {
   userId: string;
+  tenantId: string;
   type: 'access';
   jti: string; // Identifiant unique — nécessaire pour la blacklist de révocation
 }
@@ -36,9 +37,10 @@ export class TokenService implements ITokenService {
     }
   }
 
-  generateAccessToken(userId: string): string {
+  generateAccessToken(userId: string, tenantId: string = 'origins'): string {
     const payload = {
       userId,
+      tenantId,
       type: 'access',
       jti: crypto.randomUUID(), // UUID v4 — unique par token, utilisé pour la blacklist
       iat: Math.floor(Date.now() / 1000),
@@ -71,7 +73,7 @@ export class TokenService implements ITokenService {
     return jwt.sign(payload, this.refreshTokenSecret, options);
   }
 
-  verifyAccessToken(token: string): { userId: string; jti: string } | null {
+  verifyAccessToken(token: string): { userId: string; jti: string; tenantId: string } | null {
     try {
       const decoded = jwt.verify(token, this.accessTokenSecret, {
         issuer: 'superoauth',
@@ -82,7 +84,7 @@ export class TokenService implements ITokenService {
         return null;
       }
 
-      return { userId: decoded.userId, jti: decoded.jti };
+      return { userId: decoded.userId, jti: decoded.jti, tenantId: decoded.tenantId };
     } catch (error) {
       return null;
     }
@@ -93,7 +95,7 @@ export class TokenService implements ITokenService {
    * Utilisé au logout pour extraire le jti et exp sans risque d'erreur
    * sur un token déjà expiré mais encore présent dans la requête.
    */
-  decodeAccessToken(token: string): { userId: string; jti: string; exp: number } | null {
+  decodeAccessToken(token: string): { userId: string; jti: string; exp: number; tenantId: string } | null {
     try {
       const decoded = jwt.decode(token) as AccessTokenPayload | null;
 
@@ -101,7 +103,7 @@ export class TokenService implements ITokenService {
         return null;
       }
 
-      return { userId: decoded.userId, jti: decoded.jti, exp: decoded.exp };
+      return { userId: decoded.userId, jti: decoded.jti, exp: decoded.exp, tenantId: decoded.tenantId };
     } catch {
       return null;
     }

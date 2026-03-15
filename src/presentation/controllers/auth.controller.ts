@@ -71,10 +71,13 @@ export class AuthController {
         userAgent: req.get('User-Agent'),
       });
 
+      const tenantId = (req.query.tenantId as string | undefined) || 'origins';
+
       const result = await this.registerUseCase.execute({
         email,
         password,
         nickname,
+        tenantId,
       });
 
       logger.info('User registered successfully', {
@@ -150,9 +153,12 @@ export class AuthController {
         userAgent: req.get('User-Agent'),
       });
 
+      const tenantId = (req.query.tenantId as string | undefined) || 'origins';
+
       const result = await this.loginUseCase.execute({
         email,
         password,
+        tenantId,
       });
 
       logger.info('User logged in successfully', {
@@ -346,8 +352,11 @@ export class AuthController {
         userAgent: req.get('User-Agent'),
       });
 
+      const tenantId = (req.query.tenantId as string | undefined) || 'origins';
+
       const result = await this.startOAuthUseCase.execute({
         provider: provider as 'discord' | 'twitch' | 'google' | 'github',
+        tenantId,
         redirectUri,
       });
 

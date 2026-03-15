@@ -47,22 +47,22 @@ export class RegisterClassicUseCase {
    */
   async execute(dto: RegisterClassicDto): Promise<AuthResponseDto> {
     // 1. Validate input using Value Objects
-    // Value Objects ensure data integrity and validation at domain level
     const email = Email.create(dto.email);
     const password = Password.create(dto.password);
     const nickname = Nickname.create(dto.nickname);
 
-    // 2. Check if user already exists (business rule)
-    // This prevents duplicate accounts with the same email
-    const existingUser = await this.userRepository.findByEmail(dto.email);
+    // 2. Check if user already exists — scoped by tenant (ADR-008)
+    const existingUser = await this.userRepository.findByEmail(dto.email, dto.tenantId);
     if (existingUser) {
+      if (!existingUser.emailVerified) {
+        throw new Error('EMAIL_UNVERIFIED_EXISTS');
+      }
       throw new Error('User with this email already exists');
     }
 
-    // 3. Create new user entity
-    // The User entity encapsulates all business logic related to users
+    // 3. Create new user entity scoped to tenant
     const userId = UserId.generate();
-    const user = User.createWithEmail(userId.toString(), email, nickname, password);
+    const user = User.createWithEmail(userId.toString(), email, nickname, password, dto.tenantId);
 
     // 4. Save user to repository (persistence layer)
     // Repository abstracts database operations
@@ -71,7 +71,7 @@ export class RegisterClassicUseCase {
     // 5. Generate JWT tokens for authentication
     // Access token: short-lived (15 min) for API requests
     // Refresh token: long-lived (7 days) for renewing access tokens
-    const accessToken = this.tokenService.generateAccessToken(savedUser.id);
+    const accessToken = this.tokenService.generateAccessToken(savedUser.id, savedUser.tenantId);
     const refreshToken = this.tokenService.generateRefreshToken();
 
     // 6. Return authentication response
@@ -95,6 +95,7 @@ export class RegisterClassicUseCase {
   private mapUserToDto(user: User): UserDto {
     return {
       id: user.id,
+      tenantId: user.tenantId,
       email: user.email?.toString() || null,
       nickname: user.nickname.toString(),
       emailVerified: user.emailVerified,

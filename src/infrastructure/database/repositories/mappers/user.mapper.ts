@@ -21,7 +21,9 @@ export class UserMapper {
       entity.updatedAt,
       entity.lastLogin ?? null,
       entity.loginCount,
-      linkedAccounts
+      linkedAccounts,
+      entity.tenantId,
+      entity.emailSource ?? null
     );
 
     return user;
@@ -31,7 +33,9 @@ export class UserMapper {
     const entity = new UserEntity();
 
     entity.id = user.id;
+    entity.tenantId = user.tenantId;
     entity.email = user.email?.toString() || null;
+    entity.emailSource = user.emailSource;
     entity.nickname = user.nickname.toString();
     entity.passwordHash = user.getPasswordHash();
     entity.emailVerified = user.emailVerified;
