@@ -16,7 +16,7 @@ SuperOAuth/
 
 ### Racine du Projet
 
-**Pour la structure complète du dossier CLAUDE**, voir [../README.md](../README.md).
+**Pour la structure complète du dossier CLAUDE**, voir les fichiers dans `CLAUDE/guides/`.
 
 ```
 SuperOAuth/
@@ -28,7 +28,7 @@ SuperOAuth/
 ├── vitest.config.js         # Configuration Vitest (tests frontend)
 │
 ├── 📚 CLAUDE/               # Documentation pour agents IA
-└── ...                      # (voir ../README.md)
+└── ...                      # (voir guides/ pour la documentation)
 ```
 
 ### 📁 src/ - Code Source Principal
@@ -436,11 +436,11 @@ Avant de créer un nouveau fichier, vérifier:
 
 | Fichier | Description |
 |---------|-------------|
-| `README.md` | Documentation principale |
-| `ARCHITECTURE.md` | Architecture détaillée |
-| `CONTRIBUTING.md` | Guide de contribution |
-| `AI_AGENT_GUIDE.md` | Guide pour agents IA |
-| `PROJECT_STRUCTURE.md` | Structure du projet (ce fichier) |
+| `CLAUDE/guides/ARCHITECTURE.md` | Architecture DDD détaillée |
+| `CLAUDE/guides/DEVELOPMENT.md` | Standards et patterns TypeScript |
+| `CLAUDE/guides/AI_AGENT_GUIDE.md` | Exemples step-by-step pour agents IA |
+| `CLAUDE/guides/TESTING.md` | Guide Vitest + Jest |
+| `CLAUDE/guides/PROJECT_STRUCTURE.md` | Structure du projet (ce fichier) |
 
 ## 🔗 Dépendances entre Modules
 
@@ -461,7 +461,6 @@ Application (dépend de Domain)
 ---
 
 **Pour naviguer efficacement dans le projet:**
-1. Commencer par `README.md` pour une vue d'ensemble
-2. Consulter `ARCHITECTURE.md` pour comprendre la structure
-3. Utiliser ce fichier pour localiser rapidement les fichiers
-4. Lire `AI_AGENT_GUIDE.md` pour les patterns de développement
+1. Consulter `CLAUDE/guides/ARCHITECTURE.md` pour comprendre la structure DDD
+2. Utiliser ce fichier pour localiser rapidement les fichiers
+3. Lire `CLAUDE/guides/AI_AGENT_GUIDE.md` pour les patterns de développement

@@ -228,11 +228,14 @@ src/
 - [ ] Mots de passe TOUJOURS hachés (bcrypt)
 - [ ] Validation stricte des entrées (Joi)
 - [ ] Pas de données sensibles dans les logs
-- [ ] Tokens JWT avec expiration courte
-- [ ] Rate limiting sur les endpoints sensibles
+- [ ] Tokens JWT avec expiration courte (access: 15min, refresh: 7j)
+- [ ] Blacklist JWT sur Redis (logout + invalidation)
+- [ ] Rate limiting Redis sur les endpoints sensibles
 - [ ] CORS configuré correctement
 - [ ] Helmet pour les headers HTTP
+- [ ] CSP nonce sur les réponses HTML
 - [ ] Protection CSRF avec state token (OAuth)
+- [ ] Device fingerprinting sur les sessions
 - [ ] Sanitisation des données utilisateur
 - [ ] Pas de secrets dans le code (utiliser .env)
 
@@ -361,7 +364,6 @@ Avant toute modification, consulter:
 3. `guides/AI_AGENT_GUIDE.md` - Workflows et exemples pour agents IA
 4. `guides/PROJECT_STRUCTURE.md` - Structure détaillée des fichiers
 5. `guides/TESTING.md` - Guide complet des tests
-6. `README.md` - Vue d'ensemble de la documentation
 
 ## 🤖 Instructions pour Agents IA
 
@@ -398,7 +400,7 @@ Avant toute modification, consulter:
 
 ## 🎯 Objectifs de Qualité
 
-- **Tests:** 290 tests (249 frontend + 41 backend) avec 100% de réussite
+- **Tests:** voir `npm run test:all` pour les métriques à jour
 - **Complexité cyclomatique:** < 10 par fonction
 - **Duplication de code:** < 3%
 - **Taille des fichiers:** < 300 lignes
@@ -412,4 +414,4 @@ Avant toute modification, consulter:
 - La maintenabilité sur l'optimisation prématurée
 - Les tests sur le code de production
 
-*Dernière mise à jour : 19 Novembre 2024*
+*Dernière mise à jour : Mars 2026*

@@ -584,4 +584,4 @@ npm run db:reset            # Réinitialiser la DB
 - La sécurité sur la performance
 - La maintenabilité sur l'optimisation prématurée
 
-*Dernière mise à jour : 19 Novembre 2024*
+*Dernière mise à jour : Mars 2026*

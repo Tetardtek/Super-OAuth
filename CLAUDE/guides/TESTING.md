@@ -2,21 +2,16 @@
 
 ## Vue d'Ensemble
 
-SuperOAuth dispose d'une suite complète de **372 tests** (123 backend + 249 frontend) avec un taux de réussite de **100%**. Ce guide explique **comment écrire de nouveaux tests** selon les bonnes pratiques du projet.
+Ce guide explique **comment écrire de nouveaux tests** selon les bonnes pratiques du projet.
 
 > **⚠️ Ce guide explique COMMENT écrire des tests.**
-> **Pour les métriques à jour, consultez [.github/TESTS_STATUS.md](../../.github/TESTS_STATUS.md) et [tests/README.md](../../tests/README.md)**
+> **Pour les métriques à jour :** `npm run test:all` ou consulter [tests/README.md](../../tests/README.md)
 
-## 📊 Statistiques Globales
+## 📊 Configuration
 
-- **Total de tests** : 372 (123 backend + 249 frontend)
-- **Tests backend** : 123 tests (Jest) - Phase 1 complétée ✅
-- **Tests frontend** : 249 tests (Vitest)
-- **Taux de réussite** : 100% ✅
-- **Coverage backend** : ~45% (objectif: 82%)
-- **Coverage frontend** : ~60%
-- **Durée d'exécution** : ~15s (backend), ~5s (frontend)
-- **Frameworks** : Jest + ts-jest (backend), Vitest + jsdom (frontend)
+- **Backend** : Jest + ts-jest
+- **Frontend** : Vitest + jsdom
+- **Durée** : ~15s (backend), ~5s (frontend)
 
 ## 🗂️ Structure des Tests
 
@@ -568,4 +563,4 @@ export default defineConfig({
 
 ---
 
-**Maintenu par l'équipe SuperOAuth** | Dernière mise à jour : 19 Novembre 2024
+*Dernière mise à jour : Mars 2026*

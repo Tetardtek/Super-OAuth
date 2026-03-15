@@ -201,6 +201,11 @@ User (1) ──────< (N) Session
    - State parameter pour CSRF protection
    - Tokens chiffrés en base de données
 
+3. **Sessions & Tokens**
+   - Access token (15 min) + Refresh token (7 jours)
+   - Blacklist JWT sur Redis (invalidation logout)
+   - Device fingerprinting pour cohérence session
+
 ### Tokens JWT
 
 ```typescript
@@ -224,10 +229,12 @@ User (1) ──────< (N) Session
 ### Middlewares de Sécurité
 
 1. **Helmet**: Headers HTTP sécurisés
-2. **CORS**: Configuration stricte des origines
-3. **Rate Limiting**: Protection DDoS
-4. **Request Validation**: Joi schemas
-5. **Error Handling**: Pas de leak d'informations sensibles
+2. **CSP nonce**: Content Security Policy dynamique
+3. **CORS**: Configuration stricte des origines
+4. **Rate Limiting Redis**: Protection DDoS avec compteurs persistants
+5. **Request Validation**: Joi schemas
+6. **Error Handling**: Pas de leak d'informations sensibles
+7. **Device Fingerprinting**: Validation cohérence session/device
 
 ## 🔌 Intégrations OAuth
 
@@ -334,9 +341,14 @@ Format de log:
 ### Variables d'Environnement
 
 **Obligatoires:**
-- `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE`
-- `JWT_SECRET`, `JWT_REFRESH_SECRET`
+- `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USERNAME`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`
+- `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`
 - `NODE_ENV` (development, production, test)
+- `REDIS_URL` (blacklist JWT + rate limiting)
+
+**Prod (VPS) :**
+- Port : 3006 — pm2 cluster mode (2 instances)
+- DB : `mysql-prod` container → `auth_hybrid_dbts`
 
 **OAuth Providers (optionnels):**
 - `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`
@@ -350,8 +362,14 @@ Format de log:
 # Build TypeScript
 npm run build
 
-# Start production
+# Start production (local)
 npm start
+
+# Production VPS — pm2 cluster
+pm2 reload ecosystem.config.js --update-env
+
+# Migrations en production
+NODE_ENV=production node --env-file=.env ./node_modules/.bin/typeorm migration:run -d dist/data-source.js
 
 # Development avec hot-reload
 npm run dev

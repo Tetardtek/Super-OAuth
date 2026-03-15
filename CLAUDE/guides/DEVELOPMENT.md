@@ -2,7 +2,7 @@
 
 ## Vue d'Ensemble
 
-Ce guide centralise tous les standards de code, patterns de développement et bonnes pratiques pour contribuer à SuperOAuth. Pour un démarrage rapide, consultez [QUICK_START.md](../QUICK_START.md).
+Ce guide centralise tous les standards de code, patterns de développement et bonnes pratiques pour contribuer à SuperOAuth.
 
 ## 📋 Table des Matières
 
@@ -577,4 +577,4 @@ Pour toute question:
 
 **Merci de contribuer à SuperOAuth !**
 
-*Dernière mise à jour : 19 Novembre 2024*
+*Dernière mise à jour : Mars 2026*
