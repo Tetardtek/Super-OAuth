@@ -4,3 +4,4 @@ export * from './csp-nonce.middleware';
 export * from './error.middleware';
 export * from './rate-limit.middleware';
 export * from './validation.middleware';
+export * from './authenticate-tenant.middleware';

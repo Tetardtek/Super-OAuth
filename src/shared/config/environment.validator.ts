@@ -75,6 +75,12 @@ const ENVIRONMENT_VARIABLES: EnvironmentVariable[] = [
     defaultValue: '7d',
     description: 'JWT refresh token expiration time',
   },
+  {
+    name: 'TENANT_ENCRYPTION_KEY',
+    required: true,
+    validator: (value) => value.length === 64 && /^[0-9a-fA-F]{64}$/.test(value),
+    description: 'Master AES-256-GCM key for tenant secrets (64 hex chars = 32 bytes). Generate: openssl rand -hex 32',
+  },
 ];
 
 export class EnvironmentValidator {
