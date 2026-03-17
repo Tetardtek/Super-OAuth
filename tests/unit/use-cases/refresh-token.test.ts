@@ -3,6 +3,8 @@ import {
   IUserRepository,
   ITokenService,
   ISessionRepository,
+  ITenantTokenService,
+  IAuditLogService,
 } from '../../../src/application/interfaces/repositories.interface';
 import { User } from '../../../src/domain/entities';
 import { Email } from '../../../src/domain/value-objects/email.vo';
@@ -24,6 +26,8 @@ describe('RefreshTokenUseCase', () => {
   let mockUserRepository: jest.Mocked<IUserRepository>;
   let mockTokenService: jest.Mocked<ITokenService>;
   let mockSessionRepository: jest.Mocked<ISessionRepository>;
+  let mockTenantTokenService: jest.Mocked<ITenantTokenService>;
+  let mockAuditLogService: jest.Mocked<IAuditLogService>;
   let mockUser: User;
   let validSession: { userId: string; expiresAt: Date };
 
@@ -63,6 +67,15 @@ describe('RefreshTokenUseCase', () => {
     const password = Password.create('Test123!@#');
     mockUser = User.createWithEmail('user-id-123', email, nickname, password, 'test-tenant');
 
+    mockTenantTokenService = {
+      generateAccessToken: jest.fn().mockResolvedValue('new-access-token'),
+      verifyAccessToken: jest.fn(),
+    };
+
+    mockAuditLogService = {
+      log: jest.fn().mockResolvedValue(undefined),
+    };
+
     // Create valid session
     validSession = {
       userId: 'user-id-123',
@@ -72,7 +85,9 @@ describe('RefreshTokenUseCase', () => {
     useCase = new RefreshTokenUseCase(
       mockUserRepository,
       mockTokenService,
-      mockSessionRepository
+      mockSessionRepository,
+      mockTenantTokenService,
+      mockAuditLogService
     );
   });
 
@@ -85,7 +100,7 @@ describe('RefreshTokenUseCase', () => {
 
       mockSessionRepository.findByRefreshToken.mockResolvedValue(validSession);
       mockUserRepository.findById.mockResolvedValue(mockUser);
-      mockTokenService.generateAccessToken.mockReturnValue('new-access-token');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('new-access-token');
       mockTokenService.generateRefreshToken.mockReturnValue('new-refresh-token');
       mockSessionRepository.deleteByRefreshToken.mockResolvedValue(undefined);
       mockSessionRepository.create.mockResolvedValue(undefined);
@@ -96,7 +111,7 @@ describe('RefreshTokenUseCase', () => {
       // Assert
       expect(mockSessionRepository.findByRefreshToken).toHaveBeenCalledWith('valid-refresh-token');
       expect(mockUserRepository.findById).toHaveBeenCalledWith('user-id-123');
-      expect(mockTokenService.generateAccessToken).toHaveBeenCalledWith('user-id-123', 'test-tenant');
+      expect(mockTenantTokenService.generateAccessToken).toHaveBeenCalledWith('user-id-123', 'test-tenant');
       expect(mockTokenService.generateRefreshToken).toHaveBeenCalled();
       expect(result.accessToken).toBe('new-access-token');
       expect(result.refreshToken).toBe('new-refresh-token');
@@ -112,7 +127,7 @@ describe('RefreshTokenUseCase', () => {
 
       mockSessionRepository.findByRefreshToken.mockResolvedValue(validSession);
       mockUserRepository.findById.mockResolvedValue(mockUser);
-      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('access-token');
       mockTokenService.generateRefreshToken.mockReturnValue('new-refresh-token');
 
       // Act
@@ -144,7 +159,7 @@ describe('RefreshTokenUseCase', () => {
 
       mockSessionRepository.findByRefreshToken.mockResolvedValue(validSession);
       mockUserRepository.findById.mockResolvedValue(mockUser);
-      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('access-token');
       mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
 
       // Act
@@ -216,7 +231,7 @@ describe('RefreshTokenUseCase', () => {
       // Act & Assert
       await expect(useCase.execute(dto)).rejects.toThrow('User not found');
       expect(mockSessionRepository.deleteByRefreshToken).toHaveBeenCalledWith('orphaned-token');
-      expect(mockTokenService.generateAccessToken).not.toHaveBeenCalled();
+      expect(mockTenantTokenService.generateAccessToken).not.toHaveBeenCalled();
     });
 
     it('should throw error and cleanup all sessions if user inactive', async () => {
@@ -235,7 +250,7 @@ describe('RefreshTokenUseCase', () => {
       // Act & Assert
       await expect(useCase.execute(dto)).rejects.toThrow('Account is deactivated');
       expect(mockSessionRepository.deleteByUserId).toHaveBeenCalledWith('user-id-123');
-      expect(mockTokenService.generateAccessToken).not.toHaveBeenCalled();
+      expect(mockTenantTokenService.generateAccessToken).not.toHaveBeenCalled();
     });
   });
 
@@ -262,7 +277,7 @@ describe('RefreshTokenUseCase', () => {
 
       mockSessionRepository.findByRefreshToken.mockResolvedValue(validSession);
       mockUserRepository.findById.mockResolvedValue(userWithNullEmail);
-      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('access-token');
       mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
 
       // Act
@@ -369,7 +384,7 @@ describe('RefreshTokenUseCase', () => {
 
     beforeEach(() => {
       mockUserRepository.findById.mockResolvedValue(mockUser);
-      mockTokenService.generateAccessToken.mockReturnValue('new-access-token');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('new-access-token');
       mockTokenService.generateRefreshToken.mockReturnValue('new-refresh-token');
       mockSessionRepository.deleteByRefreshToken.mockResolvedValue(undefined);
       mockSessionRepository.create.mockResolvedValue(undefined);

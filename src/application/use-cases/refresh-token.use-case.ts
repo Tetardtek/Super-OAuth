@@ -2,6 +2,8 @@ import {
   IUserRepository,
   ITokenService,
   ISessionRepository,
+  ITenantTokenService,
+  IAuditLogService,
 } from '../interfaces/repositories.interface';
 import { RefreshTokenDto, AuthResponseDto, UserDto } from '../dto/auth.dto';
 import { User } from '../../domain/entities';
@@ -11,7 +13,9 @@ export class RefreshTokenUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly tokenService: ITokenService,
-    private readonly sessionRepository: ISessionRepository
+    private readonly sessionRepository: ISessionRepository,
+    private readonly tenantTokenService: ITenantTokenService,
+    private readonly auditLog: IAuditLogService
   ) {}
 
   async execute(dto: RefreshTokenDto): Promise<AuthResponseDto> {
@@ -62,8 +66,8 @@ export class RefreshTokenUseCase {
       throw new Error('Account is deactivated');
     }
 
-    // 6. Generate new tokens
-    const accessToken = this.tokenService.generateAccessToken(user.id, user.tenantId);
+    // 6. Generate new tokens — access token signed with tenant secret (Tier 3)
+    const accessToken = await this.tenantTokenService.generateAccessToken(user.id, user.tenantId);
     const newRefreshToken = this.tokenService.generateRefreshToken();
 
     // 7. Update session with new refresh token
@@ -78,6 +82,9 @@ export class RefreshTokenUseCase {
     await this.sessionRepository.create(user.id, newRefreshToken, expiresAt, {
       ...(fingerprint && { deviceFingerprint: fingerprint }),
     });
+
+    // 7b. Audit log — fire-and-forget
+    this.auditLog.log({ tenantId: user.tenantId, userId: user.id, event: 'token_refresh' }).catch(() => {});
 
     // 8. Return new authentication response
     return {

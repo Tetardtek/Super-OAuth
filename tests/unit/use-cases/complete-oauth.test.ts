@@ -4,6 +4,8 @@ import {
   ITokenService,
   ISessionRepository,
   IOAuthService,
+  ITenantTokenService,
+  IAuditLogService,
 } from '../../../src/application/interfaces/repositories.interface';
 import { User } from '../../../src/domain/entities';
 import { Email } from '../../../src/domain/value-objects/email.vo';
@@ -16,6 +18,8 @@ describe('CompleteOAuthUseCase', () => {
   let mockTokenService: jest.Mocked<ITokenService>;
   let mockSessionRepository: jest.Mocked<ISessionRepository>;
   let mockOAuthService: jest.Mocked<IOAuthService>;
+  let mockTenantTokenService: jest.Mocked<ITenantTokenService>;
+  let mockAuditLogService: jest.Mocked<IAuditLogService>;
   let mockOAuthResult: {
     accessToken: string;
     refreshToken?: string;
@@ -58,6 +62,15 @@ describe('CompleteOAuthUseCase', () => {
       exchangeCodeForTokens: jest.fn(),
     };
 
+    mockTenantTokenService = {
+      generateAccessToken: jest.fn().mockResolvedValue('jwt-access-token'),
+      verifyAccessToken: jest.fn(),
+    };
+
+    mockAuditLogService = {
+      log: jest.fn().mockResolvedValue(undefined),
+    };
+
     // Mock OAuth result
     mockOAuthResult = {
       accessToken: 'oauth-access-token',
@@ -75,7 +88,9 @@ describe('CompleteOAuthUseCase', () => {
       mockUserRepository,
       mockTokenService,
       mockSessionRepository,
-      mockOAuthService
+      mockOAuthService,
+      mockTenantTokenService,
+      mockAuditLogService
     );
   });
 
@@ -105,7 +120,7 @@ describe('CompleteOAuthUseCase', () => {
       mockOAuthService.exchangeCodeForTokens.mockResolvedValue(mockOAuthResult);
       mockUserRepository.findByProvider.mockResolvedValue(existingUser);
       mockUserRepository.save.mockResolvedValue(existingUser);
-      mockTokenService.generateAccessToken.mockReturnValue('jwt-access-token');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('jwt-access-token');
       mockTokenService.generateRefreshToken.mockReturnValue('jwt-refresh-token');
 
       // Act
@@ -146,7 +161,7 @@ describe('CompleteOAuthUseCase', () => {
       mockOAuthService.exchangeCodeForTokens.mockResolvedValue(mockOAuthResult);
       mockUserRepository.findByProvider.mockResolvedValue(existingUser);
       mockUserRepository.save.mockResolvedValue(existingUser);
-      mockTokenService.generateAccessToken.mockReturnValue('access');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('access');
       mockTokenService.generateRefreshToken.mockReturnValue('refresh');
 
       // Act
@@ -172,7 +187,7 @@ describe('CompleteOAuthUseCase', () => {
       mockUserRepository.findByProvider.mockResolvedValue(null); // User doesn't exist
       mockUserRepository.findByEmail.mockResolvedValue(null); // Email not taken
       mockUserRepository.save.mockImplementation((user) => Promise.resolve(user));
-      mockTokenService.generateAccessToken.mockReturnValue('new-access-token');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('new-access-token');
       mockTokenService.generateRefreshToken.mockReturnValue('new-refresh-token');
 
       // Act
@@ -209,7 +224,7 @@ describe('CompleteOAuthUseCase', () => {
       mockUserRepository.findByProvider.mockResolvedValue(null);
       mockUserRepository.findByEmail.mockResolvedValue(null);
       mockUserRepository.save.mockImplementation((user) => Promise.resolve(user));
-      mockTokenService.generateAccessToken.mockReturnValue('access');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('access');
       mockTokenService.generateRefreshToken.mockReturnValue('refresh');
 
       // Act
@@ -243,7 +258,7 @@ describe('CompleteOAuthUseCase', () => {
       mockUserRepository.findByProvider.mockResolvedValue(null); // No OAuth user
       mockUserRepository.findByEmail.mockResolvedValue(existingUser); // But email exists
       mockUserRepository.save.mockResolvedValue(existingUser);
-      mockTokenService.generateAccessToken.mockReturnValue('access');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('access');
       mockTokenService.generateRefreshToken.mockReturnValue('refresh');
 
       // Act
@@ -335,7 +350,7 @@ describe('CompleteOAuthUseCase', () => {
       mockUserRepository.findByProvider.mockResolvedValue(null);
       mockUserRepository.findByEmail.mockResolvedValue(null);
       mockUserRepository.save.mockImplementation((user) => Promise.resolve(user));
-      mockTokenService.generateAccessToken.mockReturnValue('access');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('access');
       mockTokenService.generateRefreshToken.mockReturnValue('refresh');
 
       // Act
@@ -377,7 +392,7 @@ describe('CompleteOAuthUseCase', () => {
       mockUserRepository.findByProvider.mockResolvedValue(null);
       mockUserRepository.findByEmail.mockResolvedValue(null);
       mockUserRepository.save.mockImplementation((user) => Promise.resolve(user));
-      mockTokenService.generateAccessToken.mockReturnValue('access');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('access');
       mockTokenService.generateRefreshToken.mockReturnValue('refresh');
 
       // Act
@@ -416,7 +431,7 @@ describe('CompleteOAuthUseCase', () => {
       mockUserRepository.findByProvider.mockResolvedValue(null); // GitHub not linked yet
       mockUserRepository.findByEmail.mockResolvedValue(existingUser);
       mockUserRepository.save.mockResolvedValue(existingUser);
-      mockTokenService.generateAccessToken.mockReturnValue('access');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('access');
       mockTokenService.generateRefreshToken.mockReturnValue('refresh');
 
       // Act

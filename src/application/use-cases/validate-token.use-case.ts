@@ -2,6 +2,7 @@ import {
   IUserRepository,
   ITokenService,
   ITokenBlacklist,
+  ITenantTokenService,
 } from '../interfaces/repositories.interface';
 import { ValidateTokenDto, TokenValidationResponseDto } from '../dto/auth.dto';
 
@@ -29,12 +30,19 @@ export class ValidateTokenUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly tokenService: ITokenService,
-    private readonly tokenBlacklist: ITokenBlacklist
+    private readonly tokenBlacklist: ITokenBlacklist,
+    private readonly tenantTokenService: ITenantTokenService
   ) {}
 
   async execute(dto: ValidateTokenDto): Promise<TokenValidationResponseDto> {
-    // 1. Verify JWT signature and expiry
-    const decoded = this.tokenService.verifyAccessToken(dto.token);
+    // 1. Decode without verification to extract tenantId (no signature check yet)
+    const unverified = this.tokenService.decodeAccessToken(dto.token);
+    if (!unverified) {
+      throw new Error('INVALID_TOKEN');
+    }
+
+    // 1b. Verify JWT signature with the tenant's secret
+    const decoded = await this.tenantTokenService.verifyAccessToken(dto.token, unverified.tenantId);
     if (!decoded) {
       throw new Error('INVALID_TOKEN');
     }

@@ -7,7 +7,7 @@
  */
 
 import { OAuthUserInfo } from '../../infrastructure/oauth/oauth-config';
-import { IUserRepository } from '../interfaces/repositories.interface';
+import { IUserRepository, IAuditLogService } from '../interfaces/repositories.interface';
 import { logger } from '../../shared/utils/logger.util';
 
 export interface LinkProviderInput {
@@ -24,7 +24,10 @@ export interface LinkProviderOutput {
 }
 
 export class LinkProviderUseCase {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly auditLog: IAuditLogService
+  ) {}
 
   async execute(input: LinkProviderInput): Promise<LinkProviderOutput> {
     const { linkingUserId, tenantId, provider, oauthUserInfo } = input;
@@ -74,6 +77,9 @@ export class LinkProviderUseCase {
       userId: linkingUserId,
       provider,
     });
+
+    // Audit log — fire-and-forget
+    this.auditLog.log({ tenantId, userId: linkingUserId, event: 'link', metadata: { provider } }).catch(() => {});
 
     return { success: true, provider };
   }

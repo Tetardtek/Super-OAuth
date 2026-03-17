@@ -4,6 +4,8 @@ import {
   IUserRepository,
   ITokenService,
   ISessionRepository,
+  ITenantTokenService,
+  IAuditLogService,
 } from '../interfaces/repositories.interface';
 import { LoginClassicDto, AuthResponseDto, UserDto } from '../dto/auth.dto';
 
@@ -44,7 +46,9 @@ export class LoginClassicUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly tokenService: ITokenService,
-    private readonly sessionRepository: ISessionRepository
+    private readonly sessionRepository: ISessionRepository,
+    private readonly tenantTokenService: ITenantTokenService,
+    private readonly auditLog: IAuditLogService
   ) {}
 
   /**
@@ -91,9 +95,9 @@ export class LoginClassicUseCase {
     await this.userRepository.save(user);
 
     // 7. Generate JWT tokens
-    // Access token: short-lived (15 min), used for API authentication
-    // Refresh token: long-lived (7 days), used to obtain new access tokens
-    const accessToken = this.tokenService.generateAccessToken(user.id, user.tenantId);
+    // Access token: signed with tenant-specific secret (Tier 3)
+    // Refresh token: global (no tenant secret required)
+    const accessToken = await this.tenantTokenService.generateAccessToken(user.id, user.tenantId);
     const refreshToken = this.tokenService.generateRefreshToken();
 
     // 8. Store refresh token in session database
@@ -102,7 +106,10 @@ export class LoginClassicUseCase {
     const expiresAt = new Date(Date.now() + tokenExpiration.refreshToken);
     await this.sessionRepository.create(user.id, refreshToken, expiresAt);
 
-    // 9. Return authentication response
+    // 9. Audit log — fire-and-forget (never blocks the auth flow)
+    this.auditLog.log({ tenantId: user.tenantId, userId: user.id, event: 'login' }).catch(() => {});
+
+    // 10. Return authentication response
     // Map domain entity to DTO to avoid exposing internal structure
     return {
       accessToken,

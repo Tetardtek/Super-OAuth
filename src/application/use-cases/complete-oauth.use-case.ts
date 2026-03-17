@@ -5,6 +5,8 @@ import {
   ITokenService,
   ISessionRepository,
   IOAuthService,
+  ITenantTokenService,
+  IAuditLogService,
 } from '../interfaces/repositories.interface';
 import { AuthResponseDto, UserDto } from '../dto/auth.dto';
 
@@ -19,7 +21,9 @@ export class CompleteOAuthUseCase {
     private readonly userRepository: IUserRepository,
     private readonly tokenService: ITokenService,
     private readonly sessionRepository: ISessionRepository,
-    private readonly oauthService: IOAuthService
+    private readonly oauthService: IOAuthService,
+    private readonly tenantTokenService: ITenantTokenService,
+    private readonly auditLog: IAuditLogService
   ) {}
 
   async execute(dto: CompleteOAuthDto): Promise<AuthResponseDto> {
@@ -108,14 +112,17 @@ export class CompleteOAuthUseCase {
       }
     }
 
-    // 3. Generate tokens (tenantId embedded in JWT)
-    const accessToken = this.tokenService.generateAccessToken(user.id, user.tenantId);
+    // 3. Generate tokens — access token signed with tenant secret (Tier 3)
+    const accessToken = await this.tenantTokenService.generateAccessToken(user.id, user.tenantId);
     const refreshToken = this.tokenService.generateRefreshToken();
 
     // 4. Store refresh token in session
     const tokenExpiration = this.tokenService.getTokenExpiration();
     const expiresAt = new Date(Date.now() + tokenExpiration.refreshToken);
     await this.sessionRepository.create(user.id, refreshToken, expiresAt);
+
+    // 4b. Audit log — fire-and-forget
+    this.auditLog.log({ tenantId: user.tenantId, userId: user.id, event: 'login' }).catch(() => {});
 
     return {
       accessToken,

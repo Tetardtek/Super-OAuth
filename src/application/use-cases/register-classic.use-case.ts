@@ -1,6 +1,11 @@
 import { User } from '../../domain/entities';
 import { Email, Password, Nickname, UserId } from '../../domain/value-objects';
-import { IUserRepository, ITokenService } from '../interfaces/repositories.interface';
+import {
+  IUserRepository,
+  ITokenService,
+  ITenantTokenService,
+  IAuditLogService,
+} from '../interfaces/repositories.interface';
 import { RegisterClassicDto, AuthResponseDto, UserDto } from '../dto/auth.dto';
 
 /**
@@ -35,7 +40,9 @@ import { RegisterClassicDto, AuthResponseDto, UserDto } from '../dto/auth.dto';
 export class RegisterClassicUseCase {
   constructor(
     private readonly userRepository: IUserRepository,
-    private readonly tokenService: ITokenService
+    private readonly tokenService: ITokenService,
+    private readonly tenantTokenService: ITenantTokenService,
+    private readonly auditLog: IAuditLogService
   ) {}
 
   /**
@@ -69,10 +76,13 @@ export class RegisterClassicUseCase {
     const savedUser = await this.userRepository.save(user);
 
     // 5. Generate JWT tokens for authentication
-    // Access token: short-lived (15 min) for API requests
-    // Refresh token: long-lived (7 days) for renewing access tokens
-    const accessToken = this.tokenService.generateAccessToken(savedUser.id, savedUser.tenantId);
+    // Access token: signed with tenant-specific secret (Tier 3)
+    // Refresh token: global (no tenant secret required)
+    const accessToken = await this.tenantTokenService.generateAccessToken(savedUser.id, savedUser.tenantId);
     const refreshToken = this.tokenService.generateRefreshToken();
+
+    // 5b. Audit log — fire-and-forget
+    this.auditLog.log({ tenantId: savedUser.tenantId, userId: savedUser.id, event: 'register' }).catch(() => {});
 
     // 6. Return authentication response
     // Map domain entity to DTO for presentation layer

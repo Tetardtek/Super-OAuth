@@ -3,6 +3,8 @@ import {
   IUserRepository,
   ITokenService,
   ISessionRepository,
+  ITenantTokenService,
+  IAuditLogService,
 } from '../../../src/application/interfaces/repositories.interface';
 import { User } from '../../../src/domain/entities';
 import { Email } from '../../../src/domain/value-objects/email.vo';
@@ -14,6 +16,8 @@ describe('LoginClassicUseCase', () => {
   let mockUserRepository: jest.Mocked<IUserRepository>;
   let mockTokenService: jest.Mocked<ITokenService>;
   let mockSessionRepository: jest.Mocked<ISessionRepository>;
+  let mockTenantTokenService: jest.Mocked<ITenantTokenService>;
+  let mockAuditLogService: jest.Mocked<IAuditLogService>;
   let mockUser: User;
 
   beforeEach(() => {
@@ -46,6 +50,15 @@ describe('LoginClassicUseCase', () => {
       deleteExpired: jest.fn(),
     };
 
+    mockTenantTokenService = {
+      generateAccessToken: jest.fn().mockResolvedValue('mock-access-token'),
+      verifyAccessToken: jest.fn(),
+    };
+
+    mockAuditLogService = {
+      log: jest.fn().mockResolvedValue(undefined),
+    };
+
     // Create a mock user with all necessary methods
     const email = Email.create('test@example.com');
     const nickname = Nickname.create('testuser');
@@ -56,7 +69,9 @@ describe('LoginClassicUseCase', () => {
     useCase = new LoginClassicUseCase(
       mockUserRepository,
       mockTokenService,
-      mockSessionRepository
+      mockSessionRepository,
+      mockTenantTokenService,
+      mockAuditLogService
     );
   });
 
@@ -71,7 +86,7 @@ describe('LoginClassicUseCase', () => {
 
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
       mockUserRepository.save.mockResolvedValue(mockUser);
-      mockTokenService.generateAccessToken.mockReturnValue('mock-access-token');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('mock-access-token');
       mockTokenService.generateRefreshToken.mockReturnValue('mock-refresh-token');
       mockSessionRepository.create.mockResolvedValue(undefined);
 
@@ -81,7 +96,7 @@ describe('LoginClassicUseCase', () => {
       // Assert
       expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(dto.email, dto.tenantId);
       expect(mockUserRepository.save).toHaveBeenCalledWith(mockUser);
-      expect(mockTokenService.generateAccessToken).toHaveBeenCalledWith('user-id-123', 'test-tenant');
+      expect(mockTenantTokenService.generateAccessToken).toHaveBeenCalledWith('user-id-123', 'test-tenant');
       expect(mockTokenService.generateRefreshToken).toHaveBeenCalled();
       expect(mockSessionRepository.create).toHaveBeenCalled();
       expect(result.accessToken).toBe('mock-access-token');
@@ -103,7 +118,7 @@ describe('LoginClassicUseCase', () => {
 
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
       mockUserRepository.save.mockResolvedValue(mockUser);
-      mockTokenService.generateAccessToken.mockReturnValue('mock-access-token');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('mock-access-token');
       mockTokenService.generateRefreshToken.mockReturnValue('mock-refresh-token');
 
       // Act
@@ -125,7 +140,7 @@ describe('LoginClassicUseCase', () => {
 
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
       mockUserRepository.save.mockResolvedValue(mockUser);
-      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('access-token');
       mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
 
       // Act
@@ -323,7 +338,7 @@ describe('LoginClassicUseCase', () => {
 
       mockUserRepository.findByEmail.mockResolvedValue(userWithNullEmail);
       mockUserRepository.save.mockResolvedValue(userWithNullEmail);
-      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('access-token');
       mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
 
       // Act
@@ -344,7 +359,7 @@ describe('LoginClassicUseCase', () => {
 
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
       mockUserRepository.save.mockResolvedValue(mockUser);
-      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTenantTokenService.generateAccessToken.mockResolvedValue('access-token');
       mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
 
       // Act

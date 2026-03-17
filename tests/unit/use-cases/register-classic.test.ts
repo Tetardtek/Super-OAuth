@@ -1,11 +1,18 @@
 import { RegisterClassicUseCase } from '../../../src/application/use-cases/register-classic.use-case';
-import { IUserRepository, ITokenService } from '../../../src/application/interfaces/repositories.interface';
+import {
+  IUserRepository,
+  ITokenService,
+  ITenantTokenService,
+  IAuditLogService,
+} from '../../../src/application/interfaces/repositories.interface';
 import { User } from '../../../src/domain/entities';
 
 describe('RegisterClassicUseCase', () => {
   let useCase: RegisterClassicUseCase;
   let mockUserRepository: jest.Mocked<IUserRepository>;
   let mockTokenService: jest.Mocked<ITokenService>;
+  let mockTenantTokenService: jest.Mocked<ITenantTokenService>;
+  let mockAuditLogService: jest.Mocked<IAuditLogService>;
 
   beforeEach(() => {
     mockUserRepository = {
@@ -25,7 +32,21 @@ describe('RegisterClassicUseCase', () => {
       getTokenExpiration: jest.fn(),
     };
 
-    useCase = new RegisterClassicUseCase(mockUserRepository, mockTokenService);
+    mockTenantTokenService = {
+      generateAccessToken: jest.fn().mockResolvedValue('mock-access-token'),
+      verifyAccessToken: jest.fn(),
+    };
+
+    mockAuditLogService = {
+      log: jest.fn().mockResolvedValue(undefined),
+    };
+
+    useCase = new RegisterClassicUseCase(
+      mockUserRepository,
+      mockTokenService,
+      mockTenantTokenService,
+      mockAuditLogService
+    );
   });
 
   it('should register a new user successfully', async () => {
@@ -51,7 +72,7 @@ describe('RegisterClassicUseCase', () => {
 
     mockUserRepository.findByEmail.mockResolvedValue(null); // User doesn't exist
     mockUserRepository.save.mockResolvedValue(mockUser); // Mock saved user
-    mockTokenService.generateAccessToken.mockReturnValue('mock-access-token');
+    mockTenantTokenService.generateAccessToken.mockResolvedValue('mock-access-token');
     mockTokenService.generateRefreshToken.mockReturnValue('mock-refresh-token');
 
     // Act
@@ -60,7 +81,7 @@ describe('RegisterClassicUseCase', () => {
     // Assert
     expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(dto.email, dto.tenantId);
     expect(mockUserRepository.save).toHaveBeenCalled();
-    expect(mockTokenService.generateAccessToken).toHaveBeenCalled();
+    expect(mockTenantTokenService.generateAccessToken).toHaveBeenCalled();
     expect(mockTokenService.generateRefreshToken).toHaveBeenCalled();
     expect(result.accessToken).toBe('mock-access-token');
     expect(result.refreshToken).toBe('mock-refresh-token');

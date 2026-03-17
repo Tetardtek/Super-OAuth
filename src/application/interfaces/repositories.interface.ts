@@ -30,6 +30,34 @@ export interface ITokenService {
   getTokenExpiration(): { accessToken: number; refreshToken: number };
 }
 
+export interface ITenantTokenService {
+  generateAccessToken(userId: string, tenantId: string): Promise<string>;
+  verifyAccessToken(
+    token: string,
+    tenantId: string
+  ): Promise<{ userId: string; jti: string; tenantId: string } | null>;
+}
+
+export type AuditEvent =
+  | 'login'
+  | 'register'
+  | 'link'
+  | 'unlink'
+  | 'merge'
+  | 'password_reset'
+  | 'token_refresh';
+
+export interface IAuditLogService {
+  log(entry: {
+    tenantId: string;
+    userId?: string | null;
+    event: AuditEvent;
+    ip?: string | null;
+    userAgent?: string | null;
+    metadata?: Record<string, unknown> | null;
+  }): Promise<void>;
+}
+
 export interface ITokenBlacklist {
   revoke(jti: string, ttlSeconds: number): Promise<void>;
   isRevoked(jti: string): Promise<boolean>;

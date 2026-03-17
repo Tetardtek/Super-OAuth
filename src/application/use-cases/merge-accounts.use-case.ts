@@ -9,7 +9,13 @@
  */
 
 import { DataSource } from 'typeorm';
-import { IUserRepository, ITokenBlacklist, ITokenService } from '../interfaces/repositories.interface';
+import {
+  IUserRepository,
+  ITokenBlacklist,
+  ITokenService,
+  ITenantTokenService,
+  IAuditLogService,
+} from '../interfaces/repositories.interface';
 import { logger } from '../../shared/utils/logger.util';
 import { LinkedAccountEntity } from '../../infrastructure/database/entities/linked-account.entity';
 import { SessionEntity } from '../../infrastructure/database/entities/session.entity';
@@ -34,14 +40,17 @@ export class MergeAccountsUseCase {
     private readonly userRepository: IUserRepository,
     private readonly tokenService: ITokenService,
     private readonly tokenBlacklist: ITokenBlacklist,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+    private readonly tenantTokenService: ITenantTokenService,
+    private readonly auditLog: IAuditLogService
   ) {}
 
   async execute(input: MergeAccountsInput): Promise<MergeAccountsOutput> {
     const { currentUserId, targetToken, tenantId } = input;
 
-    // 1. Verify targetToken to extract targetUserId [SG7 préambule]
-    const targetPayload = this.tokenService.verifyAccessToken(targetToken);
+    // 1. Verify targetToken with tenant secret to extract targetUserId [SG7 préambule]
+    // tenantId is provided in input — no chicken-and-egg issue here
+    const targetPayload = await this.tenantTokenService.verifyAccessToken(targetToken, tenantId);
     if (!targetPayload) {
       throw new Error('INVALID_TARGET_TOKEN');
     }
@@ -173,6 +182,11 @@ export class MergeAccountsUseCase {
     // Return updated provider list (re-fetch current user)
     const updatedUser = await this.userRepository.findById(currentUserId);
     const linkedProviders = updatedUser?.linkedProviders ?? [];
+
+    // Audit log — fire-and-forget
+    this.auditLog
+      .log({ tenantId, userId: currentUserId, event: 'merge', metadata: { targetUserId } })
+      .catch(() => {});
 
     return { merged: true, linkedProviders };
   }

@@ -8,6 +8,8 @@ import {
   CompleteOAuthUseCase,
   ValidateTokenUseCase,
 } from '../../application/use-cases';
+import { LinkProviderUseCase } from '../../application/use-cases/link-provider.use-case';
+import { MergeAccountsUseCase } from '../../application/use-cases/merge-accounts.use-case';
 
 import {
   TokenService,
@@ -15,8 +17,13 @@ import {
   UserRepository,
   OAuthService,
   PasswordService,
+  TenantCryptoService,
+  TenantRepository,
+  TenantTokenService,
+  AuditLogService,
 } from '../services';
 import { TokenBlacklistService } from '../services/token-blacklist.service';
+import { DatabaseConnection } from '../database/config/database.config';
 
 import {
   ITokenService,
@@ -24,6 +31,8 @@ import {
   IUserRepository,
   IOAuthService,
   ITokenBlacklist,
+  ITenantTokenService,
+  IAuditLogService,
 } from '../../application/interfaces/repositories.interface';
 
 export class DIContainer {
@@ -50,12 +59,22 @@ export class DIContainer {
     this.services.set('PasswordService', new PasswordService());
     this.services.set('TokenBlacklistService', new TokenBlacklistService());
 
+    // Tier 3 — Tenant-scoped services
+    const tenantCrypto = new TenantCryptoService();
+    this.services.set('TenantCryptoService', tenantCrypto);
+    const tenantRepository = new TenantRepository(tenantCrypto);
+    this.services.set('TenantRepository', tenantRepository);
+    this.services.set('TenantTokenService', new TenantTokenService(tenantRepository));
+    this.services.set('AuditLogService', new AuditLogService());
+
     // Use Cases
     this.services.set(
       'RegisterClassicUseCase',
       new RegisterClassicUseCase(
         this.get<IUserRepository>('UserRepository'),
-        this.get<ITokenService>('TokenService')
+        this.get<ITokenService>('TokenService'),
+        this.get<ITenantTokenService>('TenantTokenService'),
+        this.get<IAuditLogService>('AuditLogService')
       )
     );
 
@@ -64,7 +83,9 @@ export class DIContainer {
       new LoginClassicUseCase(
         this.get<IUserRepository>('UserRepository'),
         this.get<ITokenService>('TokenService'),
-        this.get<ISessionRepository>('SessionRepository')
+        this.get<ISessionRepository>('SessionRepository'),
+        this.get<ITenantTokenService>('TenantTokenService'),
+        this.get<IAuditLogService>('AuditLogService')
       )
     );
 
@@ -73,7 +94,9 @@ export class DIContainer {
       new RefreshTokenUseCase(
         this.get<IUserRepository>('UserRepository'),
         this.get<ITokenService>('TokenService'),
-        this.get<ISessionRepository>('SessionRepository')
+        this.get<ISessionRepository>('SessionRepository'),
+        this.get<ITenantTokenService>('TenantTokenService'),
+        this.get<IAuditLogService>('AuditLogService')
       )
     );
 
@@ -96,7 +119,9 @@ export class DIContainer {
         this.get<IUserRepository>('UserRepository'),
         this.get<ITokenService>('TokenService'),
         this.get<ISessionRepository>('SessionRepository'),
-        this.get<IOAuthService>('OAuthService')
+        this.get<IOAuthService>('OAuthService'),
+        this.get<ITenantTokenService>('TenantTokenService'),
+        this.get<IAuditLogService>('AuditLogService')
       )
     );
 
@@ -105,7 +130,28 @@ export class DIContainer {
       new ValidateTokenUseCase(
         this.get<IUserRepository>('UserRepository'),
         this.get<ITokenService>('TokenService'),
-        this.get<ITokenBlacklist>('TokenBlacklistService')
+        this.get<ITokenBlacklist>('TokenBlacklistService'),
+        this.get<ITenantTokenService>('TenantTokenService')
+      )
+    );
+
+    this.services.set(
+      'LinkProviderUseCase',
+      new LinkProviderUseCase(
+        this.get<IUserRepository>('UserRepository'),
+        this.get<IAuditLogService>('AuditLogService')
+      )
+    );
+
+    this.services.set(
+      'MergeAccountsUseCase',
+      new MergeAccountsUseCase(
+        this.get<IUserRepository>('UserRepository'),
+        this.get<ITokenService>('TokenService'),
+        this.get<ITokenBlacklist>('TokenBlacklistService'),
+        DatabaseConnection.getDataSource(),
+        this.get<ITenantTokenService>('TenantTokenService'),
+        this.get<IAuditLogService>('AuditLogService')
       )
     );
   }
@@ -145,5 +191,13 @@ export class DIContainer {
 
   getValidateTokenUseCase(): ValidateTokenUseCase {
     return this.get<ValidateTokenUseCase>('ValidateTokenUseCase');
+  }
+
+  getLinkProviderUseCase(): LinkProviderUseCase {
+    return this.get<LinkProviderUseCase>('LinkProviderUseCase');
+  }
+
+  getMergeAccountsUseCase(): MergeAccountsUseCase {
+    return this.get<MergeAccountsUseCase>('MergeAccountsUseCase');
   }
 }

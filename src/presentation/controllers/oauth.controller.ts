@@ -20,12 +20,7 @@ import { authService } from '../../application/services/auth.service';
 import { logger } from '../../shared/utils/logger.util';
 import { ApiResponse } from '../../shared/utils/response.util';
 import { OAuthError, OAuthErrorType } from '../../infrastructure/oauth/oauth-config';
-import { LinkProviderUseCase } from '../../application/use-cases/link-provider.use-case';
-import { MergeAccountsUseCase } from '../../application/use-cases/merge-accounts.use-case';
-import { userRepository } from '../../infrastructure/services/user.repository';
-import { tokenService } from '../../infrastructure/services/token.service';
-import { TokenBlacklistService } from '../../infrastructure/services/token-blacklist.service';
-import { DatabaseConnection } from '../../infrastructure/database/config/database.config';
+import { DIContainer } from '../../infrastructure/di/container';
 import { AuthenticatedRequest } from '../../shared/middleware/auth.middleware';
 import { getWebhookService } from '../../infrastructure/services/webhook.service';
 
@@ -227,7 +222,7 @@ export class OAuthController {
           return;
         }
 
-        const linkUseCase = new LinkProviderUseCase(userRepository);
+        const linkUseCase = DIContainer.getInstance().getLinkProviderUseCase();
         try {
           await linkUseCase.execute({ linkingUserId, tenantId, provider, oauthUserInfo });
         } catch (linkError) {
@@ -380,12 +375,7 @@ export class OAuthController {
     }
 
     try {
-      const mergeUseCase = new MergeAccountsUseCase(
-        userRepository,
-        tokenService,
-        new TokenBlacklistService(),
-        DatabaseConnection.getDataSource()
-      );
+      const mergeUseCase = DIContainer.getInstance().getMergeAccountsUseCase();
 
       const result = await mergeUseCase.execute({
         currentUserId: userId,
