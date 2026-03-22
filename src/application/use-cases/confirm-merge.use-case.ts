@@ -1,4 +1,4 @@
-import type { OAuthProvider } from '../../domain/entities';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {
   IUserRepository,
   ITokenService,
