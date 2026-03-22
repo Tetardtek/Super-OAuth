@@ -25,6 +25,12 @@ import {
 import { logger } from '../../shared/utils/logger.util';
 import { RedisStateStorage, IStateStorage, OAuthState } from '../redis';
 
+/** Optional per-tenant credential overrides (resolved from tenant_providers table) */
+export interface TenantCredentialOverrides {
+  clientId: string;
+  clientSecret: string;
+}
+
 export class OAuthService {
   private stateStorage: IStateStorage;
   private readonly stateExpirationSeconds = 10 * 60; // 10 minutes (en secondes pour Redis TTL)
@@ -44,7 +50,8 @@ export class OAuthService {
     tenantId: string = 'origins',
     redirectUrl?: string,
     mode: 'auth' | 'link' = 'auth',
-    linkingUserId?: string
+    linkingUserId?: string,
+    tenantCreds?: TenantCredentialOverrides
   ): Promise<{ authUrl: string; state: string }> {
     logger.info(`🔗 Generating OAuth URL for ${provider}`);
 
@@ -55,18 +62,21 @@ export class OAuthService {
       );
     }
 
-    if (!validateOAuthConfig(provider)) {
+    const config = getOAuthConfig(provider)!;
+
+    // Validate: either tenant creds or global config must be valid
+    if (!tenantCreds && !validateOAuthConfig(provider)) {
       throw new OAuthError(
         OAuthErrorType.INVALID_PROVIDER,
         `Provider ${provider} is not properly configured`
       );
     }
 
-    const config = getOAuthConfig(provider)!;
+    const effectiveClientId = tenantCreds?.clientId ?? config.clientId;
     const state = await this.generateState(provider, tenantId, redirectUrl, mode, linkingUserId);
 
     const params = new URLSearchParams({
-      client_id: config.clientId,
+      client_id: effectiveClientId,
       redirect_uri: config.redirectUri,
       response_type: 'code',
       scope: config.scope.join(' '),
@@ -96,7 +106,8 @@ export class OAuthService {
   async handleCallback(
     provider: string,
     code: string,
-    state: string
+    state: string,
+    tenantCreds?: TenantCredentialOverrides
   ): Promise<{ userInfo: OAuthUserInfo; tenantId: string; mode: 'auth' | 'link'; linkingUserId?: string }> {
     logger.info(`🔄 Processing OAuth callback for ${provider}`);
 
@@ -123,11 +134,11 @@ export class OAuthService {
     const linkingUserId = stateData.linkingUserId;
 
     try {
-      // Exchange code for token
-      const tokenResponse = await this.exchangeCodeForToken(provider, code);
+      // Exchange code for token (use tenant creds if available, fallback to global)
+      const tokenResponse = await this.exchangeCodeForToken(provider, code, tenantCreds);
 
       // Get user info using token
-      const userInfo = await this.getUserInfo(provider, tokenResponse.access_token);
+      const userInfo = await this.getUserInfo(provider, tokenResponse.access_token, tenantCreds);
 
       logger.info(`✅ OAuth callback processed successfully for ${provider}`, {
         provider,
@@ -162,13 +173,13 @@ export class OAuthService {
   /**
    * Exchange authorization code for access token
    */
-  private async exchangeCodeForToken(provider: string, code: string): Promise<OAuthTokenResponse> {
+  private async exchangeCodeForToken(provider: string, code: string, tenantCreds?: TenantCredentialOverrides): Promise<OAuthTokenResponse> {
     const config = getOAuthConfig(provider)!;
 
     const data = new URLSearchParams({
       grant_type: 'authorization_code',
-      client_id: config.clientId,
-      client_secret: config.clientSecret,
+      client_id: tenantCreds?.clientId ?? config.clientId,
+      client_secret: tenantCreds?.clientSecret ?? config.clientSecret,
       redirect_uri: config.redirectUri,
       code: code,
     });
@@ -209,7 +220,7 @@ export class OAuthService {
   /**
    * Get user information from OAuth provider
    */
-  private async getUserInfo(provider: string, accessToken: string): Promise<OAuthUserInfo> {
+  private async getUserInfo(provider: string, accessToken: string, tenantCreds?: TenantCredentialOverrides): Promise<OAuthUserInfo> {
     const config = getOAuthConfig(provider)!;
 
     const headers: Record<string, string> = {
@@ -223,7 +234,7 @@ export class OAuthService {
     }
 
     if (provider === 'twitch') {
-      headers['Client-Id'] = config.clientId;
+      headers['Client-Id'] = tenantCreds?.clientId ?? config.clientId;
     }
 
     try {
@@ -412,6 +423,22 @@ export class OAuthService {
     }
 
     return stateData;
+  }
+
+  /**
+   * Peek at state data without consuming it.
+   * Used by PKCE flow to read tenantId before the callback consumes the state.
+   */
+  async peekState(state: string): Promise<OAuthState | null> {
+    try {
+      const { redisClientSingleton } = await import('../redis/redis-client');
+      const client = await redisClientSingleton.getClient();
+      const value = await client.get(`oauth:state:${state}`);
+      if (!value) return null;
+      return JSON.parse(value) as OAuthState;
+    } catch {
+      return null;
+    }
   }
 
   /**

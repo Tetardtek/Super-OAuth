@@ -9,3 +9,4 @@ export { TenantRepository } from './tenant.repository';
 export { TenantTokenService } from './tenant-token.service';
 export { TenantProviderRepository } from './tenant-provider.repository';
 export { AuditLogService } from './audit-log.service';
+export { AuthorizationCodeService } from './authorization-code.service';

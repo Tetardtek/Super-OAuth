@@ -6,3 +6,4 @@ export { TenantEntity } from './tenant.entity';
 export { TenantProviderEntity } from './tenant-provider.entity';
 export { AuditLogEntity } from './audit-log.entity';
 export type { AuditEvent } from './audit-log.entity';
+export { AuthorizationCodeEntity } from './authorization-code.entity';

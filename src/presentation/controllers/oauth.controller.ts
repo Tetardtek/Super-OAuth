@@ -23,6 +23,7 @@ import { OAuthError, OAuthErrorType } from '../../infrastructure/oauth/oauth-con
 import { DIContainer } from '../../infrastructure/di/container';
 import { AuthenticatedRequest } from '../../shared/middleware/auth.middleware';
 import { getWebhookService } from '../../infrastructure/services/webhook.service';
+import { pkceController } from './pkce.controller';
 
 // [SG1] Tenant validation now handled by validateTenant middleware (DB-backed via TenantValidationService)
 
@@ -178,6 +179,13 @@ export class OAuthController {
 
       if (!code || !state) {
         res.redirect(`${process.env.FRONTEND_URL}/auth/error?error=invalid_request&provider=${provider}`);
+        return;
+      }
+
+      // Check if this is a PKCE authorization server flow
+      // If PKCE metadata exists for this state, delegate to PKCE controller
+      const handledByPkce = await pkceController.handlePkceCallback(req, res, provider, code, state);
+      if (handledByPkce) {
         return;
       }
 

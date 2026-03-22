@@ -7,6 +7,7 @@ import { WebhookDeliveryEntity } from '../entities/webhook-delivery.entity';
 import { TenantEntity } from '../entities/tenant.entity';
 import { TenantProviderEntity } from '../entities/tenant-provider.entity';
 import { AuditLogEntity } from '../entities/audit-log.entity';
+import { AuthorizationCodeEntity } from '../entities/authorization-code.entity';
 import { getDatabaseConfig } from '@shared/config/database.config';
 import { logger } from '@shared/utils/logger.util';
 
@@ -24,7 +25,7 @@ export class DatabaseConnection {
         username: config.username,
         password: config.password,
         database: config.database,
-        entities: [UserEntity, LinkedAccountEntity, SessionEntity, WebhookDeliveryEntity, TenantEntity, TenantProviderEntity, AuditLogEntity],
+        entities: [UserEntity, LinkedAccountEntity, SessionEntity, WebhookDeliveryEntity, TenantEntity, TenantProviderEntity, AuditLogEntity, AuthorizationCodeEntity],
         migrations: ['dist/infrastructure/database/migrations/*.js'],
         migrationsRun: process.env.NODE_ENV !== 'production',
         synchronize: process.env.NODE_ENV === 'development',

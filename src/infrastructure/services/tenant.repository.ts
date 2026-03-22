@@ -14,6 +14,7 @@ export interface TenantRecord {
   name: string;
   webhookUrl: string | null;
   allowedOrigins: string[] | null;
+  redirectUris: string[] | null;
   retentionDays: number;
   isActive: boolean;
   createdAt: Date;
@@ -34,6 +35,7 @@ export class TenantRepository {
   async create(name: string, opts?: {
     webhookUrl?: string;
     allowedOrigins?: string[];
+    redirectUris?: string[];
     retentionDays?: number;
   }): Promise<{ tenant: TenantRecord; clientSecret: string }> {
     const clientId = crypto.randomUUID();
@@ -54,6 +56,7 @@ export class TenantRepository {
       jwtSecretIv,
       webhookUrl: opts?.webhookUrl ?? null,
       allowedOrigins: opts?.allowedOrigins ?? null,
+      redirectUris: opts?.redirectUris ?? null,
       retentionDays: opts?.retentionDays ?? 90,
       isActive: true,
     });
@@ -96,6 +99,7 @@ export class TenantRepository {
       name: entity.name,
       webhookUrl: entity.webhookUrl ?? null,
       allowedOrigins: entity.allowedOrigins ?? null,
+      redirectUris: entity.redirectUris ?? null,
       retentionDays: entity.retentionDays,
       isActive: entity.isActive,
       createdAt: entity.createdAt,

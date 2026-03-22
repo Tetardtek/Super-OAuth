@@ -36,6 +36,9 @@ export class TenantEntity {
   @Column({ type: 'json', nullable: true, name: 'allowed_origins' })
   allowedOrigins?: string[] | null;
 
+  @Column({ type: 'json', nullable: true, name: 'redirect_uris' })
+  redirectUris?: string[] | null;
+
   @Column({ type: 'int', default: 90, name: 'retention_days' })
   retentionDays!: number;
 
