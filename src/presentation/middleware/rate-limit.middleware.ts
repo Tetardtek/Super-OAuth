@@ -109,13 +109,13 @@ export const registerRateLimit = async (req: Request, res: Response, next: NextF
 
 /**
  * OAuth flow rate limiting
- * 10 OAuth initiations par minute
+ * 30 OAuth requests per minute (authorize + callback + token = 3 per provider)
  */
 export const oauthRateLimit = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   if (!oauthRateLimitInstance) {
     oauthRateLimitInstance = await createRedisRateLimiter({
       windowMs: 1 * 60 * 1000, // 1 minute
-      max: 10,
+      max: 30,
       message: 'Too many OAuth requests, please slow down',
     });
   }
