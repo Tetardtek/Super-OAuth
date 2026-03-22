@@ -78,16 +78,18 @@ class SuperOAuthServer {
     this.app.use(generateNonce);
 
     // Security middleware - Helmet sets various HTTP headers for security
-    // Content Security Policy (CSP) prevents XSS attacks with nonce-based inline scripts/styles
-    // See: https://helmetjs.github.io/
+    // CSP allows 'unsafe-inline' for styles (SvelteKit uses inline style attributes)
+    // Scripts use nonce for API pages + 'unsafe-inline' fallback for static SPA pages
     this.app.use((req, res, next) => {
       helmet({
         contentSecurityPolicy: {
           directives: {
-            defaultSrc: ["'self'"], // Only load resources from same origin
-            styleSrc: ["'self'", `'nonce-${res.locals.nonce}'`], // Allow styles with valid nonce only
-            scriptSrc: ["'self'", `'nonce-${res.locals.nonce}'`], // Allow scripts with valid nonce only
-            imgSrc: ["'self'", 'data:', 'https:'], // Allow images from self, data URIs, and HTTPS
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+            scriptSrc: ["'self'", `'nonce-${res.locals.nonce}'`, "'unsafe-inline'"],
+            fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+            imgSrc: ["'self'", 'data:', 'https:'],
+            connectSrc: ["'self'"],
           },
         },
       })(req, res, next);
