@@ -339,7 +339,7 @@ export class OAuthService {
           email: primaryEmail?.email ?? githubData.email,
           // Only verified if /user/emails confirms primary + verified
           emailVerified: !!primaryEmail,
-          nickname: githubData.name || githubData.login,
+          nickname: githubData.login || githubData.name || 'user',
           avatar: githubData.avatar_url,
           provider: 'github',
           raw: githubData,
@@ -349,6 +349,14 @@ export class OAuthService {
 
       default:
         throw new OAuthError(OAuthErrorType.INVALID_PROVIDER, `Unknown provider: ${provider}`);
+    }
+
+    // Sanitize nickname: replace invalid characters with hyphens, trim edges
+    if (normalized.nickname) {
+      normalized.nickname = normalized.nickname
+        .replace(/[^a-zA-Z0-9_.\-]/g, '-')  // Replace spaces and special chars
+        .replace(/^[_.\-]+|[_.\-]+$/g, '')   // Trim special chars from edges
+        .slice(0, 32);                        // Enforce max length
     }
 
     // Validate required fields
