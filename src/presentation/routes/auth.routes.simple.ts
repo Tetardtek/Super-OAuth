@@ -6,6 +6,7 @@ import { DIContainer } from '../../infrastructure/di/container';
 import { logger } from '../../shared/utils/logger.util';
 import { asyncHandler } from '../../shared/utils/async-handler.util';
 import { authRateLimit } from '../middleware/rate-limit.middleware';
+import { validateTenant } from '../../shared/middleware/tenant.middleware';
 import Joi from 'joi';
 
 interface AuthenticatedRequest extends ValidatedRequest {
@@ -40,7 +41,7 @@ const providerParamSchema = Joi.object({
  * POST /auth/register
  * Register new user with email/password
  */
-router.post('/register', validateBody(authValidators.register), asyncHandler(async (req: ValidatedRequest, res: Response) => {
+router.post('/register', (req, res, next) => void validateTenant(req, res, next), validateBody(authValidators.register), asyncHandler(async (req: ValidatedRequest, res: Response) => {
   try {
     const { email, password, nickname } = (req.validatedBody || req.body) as RegisterBody;
 
@@ -97,7 +98,7 @@ router.post('/register', validateBody(authValidators.register), asyncHandler(asy
  * POST /auth/login
  * Login user with email/password
  */
-router.post('/login', validateBody(authValidators.login), asyncHandler(async (req: ValidatedRequest, res: Response) => {
+router.post('/login', (req, res, next) => void validateTenant(req, res, next), validateBody(authValidators.login), asyncHandler(async (req: ValidatedRequest, res: Response) => {
   try {
     const { email, password } = (req.validatedBody || req.body) as LoginBody;
 
