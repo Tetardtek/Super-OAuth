@@ -1,5 +1,4 @@
-import { LinkedAccount, OAuthProvider } from '../../domain/entities';
-import { UserId } from '../../domain/value-objects';
+import type { OAuthProvider } from '../../domain/entities';
 import {
   IUserRepository,
   ITokenService,
@@ -53,19 +52,23 @@ export class ConfirmMergeUseCase {
       ? JSON.parse(tokenEntity.providerMetadata)
       : {};
 
-    // 4. Link the provider
-    const linkedAccount = LinkedAccount.create({
-      userId: new UserId(user.id),
+    // 4. Link the provider — direct DB insert (cascade via save doesn't work)
+    const { LinkedAccountEntity } = await import('../../infrastructure/database/entities/linked-account.entity');
+    const { DatabaseConnection } = await import('../../infrastructure/database/config/database.config');
+    const { v4: uuidv4 } = await import('uuid');
+
+    const laRepo = DatabaseConnection.getDataSource().getRepository(LinkedAccountEntity);
+    const laEntity = laRepo.create({
+      id: uuidv4(),
+      userId: user.id,
       tenantId: tokenEntity.tenantId,
-      provider: tokenEntity.provider as OAuthProvider,
+      provider: tokenEntity.provider,
       providerId: tokenEntity.providerId,
       displayName: tokenEntity.providerDisplayName || '',
       email: tokenEntity.providerEmail || '',
-      avatarUrl: undefined,
       metadata,
     });
-
-    user.linkAccount(linkedAccount);
+    await laRepo.save(laEntity);
 
     // Also verify email if not already (merge = proof of email ownership)
     if (!user.emailVerified) {
