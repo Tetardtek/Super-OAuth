@@ -1,9 +1,15 @@
 // dashboard.js
-// Composant Dashboard moderne, modulaire et robuste
-// Version refondue 2025
+// Composant Dashboard avec onglets Profil / Comptes lies / Fusion
+// Version 2.0 — settings page
 
-import { UI, Format, Storage } from './utils.js';
-import { DEFAULT_AVATARS, STORAGE_KEYS } from './config.js';
+import { UI, Format, Storage, HTTP } from './utils.js';
+import { DEFAULT_AVATARS, STORAGE_KEYS, API_CONFIG, OAUTH_PROVIDERS } from './config.js';
+
+const TABS = [
+    { id: 'profile', label: 'Profil', icon: '' },
+    { id: 'accounts', label: 'Comptes lies', icon: '' },
+    { id: 'merge', label: 'Fusionner', icon: '' }
+];
 
 export class Dashboard {
     constructor(authService) {
@@ -11,6 +17,8 @@ export class Dashboard {
         this.currentUser = null;
         this.avatarOptionsCache = null;
         this.userCache = { data: null, timestamp: null, ttl: 5 * 60 * 1000 };
+        this.activeTab = 'profile';
+        this.linkedAccounts = [];
     }
 
     async load() {
@@ -22,7 +30,7 @@ export class Dashboard {
                 return;
             }
             UI.showElement('userDashboard');
-            UI.setHTML('userInfo', '<div class="loading">⏳ Chargement...</div>');
+            UI.setHTML('userInfo', '<div class="loading">Chargement...</div>');
             const result = await this.authService.getCurrentUser();
             const userData = result.data || result.user;
             if (result.success && userData) {
@@ -31,11 +39,11 @@ export class Dashboard {
                 this.ensureVisible();
                 this.hideLoading();
             } else {
-                this.showError('❌ Impossible de charger le dashboard.<br>Vérifiez votre connexion ou reconnectez-vous.');
+                this.showError('Impossible de charger le dashboard.<br>Verifiez votre connexion ou reconnectez-vous.');
                 this.hideLoading();
             }
         } catch (e) {
-            this.showError('❌ Impossible de charger le dashboard.<br>Vérifiez votre connexion ou reconnectez-vous.');
+            this.showError('Impossible de charger le dashboard.<br>Verifiez votre connexion ou reconnectez-vous.');
             this.hideLoading();
         }
     }
@@ -49,13 +57,15 @@ export class Dashboard {
         this.userCache.data = userData;
         this.userCache.timestamp = Date.now();
         this.currentUser = userData;
+        this.linkedAccounts = userData.linkedAccounts || [];
     }
 
     show(userData) {
         if (!userData) return;
         UI.showElement('userDashboard');
-        UI.setHTML('userInfo', this.generateUserInfoHTML(userData));
+        UI.setHTML('userInfo', this.generateDashboardHTML(userData));
         this.bindEvents();
+        this.switchTab(this.activeTab);
     }
 
     showError(message) {
@@ -75,15 +85,34 @@ export class Dashboard {
         if (dash) dash.style.display = 'block';
     }
 
-    generateUserInfoHTML(userData) {
-        if (!userData) return '<div class="error">Aucune donnée utilisateur à afficher.</div>';
+    // --- HTML Generation ---
+
+    generateDashboardHTML(userData) {
+        if (!userData) return '<div class="error">Aucune donnee utilisateur a afficher.</div>';
         return `
-            ${this.generateUserProfile(userData)}
-            ${this.generateAvatarTestSection()}
-            ${this.generateUserStats(userData)}
-            ${this.generateProvidersSection(userData.linkedAccounts || [])}
-            ${this.generateOAuthConnectSection()}
+            ${this.generateTabs()}
+            <div class="tab-content" id="tabContent">
+                <div class="tab-pane" id="tab-profile">
+                    ${this.generateUserProfile(userData)}
+                    ${this.generateAvatarTestSection()}
+                    ${this.generateUserStats(userData)}
+                </div>
+                <div class="tab-pane" id="tab-accounts" style="display:none;">
+                    ${this.generateAccountsSection()}
+                </div>
+                <div class="tab-pane" id="tab-merge" style="display:none;">
+                    ${this.generateMergeSection()}
+                </div>
+            </div>
         `;
+    }
+
+    generateTabs() {
+        const tabs = TABS.map(tab => {
+            const activeClass = tab.id === this.activeTab ? 'tab-active' : '';
+            return `<button class="tab-btn ${activeClass}" data-action="switch-tab" data-tab="${tab.id}">${tab.icon} ${tab.label}</button>`;
+        }).join('');
+        return `<div class="dashboard-tabs">${tabs}</div>`;
     }
 
     generateUserProfile(userData) {
@@ -94,10 +123,9 @@ export class Dashboard {
             <div class="user-profile">
                 <img id="userProfileImg" src="${avatarUrl}" alt="Avatar" class="user-profile-img" data-action="select-avatar">
                 <div class="user-basic-info">
-                    <h3>👤 ${userData.nickname || userData.email || 'Utilisateur'}</h3>
-                    <p>📧 ${userData.email || 'Email non défini'}</p>
-                    <p>🆔 ${userData.id || 'ID non défini'}</p>
-                    <p>✅ ${userData.emailVerified ? 'Email vérifié' : 'Email non vérifié'}</p>
+                    <h3>${userData.nickname || userData.email || 'Utilisateur'}</h3>
+                    <p>${userData.email || 'Email non defini'}</p>
+                    <p>${userData.emailVerified ? 'Email verifie' : 'Email non verifie'}</p>
                 </div>
             </div>
         `;
@@ -110,10 +138,10 @@ export class Dashboard {
         const totalConnections = userData.totalConnections || 0;
         return `
             <div class="user-stats">
-                <div class="stat-card"><h5>📅 Membre depuis</h5><p>${createdDate}</p></div>
-                <div class="stat-card"><h5>🕒 Dernière connexion</h5><p>${lastLoginDate}</p></div>
-                <div class="stat-card"><h5>🔢 Connexions totales</h5><p>${totalConnections}</p></div>
-                <div class="stat-card"><h5>🔗 Comptes liés</h5><p>${linkedAccountsCount}</p></div>
+                <div class="stat-card"><h5>Membre depuis</h5><p>${createdDate}</p></div>
+                <div class="stat-card"><h5>Derniere connexion</h5><p>${lastLoginDate}</p></div>
+                <div class="stat-card"><h5>Connexions totales</h5><p>${totalConnections}</p></div>
+                <div class="stat-card"><h5>Comptes lies</h5><p>${linkedAccountsCount}</p></div>
             </div>
         `;
     }
@@ -130,47 +158,98 @@ export class Dashboard {
     generateAvatarTestSection() {
         return `
             <div class="avatar-test-section">
-                <h4>🎨 Test d'avatars :</h4>
+                <h4>Test d'avatars :</h4>
                 <div class="avatar-options">${this.generateAvatarOptionsHTML()}</div>
             </div>
         `;
     }
 
-    generateProvidersSection(linkedAccounts) {
-        const linkedAccountsCount = linkedAccounts.length;
-        let providersHTML;
-        if (linkedAccountsCount > 0) {
-            providersHTML = linkedAccounts.map(account => `
-                <div class="provider-item">
-                    <div><strong>${Format.capitalize(account.provider)}</strong><br><small>${account.providerUserId || account.displayName || 'Nom non disponible'}</small></div>
-                    <button class="btn btn-danger btn-sm" data-action="disconnect-provider" data-provider="${account.provider}" data-provider-id="${account.id}">🗑️ Déconnecter</button>
+    generateAccountsSection() {
+        const providers = Object.entries(OAUTH_PROVIDERS);
+        const linked = this.linkedAccounts;
+        const linkedProviders = linked.map(a => a.provider);
+
+        const providerCards = providers.map(([key, config]) => {
+            const isLinked = linkedProviders.includes(key);
+            const account = linked.find(a => a.provider === key);
+            const statusClass = isLinked ? 'provider-status-linked' : 'provider-status-unlinked';
+            const statusText = isLinked ? 'Lie' : 'Non lie';
+            const displayName = account ? (account.displayName || account.providerUserId || '') : '';
+
+            let actionBtn;
+            if (isLinked) {
+                actionBtn = `<button class="btn btn-danger btn-sm" data-action="unlink-provider" data-provider="${key}">Delier</button>`;
+            } else {
+                actionBtn = `<button class="btn btn-sm oauth-btn ${config.name.toLowerCase() === 'google' ? 'oauth-google-link' : `oauth-${key}`}" data-action="link-provider" data-provider="${key}">Lier</button>`;
+            }
+
+            return `
+                <div class="settings-provider-card">
+                    <div class="settings-provider-info">
+                        <span class="settings-provider-icon oauth-${key}-icon">${config.icon}</span>
+                        <div class="settings-provider-details">
+                            <strong>${config.name}</strong>
+                            ${displayName ? `<small>${displayName}</small>` : ''}
+                        </div>
+                    </div>
+                    <div class="settings-provider-actions">
+                        <span class="provider-status ${statusClass}">${statusText}</span>
+                        ${actionBtn}
+                    </div>
                 </div>
-            `).join('');
-        } else {
-            providersHTML = `<p>🔗 Aucun compte social connecté</p><p><small>Utilisez la section OAuth ci-dessous pour connecter vos comptes</small></p>`;
-        }
-        return `<div class="providers-section"><h4>🌐 Comptes OAuth connectés</h4>${providersHTML}</div>`;
+            `;
+        }).join('');
+
+        return `
+            <div class="settings-accounts-section">
+                <h4>Comptes OAuth lies</h4>
+                <p class="settings-subtitle">Gerez les comptes sociaux lies a votre profil.</p>
+                <div class="settings-providers-list">
+                    ${providerCards}
+                </div>
+            </div>
+        `;
     }
 
-    generateOAuthConnectSection() {
-        const PROVIDERS = [
-            { key: 'discord', label: 'Discord', icon: '🎮', btnClass: 'oauth-discord' },
-            { key: 'twitch', label: 'Twitch', icon: '📺', btnClass: 'oauth-twitch' },
-            { key: 'google', label: 'Google', icon: '📧', btnClass: 'oauth-google' },
-            { key: 'github', label: 'GitHub', icon: '🐱', btnClass: 'oauth-github' }
-        ];
-        const linked = (this.currentUser && this.currentUser.linkedAccounts) ? this.currentUser.linkedAccounts.map(a => a.provider) : [];
-        const buttons = PROVIDERS.map(p => {
-            const isLinked = linked.includes(p.key);
-            if (isLinked) {
-                return `<button class="btn btn-danger oauth-btn ${p.btnClass}" data-action="disconnect-provider" data-provider="${p.key}"><span>${p.icon}</span> Délier ${p.label}</button>`;
-            } else {
-                return `<button class="btn oauth-btn ${p.btnClass}" data-action="oauth-login" data-provider="${p.key}"><span>${p.icon}</span> Lier ${p.label}</button>`;
-            }
-        }).join('');
-        return `<div class="oauth-connect-section"><h4>🔗 Connecter un compte social</h4><div class="oauth-providers" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 10px 0 20px 0;">${buttons}</div><p style="font-size: 0.95em; color: #888;">Ajoutez ou retirez des comptes sociaux à votre profil pour une connexion simplifiée.</p></div>`;
+    generateMergeSection() {
+        return `
+            <div class="settings-merge-section">
+                <h4>Fusionner un compte</h4>
+                <p class="settings-subtitle">Absorbez un autre compte dans celui-ci. Les comptes OAuth et l'historique de l'autre compte seront transferes.</p>
+                <div class="merge-flow">
+                    <div class="merge-steps">
+                        <p><strong>1.</strong> Connectez-vous a l'autre compte dans un navigateur prive</p>
+                        <p><strong>2.</strong> Copiez son access token depuis le localStorage</p>
+                        <p><strong>3.</strong> Collez-le ci-dessous et lancez la fusion</p>
+                    </div>
+                    <div class="merge-input-group">
+                        <input type="text" id="mergeTargetToken" class="merge-input" placeholder="Access token du compte a absorber">
+                        <button class="btn btn-primary" data-action="merge-account">Fusionner</button>
+                    </div>
+                    <div id="mergeFeedback" class="merge-feedback" style="display:none;"></div>
+                </div>
+            </div>
+        `;
     }
-    // Event delegation pour toutes les actions du dashboard
+
+    // --- Tab switching ---
+
+    switchTab(tabId) {
+        this.activeTab = tabId;
+        // Update tab buttons
+        const buttons = document.querySelectorAll('.tab-btn');
+        buttons.forEach(btn => {
+            btn.classList.toggle('tab-active', btn.getAttribute('data-tab') === tabId);
+        });
+        // Update tab panes
+        const panes = document.querySelectorAll('.tab-pane');
+        panes.forEach(pane => {
+            pane.style.display = pane.id === `tab-${tabId}` ? 'block' : 'none';
+        });
+    }
+
+    // --- Event handling ---
+
     bindEvents() {
         const userInfo = document.getElementById('userInfo');
         if (!userInfo) return;
@@ -178,60 +257,136 @@ export class Dashboard {
             const target = e.target.closest('[data-action]');
             if (!target) return;
             const action = target.getAttribute('data-action');
-            if (action === 'select-avatar') {
-                this.selectAvatar();
-            } else if (action === 'set-avatar') {
-                const url = target.getAttribute('data-avatar-url');
-                if (url) this.updateAvatar(url);
-            } else if (action === 'disconnect-provider') {
-                const provider = target.getAttribute('data-provider');
-                const providerId = target.getAttribute('data-provider-id');
-                this.disconnectProvider(provider, providerId);
-            } else if (action === 'oauth-login') {
-                const provider = target.getAttribute('data-provider');
-                if (provider && this.authService && typeof this.authService.redirectToOAuth === 'function') {
-                    this.authService.redirectToOAuth(provider);
+
+            switch (action) {
+                case 'switch-tab':
+                    this.switchTab(target.getAttribute('data-tab'));
+                    break;
+                case 'select-avatar':
+                    this.selectAvatar();
+                    break;
+                case 'set-avatar': {
+                    const url = target.getAttribute('data-avatar-url');
+                    if (url) this.updateAvatar(url);
+                    break;
                 }
+                case 'disconnect-provider':
+                case 'unlink-provider': {
+                    const provider = target.getAttribute('data-provider');
+                    this.unlinkProvider(provider);
+                    break;
+                }
+                case 'link-provider': {
+                    const provider = target.getAttribute('data-provider');
+                    this.linkProvider(provider);
+                    break;
+                }
+                case 'oauth-login': {
+                    const provider = target.getAttribute('data-provider');
+                    if (provider && this.authService && typeof this.authService.redirectToOAuth === 'function') {
+                        this.authService.redirectToOAuth(provider);
+                    }
+                    break;
+                }
+                case 'merge-account':
+                    this.mergeAccount();
+                    break;
             }
         };
     }
+
+    // --- Actions ---
 
     updateAvatar(newAvatarUrl) {
         const avatarImg = document.getElementById('userProfileImg');
         if (avatarImg) {
             avatarImg.src = newAvatarUrl;
             Storage.set(STORAGE_KEYS.USER_AVATAR, newAvatarUrl);
-            this.showFeedback('✅ Avatar mis à jour !', 'success');
+            this.showFeedback('Avatar mis a jour !', 'success');
         }
     }
 
     selectAvatar() {
-        alert('🔧 Fonctionnalité de téléchargement d\'avatar en développement !\n\n💡 Pour le moment, utilisez les avatars de test ci-dessous.');
+        alert('Fonctionnalite de telechargement d\'avatar en developpement !\n\nPour le moment, utilisez les avatars de test ci-dessous.');
     }
 
-    async disconnectProvider(provider, providerId) {
-        if (!confirm(`Êtes-vous sûr de vouloir déconnecter votre compte ${Format.capitalize(provider)} ?`)) return;
-        this.showFeedback(`🔄 Déconnexion du compte ${Format.capitalize(provider)}...`, 'info');
+    async linkProvider(provider) {
+        this.showFeedback(`Redirection vers ${Format.capitalize(provider)}...`, 'info');
         try {
-            let disconnectResult;
-            if (this.authService.disconnectProvider && typeof this.authService.disconnectProvider === 'function') {
-                disconnectResult = await this.authService.disconnectProvider(provider, providerId);
+            const accessToken = Storage.getAccessToken();
+            const baseUrl = API_CONFIG.BASE_URL;
+            const response = await HTTP.post(
+                `${baseUrl}${API_CONFIG.ENDPOINTS.OAUTH.LINK}/${provider}/link`,
+                {},
+                accessToken
+            );
+            if (response.ok && response.data.success && response.data.data?.authUrl) {
+                window.location.href = response.data.data.authUrl;
             } else {
-                let url = providerId ? `/auth/oauth/${provider}/unlink?id=${encodeURIComponent(providerId)}` : `/auth/oauth/${provider}/unlink`;
-                const response = await fetch(url, { method: 'DELETE', credentials: 'include' });
-                disconnectResult = await response.json();
-            }
-            if (disconnectResult && disconnectResult.success) {
-                this.showFeedback('✅ Compte social déconnecté !', 'success');
-                this.invalidateUserCache();
-                await this.load();
-            } else {
-                this.showFeedback((disconnectResult && disconnectResult.message) || 'Erreur lors de la déconnexion', 'error');
+                this.showFeedback(response.data.message || 'Erreur lors de la liaison', 'error');
             }
         } catch (e) {
-            this.showFeedback('Erreur technique lors de la déconnexion', 'error');
+            this.showFeedback('Erreur technique lors de la liaison', 'error');
         }
     }
+
+    async unlinkProvider(provider) {
+        if (!confirm(`Delier votre compte ${Format.capitalize(provider)} ?`)) return;
+        this.showFeedback(`Deliaison de ${Format.capitalize(provider)}...`, 'info');
+        try {
+            const accessToken = Storage.getAccessToken();
+            const baseUrl = API_CONFIG.BASE_URL;
+            const response = await HTTP.delete(
+                `${baseUrl}${API_CONFIG.ENDPOINTS.OAUTH.UNLINK}/${provider}/unlink`,
+                accessToken
+            );
+            if (response.ok && response.data.success) {
+                this.showFeedback('Compte delie avec succes !', 'success');
+                this.invalidateUserCache();
+                await this.load();
+                this.switchTab('accounts');
+            } else {
+                this.showFeedback(response.data.message || 'Erreur lors de la deliaison', 'error');
+            }
+        } catch (e) {
+            this.showFeedback('Erreur technique lors de la deliaison', 'error');
+        }
+    }
+
+    async mergeAccount() {
+        const tokenInput = document.getElementById('mergeTargetToken');
+        const feedbackEl = document.getElementById('mergeFeedback');
+        if (!tokenInput || !tokenInput.value.trim()) {
+            this.showMergeFeedback('Veuillez entrer le token du compte a fusionner.', 'error');
+            return;
+        }
+        const targetToken = tokenInput.value.trim();
+        if (!confirm('Cette action est irreversible. Le compte cible sera absorbe dans votre compte actuel. Continuer ?')) return;
+
+        this.showMergeFeedback('Fusion en cours...', 'info');
+        try {
+            const accessToken = Storage.getAccessToken();
+            const baseUrl = API_CONFIG.BASE_URL;
+            const response = await HTTP.post(
+                `${baseUrl}${API_CONFIG.ENDPOINTS.OAUTH.MERGE}`,
+                { targetToken },
+                accessToken
+            );
+            if (response.ok && response.data.success) {
+                this.showMergeFeedback('Fusion reussie ! Les comptes ont ete fusionnes.', 'success');
+                tokenInput.value = '';
+                this.invalidateUserCache();
+                await this.load();
+                this.switchTab('accounts');
+            } else {
+                this.showMergeFeedback(response.data.message || 'Erreur lors de la fusion', 'error');
+            }
+        } catch (e) {
+            this.showMergeFeedback('Erreur technique lors de la fusion', 'error');
+        }
+    }
+
+    // --- Feedback ---
 
     showFeedback(message, type = 'info') {
         const colors = { success: '#48bb78', error: '#f56565', info: '#4299e1', warning: '#ed8936' };
@@ -239,6 +394,18 @@ export class Dashboard {
         UI.setHTML('dashboardResponse', `<div style="color: ${colors[type]};">${message}</div>`);
         if (type === 'success' || type === 'error') {
             setTimeout(() => { UI.hideElement('dashboardResponse'); }, 3000);
+        }
+    }
+
+    showMergeFeedback(message, type = 'info') {
+        const feedbackEl = document.getElementById('mergeFeedback');
+        if (!feedbackEl) return;
+        const colors = { success: '#48bb78', error: '#f56565', info: '#4299e1' };
+        feedbackEl.style.display = 'block';
+        feedbackEl.style.color = colors[type] || colors.info;
+        feedbackEl.textContent = message;
+        if (type === 'success' || type === 'error') {
+            setTimeout(() => { feedbackEl.style.display = 'none'; }, 5000);
         }
     }
 

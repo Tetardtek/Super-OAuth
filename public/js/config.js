@@ -25,6 +25,12 @@ export const API_CONFIG = {
             ME: '/api/v1/auth/me',
             OAUTH: '/api/v1/auth/oauth',
             DOCS: '/api/v1/auth/docs'
+        },
+        OAUTH: {
+            LINKED: '/api/v1/oauth/linked',
+            LINK: '/api/v1/oauth',
+            UNLINK: '/api/v1/oauth',
+            MERGE: '/api/v1/oauth/account/merge'
         }
     }
 };

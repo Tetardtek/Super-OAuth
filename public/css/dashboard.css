@@ -180,6 +180,238 @@
     font-weight: bold;
 }
 
+/* === Dashboard Tabs === */
+
+.dashboard-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #718096;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+    color: #4a5568;
+    background: #f7fafc;
+}
+
+.tab-btn.tab-active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+    font-weight: 600;
+}
+
+.tab-pane {
+    animation: tabFadeIn 0.2s ease;
+}
+
+@keyframes tabFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* === Settings — Comptes lies === */
+
+.settings-accounts-section h4,
+.settings-merge-section h4 {
+    margin: 0 0 4px 0;
+    font-size: 1.15rem;
+    color: #2d3748;
+}
+
+.settings-subtitle {
+    margin: 0 0 16px 0;
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+.settings-providers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.settings-provider-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    transition: border-color 0.2s;
+}
+
+.settings-provider-card:hover {
+    border-color: #cbd5e0;
+}
+
+.settings-provider-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.settings-provider-icon {
+    font-size: 1.4rem;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.oauth-discord-icon { background: rgba(88, 101, 242, 0.1); }
+.oauth-twitch-icon { background: rgba(145, 70, 255, 0.1); }
+.oauth-google-icon { background: rgba(219, 68, 55, 0.1); }
+.oauth-github-icon { background: rgba(51, 51, 51, 0.1); }
+
+.settings-provider-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-provider-details strong {
+    font-size: 0.95rem;
+    color: #2d3748;
+}
+
+.settings-provider-details small {
+    color: #a0aec0;
+    font-size: 0.8rem;
+}
+
+.settings-provider-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.provider-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.provider-status-linked {
+    color: #38a169;
+    background: rgba(56, 161, 105, 0.1);
+}
+
+.provider-status-unlinked {
+    color: #a0aec0;
+    background: rgba(160, 174, 192, 0.1);
+}
+
+.oauth-google-link {
+    background: #fff;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+/* === Settings — Merge === */
+
+.settings-merge-section {
+    padding: 0;
+}
+
+.merge-flow {
+    margin-top: 12px;
+}
+
+.merge-steps {
+    background: rgba(102, 126, 234, 0.05);
+    border: 1px solid rgba(102, 126, 234, 0.15);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+}
+
+.merge-steps p {
+    margin: 4px 0;
+    font-size: 0.9rem;
+    color: #4a5568;
+}
+
+.merge-input-group {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.merge-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: 'Courier New', monospace;
+    transition: border-color 0.2s;
+}
+
+.merge-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.merge-feedback {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* === Responsive === */
+
+@media (max-width: 480px) {
+    .dashboard-tabs {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .tab-btn {
+        border-bottom: none;
+        border-left: 3px solid transparent;
+        text-align: left;
+    }
+
+    .tab-btn.tab-active {
+        border-left-color: #667eea;
+        border-bottom-color: transparent;
+    }
+
+    .settings-provider-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .settings-provider-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .merge-input-group {
+        flex-direction: column;
+    }
+}
+
 /**
  * Styles du dashboard SuperOAuth - Optimisé Phase 2
  * @version 1.0.0

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SuperOAuth — Auth multi-tenant pour vos projets</title>
+  <meta name="description" content="Authorization server multi-tenant avec PKCE. Branchez vos projets en quelques minutes.">
+  <link rel="stylesheet" href="css/landing.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="landing">
+
+  <div class="landing-container">
+
+    <!-- Nav -->
+    <nav class="landing-nav">
+      <a href="/" class="landing-nav-brand">SUPEROAUTH</a>
+      <div class="landing-nav-links">
+        <a href="#features">Features</a>
+        <a href="#pricing">Tarifs</a>
+        <a href="docs/index.html">Docs</a>
+        <a href="index.html" class="nav-cta">Dashboard</a>
+      </div>
+    </nav>
+
+    <div class="landing-content">
+
+      <!-- Hero -->
+      <section class="hero">
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          <span class="hero-badge-text">PKCE Authorization Server — multi-tenant natif</span>
+        </div>
+
+        <h1>
+          L'auth de vos projets.<br>
+          <span class="accent">En quelques minutes.</span>
+        </h1>
+
+        <p class="hero-sub">
+          Authorization server multi-tenant avec PKCE, credentials par tenant,
+          4 providers OAuth. Branchez vos apps — on gere l'auth.
+        </p>
+
+        <div class="hero-ctas">
+          <a href="index.html" class="btn-primary">Commencer</a>
+          <a href="#pricing" class="btn-ghost">Voir les tarifs</a>
+        </div>
+
+        <p class="hero-proof">
+          OAuth 2.0 + PKCE (RFC 7636) · 4 providers · 285 tests · Zero vendor lock-in
+        </p>
+      </section>
+
+      <!-- Features -->
+      <section id="features" class="features-grid">
+        <div class="feature-card">
+          <div class="feature-bar"></div>
+          <h3>Multi-tenant natif</h3>
+          <p>Chaque projet = un tenant. Credentials chiffrees AES-256-GCM, JWT par tenant, isolation complete des donnees.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-bar"></div>
+          <h3>PKCE Authorization Server</h3>
+          <p>/oauth/authorize + /oauth/token — standard OAuth 2.0. Vos apps n'ont pas besoin de gerer Discord, Google, etc.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-bar"></div>
+          <h3>Previsible</h3>
+          <p>Abonnement fixe, pas de commission, pas de per-seat. Votre croissance ne nous remunere pas.</p>
+        </div>
+      </section>
+
+      <!-- How it works -->
+      <section id="how">
+        <div class="pricing-header">
+          <span class="pricing-label">Integration</span>
+          <h2>3 etapes. C'est tout.</h2>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-bar"></div>
+            <h3>1. Creez un tenant</h3>
+            <p>Un client_id + client_secret. Configurez vos providers (Discord, Google, GitHub, Twitch) et vos redirect URIs.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-bar"></div>
+            <h3>2. Redirigez vos users</h3>
+            <p>GET /oauth/authorize avec votre client_id et un code_challenge PKCE. On gere le reste.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-bar"></div>
+            <h3>3. Echangez le code</h3>
+            <p>POST /oauth/token avec le code + code_verifier. Vous recevez un access_token signe avec le secret de votre tenant.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pricing -->
+      <section id="pricing">
+        <div class="pricing-header">
+          <span class="pricing-label">Tarifs</span>
+          <h2>Simple. Sans surprise.</h2>
+          <p>Abonnement mensuel sans engagement. Pas de commission sur vos revenus.</p>
+        </div>
+
+        <div class="pricing-grid">
+
+          <!-- Starter -->
+          <div class="pricing-card">
+            <div class="pricing-card-header">
+              <span class="pricing-card-name">Starter</span>
+              <div class="pricing-card-price">
+                <span class="amount">29&euro;</span>
+                <span class="period">/mois</span>
+              </div>
+              <span class="pricing-card-tagline">Pour demarrer proprement.</span>
+            </div>
+            <hr class="pricing-card-divider">
+            <ul class="pricing-card-features">
+              <li><span class="dash">&mdash;</span><span>1 tenant</span></li>
+              <li><span class="dash">&mdash;</span><span>4 providers OAuth</span></li>
+              <li><span class="dash">&mdash;</span><span>PKCE inclus</span></li>
+              <li><span class="dash">&mdash;</span><span>Support communaute</span></li>
+            </ul>
+            <a href="index.html" class="pricing-card-cta ghost">Commencer</a>
+          </div>
+
+          <!-- Studio -->
+          <div class="pricing-card highlighted">
+            <span class="pricing-badge">Populaire</span>
+            <div class="pricing-card-header">
+              <span class="pricing-card-name">Studio</span>
+              <div class="pricing-card-price">
+                <span class="amount">99&euro;</span>
+                <span class="period">/mois</span>
+              </div>
+              <span class="pricing-card-tagline">Pour les studios actifs.</span>
+            </div>
+            <hr class="pricing-card-divider">
+            <ul class="pricing-card-features">
+              <li><span class="dash">&mdash;</span><span>5 tenants</span></li>
+              <li><span class="dash">&mdash;</span><span>Credentials per-tenant</span></li>
+              <li><span class="dash">&mdash;</span><span>Audit logs</span></li>
+              <li><span class="dash">&mdash;</span><span>Webhooks</span></li>
+              <li><span class="dash">&mdash;</span><span>Support email</span></li>
+            </ul>
+            <a href="index.html" class="pricing-card-cta primary">Choisir Studio</a>
+          </div>
+
+          <!-- Pro -->
+          <div class="pricing-card">
+            <div class="pricing-card-header">
+              <span class="pricing-card-name">Pro</span>
+              <div class="pricing-card-price">
+                <span class="amount">249&euro;</span>
+                <span class="period">/mois</span>
+              </div>
+              <span class="pricing-card-tagline">Pour les operations a fort volume.</span>
+            </div>
+            <hr class="pricing-card-divider">
+            <ul class="pricing-card-features">
+              <li><span class="dash">&mdash;</span><span>Tenants illimites</span></li>
+              <li><span class="dash">&mdash;</span><span>API access complet</span></li>
+              <li><span class="dash">&mdash;</span><span>Support prioritaire</span></li>
+              <li><span class="dash">&mdash;</span><span>SLA 99.9%</span></li>
+            </ul>
+            <a href="index.html" class="pricing-card-cta ghost">Choisir Pro</a>
+          </div>
+
+        </div>
+
+        <!-- Enterprise -->
+        <div class="enterprise-bar">
+          <div class="enterprise-bar-text">
+            <h4>Enterprise</h4>
+            <p>SLA, deploiement dedie, onboarding personnalise</p>
+          </div>
+          <a href="mailto:contact@tetardtek.com" class="btn-ghost">Nous contacter</a>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+      <p>&copy; 2026 SuperOAuth — Tetardtek</p>
+      <div>
+        <a href="docs/index.html">Documentation</a>
+      </div>
+    </footer>
+
+  </div>
+
+</body>
+</html>

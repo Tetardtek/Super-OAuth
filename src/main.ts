@@ -34,7 +34,7 @@ import path from 'path';
 import { DatabaseConnection } from './infrastructure/database/config/database.config';
 import { getAppConfig, EnvironmentValidator } from './shared/config';
 import { logger } from './shared/utils/logger.util';
-import { authRoutes, oauthRoutes, adminRoutes } from './presentation/routes';
+import { authRoutes, oauthRoutes, pkceRoutes, adminRoutes } from './presentation/routes';
 import {
   errorHandler,
   notFoundHandler,
@@ -110,9 +110,12 @@ class SuperOAuthServer {
     // Useful for debugging and security monitoring
     this.app.use(requestLogger);
 
-    // Static files middleware - Serves frontend assets (HTML, CSS, JS)
-    // Files from /public directory are accessible at root path
-    this.app.use(express.static(path.join(__dirname, '..', 'public')));
+    // Static files middleware - Serves SvelteKit build (production) or legacy public (fallback)
+    const frontendBuild = path.join(__dirname, '..', 'frontend', 'build');
+    const legacyPublic = path.join(__dirname, '..', 'public');
+    const fs = require('fs');
+    const staticRoot = fs.existsSync(frontendBuild) ? frontendBuild : legacyPublic;
+    this.app.use(express.static(staticRoot));
 
     // Body parsing middleware - Parses JSON and URL-encoded request bodies
     // Limit set to 10mb to prevent memory exhaustion attacks
@@ -144,16 +147,6 @@ class SuperOAuthServer {
    * - 404 handler (catch-all)
    */
   private setupRoutes(): void {
-    // Serve the main page - Landing page with login/register options
-    this.app.get('/', (_req, res) => {
-      res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
-    });
-
-    // API Documentation page - Interactive API documentation
-    this.app.get('/docs', (_req, res) => {
-      res.sendFile(path.join(__dirname, '..', 'public', 'docs.html'));
-    });
-
     // Health check endpoint - Used by load balancers and monitoring systems
     // Returns server status, version, and environment information
     this.app.get('/health', (_req, res) => {
@@ -173,6 +166,9 @@ class SuperOAuthServer {
     // OAuth routes (separate from auth routes to avoid conflicts)
     // Handles OAuth flows: start, callback, link, unlink
     this.app.use('/api/v1/oauth', oauthRoutes);
+
+    // PKCE routes — OAuth 2.0 Authorization Server (/oauth/authorize, /oauth/token)
+    this.app.use('/oauth', pkceRoutes);
 
     // Admin routes — Tier 3: tenant management, provider config, audit logs
     this.app.use('/api/v1/admin', adminRoutes);
@@ -196,8 +192,23 @@ class SuperOAuthServer {
       });
     });
 
-    // 404 handler
-    this.app.use('*', notFoundHandler);
+    // SPA fallback — SvelteKit handles client-side routing
+    // Serves index.html for all non-API, non-static routes
+    this.app.get('*', (req, res, next) => {
+      // Don't intercept API or health routes
+      if (req.path.startsWith('/api/') || req.path.startsWith('/oauth/') || req.path === '/health') {
+        return next();
+      }
+      const fs = require('fs');
+      const frontendBuild = path.join(__dirname, '..', 'frontend', 'build');
+      const indexPath = fs.existsSync(frontendBuild)
+        ? path.join(frontendBuild, 'index.html')
+        : path.join(__dirname, '..', 'public', 'index.html');
+      res.sendFile(indexPath);
+    });
+
+    // 404 handler for API routes only
+    this.app.use('/api/*', notFoundHandler);
   }
 
   private setupErrorHandling(): void {
