@@ -48,12 +48,19 @@ export class TenantValidationService {
       logger.warn('TenantValidationService: Redis unavailable, falling back to DB', { tenantId });
     }
 
-    // 2. Query DB
-    const entity = await this.repository.findOne({
-      where: { clientId: tenantId, isActive: true },
-      select: ['clientId'],
-    });
-    const exists = entity !== null;
+    // 2. Query DB — graceful degradation if DB is not connected
+    let exists: boolean;
+    try {
+      const entity = await this.repository.findOne({
+        where: { clientId: tenantId, isActive: true },
+        select: ['clientId'],
+      });
+      exists = entity !== null;
+    } catch {
+      // DB not connected — accept default tenant, reject unknown
+      logger.warn('TenantValidationService: DB unavailable, accepting default tenant only', { tenantId });
+      exists = tenantId === 'origins';
+    }
 
     // 3. Cache result
     try {

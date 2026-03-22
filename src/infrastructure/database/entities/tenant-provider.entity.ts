@@ -38,6 +38,6 @@ export class TenantProviderEntity {
   updatedAt!: Date;
 
   @ManyToOne('TenantEntity', 'providers', { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'tenant_id', referencedColumnName: 'client_id' })
+  @JoinColumn({ name: 'tenant_id', referencedColumnName: 'clientId' })
   tenant!: TenantEntity;
 }
