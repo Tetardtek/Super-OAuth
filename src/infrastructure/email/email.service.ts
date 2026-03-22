@@ -17,7 +17,8 @@ export class EmailService {
     this.transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || '127.0.0.1',
       port: parseInt(process.env.SMTP_PORT || '587', 10),
-      secure: false, // STARTTLS on 587
+      secure: false, // false = use STARTTLS upgrade
+      requireTLS: true, // Force STARTTLS — Stalwart exposes PLAIN/LOGIN only after TLS
       auth: process.env.SMTP_USER
         ? {
             user: process.env.SMTP_USER,
