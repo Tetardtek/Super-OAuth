@@ -6,6 +6,7 @@ import { csrfProtection, generateCsrfToken, csrfErrorHandler } from '../middlewa
 import { authRateLimit, registerRateLimit } from '../middleware/rate-limit.middleware';
 import { AuthController } from '../controllers/auth.controller';
 import { asyncHandler } from '../../shared/utils/async-handler.util';
+import { validateTenant } from '../../shared/middleware/tenant.middleware';
 import Joi from 'joi';
 
 const router = Router();
@@ -40,7 +41,7 @@ router.get('/csrf-token', (req: Request, res: Response) => {
  * @csrf Protected
  * @ratelimit 3 requests per hour
  */
-router.post('/register', registerRateLimit, csrfProtection, validateBody(authValidators.register), asyncHandler(authController.register.bind(authController)));
+router.post('/register', registerRateLimit, csrfProtection, (req, res, next) => void validateTenant(req, res, next), validateBody(authValidators.register), asyncHandler(authController.register.bind(authController)));
 
 /**
  * @route POST /auth/login
@@ -49,7 +50,7 @@ router.post('/register', registerRateLimit, csrfProtection, validateBody(authVal
  * @csrf Protected
  * @ratelimit 5 requests per 15 minutes
  */
-router.post('/login', authRateLimit, csrfProtection, validateBody(authValidators.login), asyncHandler(authController.login.bind(authController)));
+router.post('/login', authRateLimit, csrfProtection, (req, res, next) => void validateTenant(req, res, next), validateBody(authValidators.login), asyncHandler(authController.login.bind(authController)));
 
 /**
  * @route POST /auth/refresh

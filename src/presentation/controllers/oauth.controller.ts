@@ -24,8 +24,7 @@ import { DIContainer } from '../../infrastructure/di/container';
 import { AuthenticatedRequest } from '../../shared/middleware/auth.middleware';
 import { getWebhookService } from '../../infrastructure/services/webhook.service';
 
-// [SG1] Hardcoded whitelist for Tier 1 — Tier 2 will move this to DB-backed config
-const VALID_TENANTS = new Set(['origins', 'tetardpg']);
+// [SG1] Tenant validation now handled by validateTenant middleware (DB-backed via TenantValidationService)
 
 interface ExtendedRequest extends Request {
   user?: { id: string; email?: string } | undefined;
@@ -60,12 +59,8 @@ export class OAuthController {
     const { provider } = req.params as unknown as OAuthParams;
     const { redirectUrl, tenantId: rawTenantId } = req.query as unknown as OAuthStartQuery;
 
-    // [SG1] Validate tenantId against whitelist — reject unknown tenants early
-    const tenantId = rawTenantId || 'origins';
-    if (!VALID_TENANTS.has(tenantId)) {
-      res.status(400).json(ApiResponse.error('Unknown tenant', 'INVALID_TENANT'));
-      return;
-    }
+    // [SG1] tenantId validated by validateTenant middleware — req.tenantId is guaranteed valid
+    const tenantId = (req as unknown as { tenantId?: string }).tenantId || rawTenantId || 'origins';
 
     try {
       logger.info(`🚀 Starting OAuth flow for ${provider}`, { provider, tenantId, redirectUrl });
@@ -116,11 +111,7 @@ export class OAuthController {
       return;
     }
 
-    // [SG1] Validate tenantId from JWT against whitelist
-    if (!VALID_TENANTS.has(tenantId)) {
-      res.status(400).json(ApiResponse.error('Unknown tenant', 'INVALID_TENANT'));
-      return;
-    }
+    // [SG1] tenantId from JWT validated by validateAuthenticatedTenant middleware
 
     try {
       logger.info(`🔗 Starting OAuth link flow for ${provider}`, { userId, provider, tenantId });

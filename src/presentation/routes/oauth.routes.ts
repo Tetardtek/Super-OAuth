@@ -12,6 +12,7 @@ import { oauthController } from '../controllers/oauth.controller';
 import { asyncHandler } from '../../shared/utils/async-handler.util';
 import { authMiddleware } from '../../shared/middleware/auth.middleware';
 import { oauthRateLimit } from '../middleware/rate-limit.middleware';
+import { validateTenant, validateAuthenticatedTenant } from '../../shared/middleware/tenant.middleware';
 
 const router = Router();
 
@@ -42,6 +43,7 @@ router.get(
 router.post(
   '/account/merge',
   (req, res, next) => void authMiddleware(req, res, next),
+  (req, res, next) => void validateAuthenticatedTenant(req, res, next),
   asyncHandler(oauthController.handleMerge.bind(oauthController))
 );
 
@@ -51,7 +53,7 @@ router.post(
  * @access  Public
  * @ratelimit 10 requests per minute
  */
-router.get('/:provider', oauthRateLimit, asyncHandler(oauthController.startOAuth.bind(oauthController)));
+router.get('/:provider', oauthRateLimit, (req, res, next) => void validateTenant(req, res, next), asyncHandler(oauthController.startOAuth.bind(oauthController)));
 
 /**
  * @route   POST /api/v1/oauth/:provider/link
@@ -62,6 +64,7 @@ router.get('/:provider', oauthRateLimit, asyncHandler(oauthController.startOAuth
 router.post(
   '/:provider/link',
   (req, res, next) => void authMiddleware(req, res, next),
+  (req, res, next) => void validateAuthenticatedTenant(req, res, next),
   oauthRateLimit,
   asyncHandler(oauthController.startLink.bind(oauthController))
 );

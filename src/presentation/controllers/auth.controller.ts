@@ -10,6 +10,7 @@ import { CompleteOAuthUseCase } from '../../application/use-cases/complete-oauth
 import { TokenService } from '../../infrastructure/services/token.service';
 import { DeviceFingerprintUtil } from '../../shared/utils/device-fingerprint.util';
 import { logger } from '../../shared/utils/logger.util';
+import { AuthenticatedRequest } from '../../shared/middleware/auth.middleware';
 
 // Request body types
 interface RegisterBody {
@@ -71,7 +72,7 @@ export class AuthController {
         userAgent: req.get('User-Agent'),
       });
 
-      const tenantId = (req.query.tenantId as string | undefined) || 'origins';
+      const tenantId = (req as AuthenticatedRequest).tenantId || 'origins';
 
       const result = await this.registerUseCase.execute({
         email,
@@ -153,7 +154,7 @@ export class AuthController {
         userAgent: req.get('User-Agent'),
       });
 
-      const tenantId = (req.query.tenantId as string | undefined) || 'origins';
+      const tenantId = (req as AuthenticatedRequest).tenantId || 'origins';
 
       const result = await this.loginUseCase.execute({
         email,
@@ -352,7 +353,7 @@ export class AuthController {
         userAgent: req.get('User-Agent'),
       });
 
-      const tenantId = (req.query.tenantId as string | undefined) || 'origins';
+      const tenantId = (req as AuthenticatedRequest).tenantId || 'origins';
 
       const result = await this.startOAuthUseCase.execute({
         provider: provider as 'discord' | 'twitch' | 'google' | 'github',
