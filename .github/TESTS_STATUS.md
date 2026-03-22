@@ -1,82 +1,66 @@
-# Tests Backend - Status
+# Tests Status
 
-**Branche:** `feature/backend-tests-phase1`
-**Date:** 2025-11-19
-**Phase:** Phase 1 - Sécurité Critique ✅ COMPLÉTÉE
+**Date:** 2026-03-22
 
----
+## Metriques
 
-## 📊 Métriques
+| Suite | Tests | Framework | Duree |
+|-------|-------|-----------|-------|
+| Backend | 274 | Jest + ts-jest | ~13s |
+| Frontend | 165 | Vitest + jsdom | ~1s |
+| **Total** | **439** | | |
 
-| Métrique | Avant | Actuel | Objectif | Statut |
-|----------|-------|--------|----------|--------|
-| **Tests Backend** | 41 | **123** | 118 | ✅ **+82 tests (+200%)** |
-| **Coverage estimé** | 18% | ~45% | 40% | ✅ **Objectif dépassé** |
-| **Use Cases testés** | 1/7 | 4/7 | 4/7 | ✅ |
-| **Middleware testés** | 0/4 | 2/4 | 2/4 | ✅ |
+## Backend (274 tests — 22 suites)
 
-**Phase 1:** ✅ COMPLÉTÉE (82/77 tests - 107%)
+### Use Cases (8 suites)
+- `register-classic.test.ts` — inscription email/password
+- `login-classic.test.ts` — connexion, sessions, stats
+- `complete-oauth.test.ts` — OAuth flow, auto-link email
+- `start-oauth.test.ts` — initiation OAuth
+- `refresh-token.test.ts` — rotation tokens
+- `logout.test.ts` — revocation
+- `link-provider.use-case.test.ts` — link provider [SG5][SG10]
+- `merge-accounts.use-case.test.ts` — merge comptes [SG7][SG8][SG9]
 
----
+### Domain (2 suites)
+- `user.entity.test.ts` — entite User, business rules
+- `value-objects.test.ts` — Email, Nickname, Password, UserId
 
-## ✅ Tests Créés - Phase 1 (82 tests)
+### Infrastructure/Services (4 suites)
+- `oauth.service.test.ts` — multi-provider OAuth
+- `password.service.test.ts` — bcrypt, timing attack prevention
+- `tenant-crypto.service.test.ts` — AES-256-GCM
+- `tenant-token.service.test.ts` — per-tenant JWT
 
-### Use Cases (49 tests)
-- `login-classic.use-case.test.ts` (14 tests) - Authentification email/password
-- `refresh-token.use-case.test.ts` (12 tests) - Rotation tokens, sécurité sessions
-- `complete-oauth.use-case.test.ts` (11 tests) - OAuth flow, linking providers
-- `register-classic.test.ts` (4 tests) - *Existait déjà*
-- `logout.use-case.test.ts` - 🔄 À créer
-- `start-oauth.use-case.test.ts` - 🔄 À créer
+### Services (2 suites)
+- `token.service.test.ts` — JWT generation/verification
+- `token-blacklist.service.test.ts` — Redis blacklist
 
-### Middleware (27 tests)
-- `auth.middleware.test.ts` (15 tests) - JWT validation, user verification
-- `validation.middleware.test.ts` (12 tests) - Request validation (body/params/query)
-- `error.middleware.test.ts` - 🔄 À créer
-- `rate-limit.middleware.test.ts` - 🔄 À créer
+### Middleware (4 suites)
+- `auth.middleware.test.ts` — JWT verification
+- `csrf.middleware.test.ts` — CSRF protection
+- `rate-limit.middleware.test.ts` — rate limiting
+- `validation.middleware.test.ts` — request validation
+- `authenticate-tenant.middleware.test.ts` — tenant auth
 
-### Services Infrastructure (18 tests)
-- `oauth.service.test.ts` (18 tests) - Multi-provider OAuth (Google/GitHub/Discord)
-- `token.service.test.ts` (14 tests) - *Existait déjà*
-- `password.service.test.ts` - 🔄 À créer
+### Utils (1 suite)
+- `crypto.util.test.ts` — encryption, HMAC, key generation
 
----
+## Frontend (165 tests — 7 suites)
 
-## 🔄 Prochaines Étapes - Phase 2-4
+- `auth-service.test.js` — login, register, logout, OAuth
+- `dashboard-component.test.js` — dashboard, cache, profil
+- `toast-manager.test.js` — notifications
+- `token-manager.test.js` — JWT lifecycle
+- `http.test.js` — HTTP client
+- `ui.test.js` — DOM utils
+- `validation.test.js` — validation frontend
 
-### Phase 2 - Business Logic (84 tests)
-- Repositories: user, session, linked-account (35 tests)
-- Mappers: user, session, linked-account (20 tests)
-- Services application: auth, user (22 tests)
-- Use cases restants: logout, start-oauth (13 tests)
-
-### Phase 3 - Complétion (67 tests)
-- Entities: user, linked-account (20 tests)
-- Middleware: error, rate-limit (11 tests)
-- Value Objects split en fichiers séparés (14 tests)
-
-### Phase 4 - Intégration (70 tests)
-- Controllers integration (45 tests)
-- Database integration (25 tests)
-
-**Objectif final:** 340 tests backend | 82%+ coverage
-
----
-
-## 🎯 Standards Respectés
-
-✅ Pattern AAA | ✅ Mocks typés | ✅ Edge cases | ✅ Happy + Error paths | ✅ Isolation | ✅ Sécurité testée
-
----
-
-## 🔧 Commandes
+## Commandes
 
 ```bash
-npm test                    # 123 tests backend
-npm run test:all            # 372 tests (123 backend + 249 frontend)
-npm run test:coverage       # Coverage backend
+npm run test             # backend
+npm run test:frontend    # frontend
+npm run test:all         # les deux
+npm run test:coverage    # avec couverture
 ```
-
----
-
-**Prochaine phase:** Phase 2 - Business Logic (Repositories, Mappers, Services)

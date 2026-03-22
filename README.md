@@ -1,641 +1,99 @@
-# 🔐 SuperOAuth
+# SuperOAuth
 
 [![CI/CD Pipeline](https://github.com/Tetardtek/Super-OAuth/actions/workflows/ci.yml/badge.svg)](https://github.com/Tetardtek/Super-OAuth/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/Tetardtek/Super-OAuth/branch/main/graph/badge.svg)](https://codecov.io/gh/Tetardtek/Super-OAuth)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.1.6-blue)](https://www.typescriptlang.org/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-**Système d'authentification moderne avec OAuth et gestion des tokens JWT**
+Système d'authentification multi-tenant avec OAuth (Discord, Twitch, Google, GitHub) et gestion JWT.
 
-SuperOAuth est une solution complète d'authentification qui combine l'authentification classique par email/mot de passe avec l'intégration OAuth pour les plateformes populaires (Discord, Twitch, Google, GitHub).
+## Stack
 
-## 📋 Table des Matières
+| Couche | Tech |
+|--------|------|
+| Runtime | Node.js 20+, TypeScript |
+| Framework | Express, TypeORM (DDD) |
+| DB | MySQL 8, Redis |
+| Auth | JWT access/refresh, bcrypt, CSRF, rate limiting |
+| OAuth | Discord, Twitch, Google, GitHub |
+| Tests | Jest (backend), Vitest (frontend) |
 
-- [🚀 Fonctionnalités](#-fonctionnalités)
-- [🛠️ Technologies](#️-technologies)
-- [📦 Installation](#-installation)
-- [🔧 Configuration](#-configuration)
-- [📖 Documentation API](#-documentation-api)
-- [🎨 Interface Utilisateur](#-interface-utilisateur)
-- [🔒 Sécurité](#-sécurité)
-- [🧪 Tests](#-tests)
-- [🤖 Pour les Agents IA](#-pour-les-agents-ia)
-- [🚀 CI/CD Pipeline](#-cicd-pipeline)
-- [📝 Changelog](#-changelog)
-
-## 🚀 Fonctionnalités
-
-### ✅ Authentification Complète
-- **Inscription/Connexion classique** avec validation des mots de passe
-- **OAuth intégré** : Discord, Twitch, Google, GitHub
-- **Gestion des tokens JWT** avec refresh automatique
-- **Sessions sécurisées** avec expiration et révocation
-
-### 🛡️ Sécurité Avancée
-- **Hachage bcrypt** pour les mots de passe
-- **Validation stricte** des entrées utilisateur
-- **Protection CSRF** et XSS
-- **Content Security Policy** (CSP) configurée
-- **Rate limiting** sur les endpoints sensibles
-
-### 🎯 Interface Moderne
-- **Design responsive** et accessible
-- **Système de notifications toast** avec animations
-- **Dashboard utilisateur** avec informations détaillées
-- **Gestion d'erreurs** contextuelle et intuitive
-
-### 🔧 Fonctionnalités Techniques
-- **Architecture modulaire** avec Domain-Driven Design
-- **Base de données MySQL** avec migrations
-- **Logging complet** des actions utilisateur
-- **Validation TypeScript** stricte
-- **Tests unitaires** et d'intégration
-
-## 🛠️ Technologies
-
-### Backend
-- **Node.js** 18+ avec TypeScript
-- **Express.js** avec middleware de sécurité
-- **MySQL** avec TypeORM
-- **JWT** pour l'authentification
-- **bcrypt** pour le hachage des mots de passe
-- **Helmet** pour la sécurité HTTP
-
-### Frontend
-- **HTML5** sémantique
-- **CSS3** moderne avec animations
-- **JavaScript ES6+** vanilla
-- **Design responsive** mobile-first
-
-### DevOps & Qualité
-- **ESLint** et **Prettier** pour la qualité du code
-- **Jest** pour les tests
-- **GitHub Actions** pour CI/CD
-- **Docker** pour la containerisation
-
-## 📦 Installation
-
-### Prérequis
-- Node.js 18+
-- MySQL 8.0+
-- npm ou yarn
-
-### Installation Rapide
+## Setup
 
 ```bash
-# Cloner le projet
-git clone <repository-url>
-cd SuperOAuth
-
-# Installer les dépendances
+git clone <repository-url> && cd Super-OAuth
 npm install
-
-# Configuration de la base de données
-cp .env.example .env
-# Éditer .env avec vos paramètres
-
-# Lancer les migrations
+cp .env.example .env   # remplir les valeurs
 npm run migration:run
-
-# Démarrer en développement
 npm run dev
 ```
 
-### Variables d'Environnement
-
-```env
-# Base de données
-DB_HOST=localhost
-DB_PORT=3306
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
-DB_DATABASE=superoauth
-
-# JWT
-JWT_SECRET=your_super_secret_key_here
-JWT_REFRESH_SECRET=your_refresh_secret_key
-
-# OAuth Providers
-DISCORD_CLIENT_ID=your_discord_client_id
-DISCORD_CLIENT_SECRET=your_discord_client_secret
-
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
-# Serveur
-PORT=3000
-NODE_ENV=development
-```
-
-## 🔧 Configuration
-
-### OAuth Providers
-
-#### Discord
-1. Aller sur [Discord Developer Portal](https://discord.com/developers/applications)
-2. Créer une nouvelle application
-3. Ajouter l'URL de redirection : `http://localhost:3000/api/v1/auth/oauth/discord/callback`
-
-#### Google
-1. Aller sur [Google Cloud Console](https://console.cloud.google.com/)
-2. Créer un projet et activer l'API Google+
-3. Configurer l'écran de consentement OAuth
-4. Ajouter l'URL de redirection : `http://localhost:3000/api/v1/auth/oauth/google/callback`
-
-#### GitHub
-1. Aller sur [GitHub Developer Settings](https://github.com/settings/developers)
-2. Créer une nouvelle OAuth App
-3. Ajouter l'URL de redirection : `http://localhost:3000/api/v1/auth/oauth/github/callback`
-
-#### Twitch
-1. Aller sur [Twitch Developer Console](https://dev.twitch.tv/console/apps)
-2. Créer une nouvelle application
-3. Ajouter l'URL de redirection : `http://localhost:3000/api/v1/auth/oauth/twitch/callback`
-
-## 📖 Documentation API
-
-### Base URL
-```
-http://localhost:3000/api/v1
-```
-
-### Endpoints d'Authentification
-
-#### POST /auth/register
-Inscription d'un nouvel utilisateur
-```json
-{
-  "email": "user@example.com",
-  "password": "SecurePassword123!",
-  "nickname": "MonPseudo"
-}
-```
-
-#### POST /auth/login
-Connexion utilisateur
-```json
-{
-  "email": "user@example.com",
-  "password": "SecurePassword123!"
-}
-```
-
-#### POST /auth/refresh
-Rafraîchir le token d'accès
-```json
-{
-  "refreshToken": "your_refresh_token"
-}
-```
-
-#### POST /auth/logout
-Déconnexion et révocation des tokens
-```json
-{
-  "refreshToken": "your_refresh_token"
-}
-```
-
-#### GET /auth/me
-Obtenir les informations de l'utilisateur connecté
-```
-Headers: Authorization: Bearer <access_token>
-```
-
-### OAuth Endpoints
-
-#### GET /auth/oauth/{provider}
-Initier la connexion OAuth
-- Providers supportés : `discord`, `google`, `github`, `twitch`
-
-#### GET /auth/oauth/{provider}/callback
-Callback OAuth automatique
-
-### Réponses API
-
-#### Succès
-```json
-{
-  "success": true,
-  "data": {
-    "user": { /* user object */ },
-    "tokens": {
-      "accessToken": "jwt_token",
-      "refreshToken": "refresh_token"
-    }
-  },
-  "message": "Opération réussie"
-}
-```
-
-#### Erreur
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Description de l'erreur",
-    "details": { /* détails optionnels */ }
-  }
-}
-```
-
-## 🎨 Interface Utilisateur
-
-### Système de Toast
-
-SuperOAuth inclut un système de notifications toast moderne :
-
-```javascript
-// Utilisation du système de toast
-Toast.success('Opération réussie !');
-Toast.error('Une erreur est survenue');
-Toast.warning('Attention !');
-Toast.info('Information');
-```
-
-#### Fonctionnalités des Toast
-- ✅ 4 types : Success, Error, Warning, Info
-- 🎨 Animations fluides d'entrée/sortie
-- ⏱️ Auto-fermeture configurable
-- 👆 Fermeture manuelle au clic
-- 📱 Design responsive
-
-### Dashboard Utilisateur
-
-Le dashboard affiche :
-- Informations personnelles
-- Historique de connexion
-- Gestion des tokens
-- Paramètres de compte
-
-### Interface Responsive
-
-- 📱 **Mobile First** : Optimisé pour mobile
-- 💻 **Desktop** : Interface complète sur grand écran
-
-## 🔒 Sécurité
-
-### Mesures Implémentées
-
-#### Protection des Mots de Passe
-- **Hachage bcrypt** avec salt
-- **Validation stricte** : minimum 8 caractères, majuscules, minuscules, chiffres, caractères spéciaux
-- **Protection contre les attaques par dictionnaire**
-
-#### Sécurité des Sessions
-- **JWT avec expiration courte** (15 minutes)
-- **Refresh tokens sécurisés** (7 jours)
-- **Révocation automatique** en cas de suspicion
-
-#### Protection Web
-- **Content Security Policy** stricte
-- **Protection CSRF** avec tokens
-- **Sanitisation des entrées** utilisateur
-- **Rate limiting** sur les endpoints sensibles
-
-#### Headers de Sécurité
-```javascript
-// Helmet configuration
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"]
-    }
-  }
-}));
-```
-
-### Validation des Données
-
-```typescript
-// Exemple de validation
-export class CreateUserDto {
-  @IsEmail()
-  email: string;
-
-  @IsString()
-  @MinLength(8)
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-  password: string;
-
-  @IsString()
-  @MinLength(2)
-  @MaxLength(50)
-  nickname: string;
-}
-```
-
-## 🧪 Tests
-
-SuperOAuth dispose d'une suite complète de **372 tests** (123 backend + 249 frontend) couvrant toutes les couches de l'application.
-
-> **📊 Documentation détaillée**: [tests/README.md](./tests/README.md)
-> **📈 Métriques temps réel**: [.github/TESTS_STATUS.md](./.github/TESTS_STATUS.md)
-
-### Lancer les Tests
+## Scripts
 
 ```bash
-# Tests frontend (Vitest)
-npm run test:frontend
-
-# Tests backend (Jest)
-npm run test:backend
-
-# Tests avec couverture
-npm run test:coverage
-
-# Tests en mode watch
-npm run test:watch
-
-# Tests d'intégration
-npm run test:e2e
+npm run dev              # dev watch mode
+npm run build            # compile TypeScript
+npm run test             # backend (Jest)
+npm run test:frontend    # frontend (Vitest)
+npm run test:all         # les deux
+npm run test:coverage    # avec couverture
+npm run lint             # ESLint
+npm run format           # Prettier
+npm run typecheck        # TypeScript strict
+npm run migration:run    # migrations TypeORM
 ```
 
-### Tests Frontend
+## Architecture DDD
 
-#### Architecture de Tests
-- **Framework** : Vitest avec jsdom
-- **249 tests unitaires** : 100% de réussite
-- **Coverage** : ~60%
-- **Durée d'exécution** : ~5 secondes
-- **Environnement** : Simulation DOM browser
+```
+src/
+├── domain/          # Entites, value objects, regles metier
+├── application/     # Use cases, interfaces, DTOs
+├── infrastructure/  # Repositories, DB, OAuth providers, services
+├── presentation/    # Controllers, routes, middleware
+└── shared/          # Config, utils
+```
 
-### Tests Backend
+## Endpoints
 
-#### Architecture de Tests
-- **Framework** : Jest avec ts-jest
-- **123 tests unitaires** : 100% de réussite
-- **Coverage** : ~45% (objectif: 82%)
-- **Durée d'exécution** : ~15 secondes
-- **Composants testés** : Use Cases (49), Middleware (27), Services (32), Value Objects (13)
+### Auth classique
 
-#### Modules Testés
-
-| Module | Tests | Description |
+| Method | Route | Description |
 |--------|-------|-------------|
-| **Storage** | 21 | localStorage, tokens, gestion des données |
-| **Validation** | 28 | Email, mots de passe, validation des entrées |
-| **TokenManager** | 36 | JWT tokens, refresh, authentification |
-| **HTTP** | 22 | Client HTTP, GET/POST/PUT/DELETE, auth headers |
-| **ToastManager** | 35 | Notifications toast, animations, auto-fermeture |
-| **UI** | 14 | Manipulation DOM, visibilité, valeurs, styles |
-| **Format** | 14 | Formatage dates, nombres, texte |
-| **Logger** | 9 | Logging console, niveaux de log |
-| **ErrorHandler** | 7 | Gestion erreurs, affichage, API errors |
-| **AuthService** | 15 | Login, register, logout, OAuth |
-| **Dashboard** | 15 | Dashboard utilisateur, affichage données |
-| **ServerMonitor** | 15 | Monitoring serveur, statut, health check |
-| **SharedUtils** | 18 | Utilitaires partagés, helpers |
+| POST | `/auth/register` | Inscription (rate limited: 3/h) |
+| POST | `/auth/login` | Connexion (rate limited: 5/15min) |
+| POST | `/auth/refresh` | Refresh token |
+| POST | `/auth/logout` | Logout + revocation |
+| GET | `/auth/me` | Profil utilisateur |
+| GET | `/auth/csrf-token` | Token CSRF |
 
-#### Exemple de Test
+### OAuth
 
-```javascript
-// tests/frontend/unit/utils/validation.test.js
-describe('Validation', () => {
-  it('should validate strong password', () => {
-    const strong = 'MyP@ssw0rd123'
-    expect(Validation.isPasswordStrong(strong)).toBe(true)
-  })
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/auth/oauth/:provider` | Initier OAuth flow |
+| GET | `/auth/callback/:provider` | Callback OAuth |
+| GET | `/api/v1/oauth/providers` | Liste providers |
+| GET | `/api/v1/oauth/linked` | Comptes lies (auth) |
+| POST | `/api/v1/oauth/:provider/link` | Lier un provider (auth) |
+| DELETE | `/api/v1/oauth/:provider/unlink` | Delier un provider (auth) |
+| POST | `/api/v1/oauth/account/merge` | Fusionner deux comptes (auth) |
 
-  it('should reject weak password', () => {
-    const weak = 'password'
-    expect(Validation.isPasswordStrong(weak)).toBe(false)
-  })
-})
-```
+## Securite
 
-#### Coverage Frontend
-- **Managers** : ToastManager, TokenManager
-- **Utils** : Storage, Validation, UI, HTTP, Format, Logger, ErrorHandler
-- **Components** : AuthService, Dashboard, ServerMonitor
-- **Shared** : SharedUtils
+- JWT access token: **5 minutes**, refresh token: **7 jours**
+- Bcrypt (salt), CSRF tokens, Helmet CSP, rate limiting Redis
+- Device fingerprinting, token blacklist Redis
+- Per-tenant JWT secrets (AES-256-GCM encrypted at rest)
+- Audit logs par tenant
 
-### Tests Backend
+## Multi-tenant
 
-```bash
-# Tests unitaires backend
-npm run test:backend
+Tier 1-3 implementes : `tenantId` sur users/sessions/linked_accounts, per-tenant OAuth providers, JWT secrets par tenant, audit logs.
 
-# Coverage backend
-npm run test:backend:coverage
-```
+## Deploy
 
-#### Modules Backend Testés
-- Controllers (Auth, User, OAuth)
-- Services (Authentication, User Management)
-- Repositories (User, Token)
-- Middleware (Auth, Validation, Error Handling)
-- Domain Layer (Entities, Value Objects)
+- **Prod** : `superoauth.tetardtek.com` — pm2 cluster 2 instances, port 3006
+- **CI/CD** : GitHub Actions — tests + lint + format + typecheck + build + deploy SSH
+- **Migration prod** : `NODE_ENV=production node --env-file=.env ./node_modules/.bin/typeorm migration:run -d dist/data-source.js`
 
-### Configuration des Tests
+## Licence
 
-#### Vitest (Frontend)
-```javascript
-// vitest.config.js
-export default defineConfig({
-  test: {
-    environment: 'jsdom',
-    setupFiles: ['./tests/frontend/setup.js'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html', 'lcov']
-    }
-  }
-})
-```
-
-#### Setup Frontend
-Les tests frontend incluent des mocks pour :
-- `localStorage` avec stockage fonctionnel
-- `sessionStorage` avec spies
-- `fetch` API pour les requêtes HTTP
-- `console` pour éviter les logs durant tests
-- `window.location` pour la navigation
-
-### Qualité du Code
-
-#### Standards
-- ✅ **100% des tests passent** (249/249)
-- ✅ **Architecture modulaire** testable
-- ✅ **Mocks réalistes** avec état persistant
-- ✅ **Edge cases** couverts (null, empty, invalid)
-- ✅ **Tests d'intégration** entre modules
-
-#### Commandes Utiles
-
-```bash
-# Lancer uniquement les tests modifiés
-npm run test:frontend -- --changed
-
-# Lancer tests en parallèle
-npm run test:frontend -- --threads
-
-# Lancer un fichier spécifique
-npm run test:frontend -- tests/frontend/unit/utils/validation.test.js
-
-# Mode interactif
-npm run test:frontend -- --ui
-```
-
-## 🤖 Pour les Agents IA
-
-Si vous êtes un **agent IA** (Claude Code, Cursor, GitHub Copilot, etc.) travaillant sur ce projet, **commencez par consulter** :
-
-### 📁 [CLAUDE/](./CLAUDE/) - Documentation Complète pour Agents IA
-
-Cette documentation spécialisée contient tout ce dont vous avez besoin :
-
-#### 🚀 Démarrage Rapide
-- **[QUICK_START.md](./CLAUDE/QUICK_START.md)** - Démarrer en 5 minutes
-- **[.cursorrules](./CLAUDE/.cursorrules)** - Règles strictes (NON NÉGOCIABLES)
-
-#### 📚 Guides Techniques
-- **[ARCHITECTURE.md](./CLAUDE/guides/ARCHITECTURE.md)** - Architecture DDD et Clean Architecture
-- **[CONTRIBUTING.md](./CLAUDE/guides/CONTRIBUTING.md)** - Standards de code et workflow Git
-- **[AI_AGENT_GUIDE.md](./CLAUDE/guides/AI_AGENT_GUIDE.md)** - Patterns, exemples et best practices
-- **[PROJECT_STRUCTURE.md](./CLAUDE/guides/PROJECT_STRUCTURE.md)** - Navigation et localisation des fichiers
-
-#### 📊 Statut du Projet
-- **[PROJECT_STATUS.md](./CLAUDE/status/PROJECT_STATUS.md)** - État actuel, métriques, roadmap
-
-### ⚡ Ordre de Lecture Recommandé
-
-1. **QUICK_START.md** (5-10 min) - Installation et commandes essentielles
-2. **.cursorrules** (10 min) - Règles NON NÉGOCIABLES
-3. **ARCHITECTURE.md** (15 min) - Comprendre la structure DDD
-4. **AI_AGENT_GUIDE.md** (20-25 min) - Patterns et exemples de code
-5. **PROJECT_STRUCTURE.md** (5-10 min) - Localiser les fichiers rapidement
-
-### 🎯 Règles d'Or
-
-- ✅ **TOUJOURS** respecter la séparation des couches (Domain, Application, Infrastructure, Presentation)
-- ✅ **TOUJOURS** utiliser l'injection de dépendances
-- ✅ **TOUJOURS** créer des tests pour le nouveau code
-- ❌ **JAMAIS** court-circuiter les couches (Controller → Repository directement)
-- ❌ **JAMAIS** utiliser le type `any` en TypeScript
-- ❌ **JAMAIS** mettre de logique métier dans les Controllers
-
-### 📖 Documentation Complète
-
-Pour plus de détails, consultez le **[README du dossier CLAUDE](./CLAUDE/README.md)** qui contient :
-- Index complet de la documentation
-- Guide de navigation
-- Checklist avant de commencer
-- Ressources et support
-
-## 🚀 CI/CD Pipeline
-
-SuperOAuth utilise **GitHub Actions** pour l'intégration et le déploiement continus.
-
-### Workflows Automatisés
-
-Le pipeline CI/CD s'exécute automatiquement sur :
-- **Push** vers `main`, `develop`, ou branches `feature/**`
-- **Pull Requests** vers `main` ou `develop`
-
-### Jobs Exécutés
-
-| Job | Description | Durée estimée |
-|-----|-------------|---------------|
-| 🧪 **Backend Tests** | Tests unitaires Jest (123 tests) | ~15s |
-| 🎨 **Frontend Tests** | Tests Vitest (249 tests) | ~10s |
-| 📝 **Linting** | Vérification ESLint | ~15s |
-| 🎨 **Formatting** | Vérification Prettier | ~10s |
-| 🔍 **Type Check** | Vérification TypeScript | ~20s |
-| 🏗️ **Build** | Compilation du projet | ~25s |
-| 📊 **Coverage** | Rapports de couverture (Codecov) | ~15s |
-
-### Statut des Builds
-
-Consultez le statut en temps réel des builds sur :
-- [GitHub Actions](https://github.com/Tetardtek/Super-OAuth/actions)
-- [Codecov Dashboard](https://codecov.io/gh/Tetardtek/Super-OAuth)
-
-### Commandes Locales
-
-Exécutez les mêmes vérifications localement avant de pousser :
-
-```bash
-# Tests complets
-npm run test:all              # Tous les tests (backend + frontend)
-npm run test:all:coverage     # Avec couverture
-
-# Qualité du code
-npm run lint                  # ESLint
-npm run format               # Prettier
-npm run typecheck            # TypeScript
-
-# Build
-npm run build                # Compilation
-```
-
-### Configuration
-
-Les workflows sont définis dans `.github/workflows/ci.yml` et incluent :
-- ✅ Cache npm pour optimisation
-- ✅ Matrix strategy (Node.js 20.x)
-- ✅ Rapports de couverture automatiques
-- ✅ Artifacts de build (rétention 7 jours)
-- ✅ Variables d'environnement pour tests
-
-## 📝 Changelog
-
-### Version 1.0.0 (Actuelle)
-- ✅ Authentification complète avec OAuth
-- ✅ Interface utilisateur moderne
-- ✅ Système de toast notifications
-- ✅ Sécurité renforcée avec CSP
-- ✅ Documentation complète
-
-### Prochaines Versions
-
-#### v1.1.0 (Planifiée)
-- 🔄 **2FA** : Authentification à deux facteurs
-- 📧 **Email de vérification** automatique
-- 🔐 **Réinitialisation de mot de passe** par email
-- 👥 **Gestion des rôles** utilisateur
-
-#### v1.2.0 (Future)
-- 🌍 **Internationalisation** (i18n)
-- 📊 **Dashboard administrateur**
-- 🔍 **Logs avancés** avec recherche
-- 🐳 **Déploiement Docker** complet
-
-## 🤝 Contribution
-
-Les contributions sont les bienvenues ! Consultez le guide de contribution pour plus de détails.
-
-### Développement Local
-
-```bash
-# Fork le projet
-git clone <your-fork>
-
-# Créer une branche feature
-git checkout -b feature/amazing-feature
-
-# Commiter vos changements
-git commit -m 'Add amazing feature'
-
-# Pousser vers la branche
-git push origin feature/amazing-feature
-
-# Ouvrir une Pull Request
-```
-
-## 📄 Licence
-
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
-
-## 🆘 Support
-
-- 🐛 **Issues** : [GitHub Issues](repository-url/issues)
-
----
-
-**Développé avec ❤️ par l'équipe SuperOAuth**
+MIT
