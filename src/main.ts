@@ -56,6 +56,7 @@ class SuperOAuthServer {
 
   constructor() {
     this.app = express();
+    this.app.set('trust proxy', 1); // Trust first proxy (Apache reverse proxy)
     this.setupMiddleware();
     this.setupRoutes();
     this.setupErrorHandling();
