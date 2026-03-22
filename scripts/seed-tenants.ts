@@ -18,8 +18,21 @@ import { TenantCryptoService } from '../src/infrastructure/services/tenant-crypt
 import { TenantRepository } from '../src/infrastructure/services/tenant.repository';
 
 const TENANTS_TO_SEED = [
-  { name: 'origins', allowedOrigins: ['https://origins.tetardtek.com'] },
-  { name: 'tetardpg', allowedOrigins: ['https://tetardpg.tetardtek.com'] },
+  {
+    name: 'origins',
+    allowedOrigins: ['https://origins.tetardtek.com'],
+    redirectUris: ['https://origins.tetardtek.com/callback'],
+  },
+  {
+    name: 'tetardpg',
+    allowedOrigins: ['https://tetardpg.tetardtek.com'],
+    redirectUris: ['https://tetardpg.tetardtek.com/auth/callback'],
+  },
+  {
+    name: 'clickerz',
+    allowedOrigins: ['https://clickerz.tetardtek.com'],
+    redirectUris: ['https://clickerz.tetardtek.com/callback'],
+  },
 ];
 
 async function main() {
@@ -57,8 +70,8 @@ async function main() {
 
     const ds = DatabaseConnection.getDataSource();
     await ds.query(
-      `INSERT INTO tenants (client_id, name, client_secret_hash, client_secret_salt, jwt_secret_encrypted, jwt_secret_iv, allowed_origins, is_active, retention_days)
-       VALUES (?, ?, ?, ?, ?, ?, ?, true, 90)`,
+      `INSERT INTO tenants (client_id, name, client_secret_hash, client_secret_salt, jwt_secret_encrypted, jwt_secret_iv, allowed_origins, redirect_uris, is_active, retention_days)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, true, 90)`,
       [
         tenant.name,
         tenant.name,
@@ -67,6 +80,7 @@ async function main() {
         jwtSecretEncrypted,
         jwtSecretIv,
         JSON.stringify(tenant.allowedOrigins),
+        JSON.stringify(tenant.redirectUris ?? []),
       ]
     );
 

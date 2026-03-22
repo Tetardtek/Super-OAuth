@@ -29,7 +29,6 @@ import { pkceController } from './pkce.controller';
 
 interface ExtendedRequest extends Request {
   user?: { id: string; email?: string } | undefined;
-  session?: { oauthState?: string } & Record<string, unknown> | undefined;
 }
 
 interface OAuthParams {
@@ -67,12 +66,7 @@ export class OAuthController {
       logger.info(`🚀 Starting OAuth flow for ${provider}`, { provider, tenantId, redirectUrl });
 
       // tenantId stored in Redis state — not relied on at callback via client [SG4]
-      const { authUrl, state } = await oauthService.generateAuthUrl(provider, tenantId, redirectUrl);
-
-      if (req.session) {
-        req.session.oauthState = state;
-      }
-
+      const { authUrl } = await oauthService.generateAuthUrl(provider, tenantId, redirectUrl);
       logger.info(`✅ OAuth URL generated for ${provider}`, { provider, tenantId });
       res.redirect(authUrl);
     } catch (error) {
@@ -189,18 +183,14 @@ export class OAuthController {
         return;
       }
 
-      if (req.session?.oauthState !== state) {
-        logger.warn(`⚠️ OAuth state mismatch for ${provider}`, { provider });
-        res.redirect(`${process.env.FRONTEND_URL}/auth/error?error=state_mismatch&provider=${provider}`);
-        return;
-      }
-
-      // [SG4] All metadata (tenantId, mode, linkingUserId) read from Redis state
+      // [SG4] State validated by Redis (use-once get+delete) in handleCallback
+      // No session check needed — Redis state is the CSRF protection
       const {
         userInfo: oauthUserInfo,
         tenantId,
         mode,
         linkingUserId,
+        redirectUrl: stateRedirectUrl,
       } = await oauthService.handleCallback(provider, code, state);
 
       logger.info(`👤 OAuth user info received for ${provider}`, {
@@ -231,10 +221,6 @@ export class OAuthController {
             `${process.env.FRONTEND_URL}/settings/error?error=${encodeURIComponent(msg)}&provider=${provider}`
           );
           return;
-        }
-
-        if (req.session?.oauthState) {
-          delete req.session.oauthState;
         }
 
         logger.info(`✅ OAuth provider linked successfully for ${provider}`, {
@@ -304,20 +290,13 @@ export class OAuthController {
       // Generate tokens — tenantId included in JWT payload
       const tokens = await authService.generateTokens(user, tenantId);
 
-      if (req.session?.oauthState) {
-        delete req.session.oauthState;
-      }
-
       logger.info(`✅ OAuth authentication successful for ${provider}`, {
         userId: user.id,
         provider,
         tenantId,
       });
 
-      const redirectUrl = req.session?.oauthRedirectUrl || `${process.env.FRONTEND_URL}/auth/success`;
-      if (req.session?.oauthRedirectUrl) {
-        delete req.session.oauthRedirectUrl;
-      }
+      const redirectUrl = stateRedirectUrl || `${process.env.FRONTEND_URL}/auth/success`;
 
       const urlWithTokens = `${String(redirectUrl)}?token=${tokens.accessToken}&refresh=${tokens.refreshToken}&provider=${provider}`;
       res.redirect(urlWithTokens);

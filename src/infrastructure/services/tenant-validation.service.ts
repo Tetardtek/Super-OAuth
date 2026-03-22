@@ -12,6 +12,7 @@ import { redisClientSingleton } from '../redis/redis-client';
 import { logger } from '../../shared/utils/logger.util';
 
 const CACHE_PREFIX = 'tenant:exists:';
+const ORIGINS_CACHE_KEY = 'tenant:all_origins';
 const CACHE_TTL_SECONDS = 300; // 5 minutes
 
 export class TenantValidationService {
@@ -74,12 +75,53 @@ export class TenantValidationService {
   }
 
   /**
+   * Get all allowed origins from active tenants.
+   * Cached in Redis for 5 minutes — used by CORS middleware.
+   */
+  async getAllowedOrigins(): Promise<Set<string>> {
+    // 1. Check Redis cache
+    try {
+      const redis = await redisClientSingleton.getClient();
+      const cached = await redis.get(ORIGINS_CACHE_KEY);
+      if (cached !== null) {
+        return new Set(JSON.parse(cached) as string[]);
+      }
+    } catch {
+      logger.warn('TenantValidationService: Redis unavailable for origins cache');
+    }
+
+    // 2. Query DB — all active tenants with allowed_origins
+    let origins: string[] = [];
+    try {
+      const tenants = await this.repository.find({
+        where: { isActive: true },
+        select: ['allowedOrigins'],
+      });
+      origins = tenants.flatMap((t) => t.allowedOrigins ?? []);
+    } catch {
+      logger.warn('TenantValidationService: DB unavailable for origins, using CORS_ORIGINS fallback');
+      return new Set(process.env.CORS_ORIGINS?.split(',') ?? []);
+    }
+
+    // 3. Cache result
+    try {
+      const redis = await redisClientSingleton.getClient();
+      await redis.set(ORIGINS_CACHE_KEY, JSON.stringify(origins), { EX: CACHE_TTL_SECONDS });
+    } catch {
+      // Non-critical
+    }
+
+    return new Set(origins);
+  }
+
+  /**
    * Invalidate cache for a tenant (call after create/delete).
    */
   async invalidateCache(tenantId: string): Promise<void> {
     try {
       const redis = await redisClientSingleton.getClient();
       await redis.del(`${CACHE_PREFIX}${tenantId}`);
+      await redis.del(ORIGINS_CACHE_KEY);
     } catch {
       // Non-critical
     }

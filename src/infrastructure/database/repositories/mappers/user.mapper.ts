@@ -45,6 +45,10 @@ export class UserMapper {
     entity.createdAt = user.createdAt;
     entity.updatedAt = user.updatedAt;
 
+    if (user.linkedAccounts.length > 0) {
+      entity.linkedAccounts = user.linkedAccounts.map((la) => LinkedAccountMapper.toEntity(la));
+    }
+
     return entity;
   }
 }

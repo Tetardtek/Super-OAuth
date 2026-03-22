@@ -108,7 +108,7 @@ export class OAuthService {
     code: string,
     state: string,
     tenantCreds?: TenantCredentialOverrides
-  ): Promise<{ userInfo: OAuthUserInfo; tenantId: string; mode: 'auth' | 'link'; linkingUserId?: string }> {
+  ): Promise<{ userInfo: OAuthUserInfo; tenantId: string; mode: 'auth' | 'link'; linkingUserId?: string; redirectUrl?: string }> {
     logger.info(`🔄 Processing OAuth callback for ${provider}`);
 
     if (!isProviderSupported(provider)) {
@@ -132,6 +132,7 @@ export class OAuthService {
     const tenantId = stateData.tenantId;
     const mode = stateData.mode ?? 'auth';
     const linkingUserId = stateData.linkingUserId;
+    const redirectUrl = stateData.redirectUrl;
 
     try {
       // Exchange code for token (use tenant creds if available, fallback to global)
@@ -149,7 +150,7 @@ export class OAuthService {
         mode,
       });
 
-      return { userInfo, tenantId, mode, ...(linkingUserId !== undefined && { linkingUserId }) };
+      return { userInfo, tenantId, mode, ...(linkingUserId !== undefined && { linkingUserId }), ...(redirectUrl && { redirectUrl }) };
     } catch (error) {
       logger.error(
         `❌ OAuth callback failed for ${provider}`,

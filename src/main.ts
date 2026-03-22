@@ -43,6 +43,7 @@ import {
 } from './presentation/middleware';
 import { generateNonce } from './presentation/middleware/csp-nonce.middleware';
 import { PROJECT_INFO, ENDPOINT_STATUS } from './shared/constants/project-info';
+import { TenantValidationService } from './infrastructure/services/tenant-validation.service';
 
 /**
  * SuperOAuth Server Class
@@ -96,12 +97,23 @@ class SuperOAuthServer {
       })(req, res, next);
     });
 
-    // CORS (Cross-Origin Resource Sharing) configuration
-    // Allows requests from specified origins with credentials
+    // CORS — dynamic per-tenant allowed_origins from DB (cached 5min in Redis)
+    // Falls back to CORS_ORIGINS env var if DB/Redis unavailable
+    const staticOrigins = new Set(process.env.CORS_ORIGINS?.split(',') ?? ['http://localhost:3000']);
     this.app.use(
       cors({
-        origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'],
-        credentials: true, // Allow cookies and authentication headers
+        origin: (origin, callback) => {
+          // Allow requests with no origin (server-to-server, curl, etc.)
+          if (!origin) return callback(null, true);
+          // Always allow static origins (dev, superoauth frontend itself)
+          if (staticOrigins.has(origin)) return callback(null, true);
+          // Check tenant allowed_origins from DB+Redis cache
+          TenantValidationService.getInstance()
+            .getAllowedOrigins()
+            .then((allowed) => callback(null, allowed.has(origin)))
+            .catch(() => callback(null, staticOrigins.has(origin)));
+        },
+        credentials: true,
       })
     );
 
@@ -129,14 +141,8 @@ class SuperOAuthServer {
     // Must be registered before csrf.middleware
     this.app.use(cookieParser());
 
-    // Simple session middleware for OAuth state management
-    // Stores temporary OAuth state tokens to prevent CSRF attacks
-    this.app.use((req: express.Request, _res, next) => {
-      // Extend Request with session property (temporary OAuth state storage)
-      (req as express.Request & { session?: Record<string, unknown> }).session =
-        (req as express.Request & { session?: Record<string, unknown> }).session || {};
-      next();
-    });
+    // OAuth state managed exclusively via Redis (RedisStateStorage)
+    // No Express session needed — state is crypto random, use-once, 10min TTL
   }
 
   /**
