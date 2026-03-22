@@ -1,0 +1,117 @@
+<script lang="ts">
+	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
+
+	let status = $state<'loading' | 'success' | 'error'>('loading');
+	let errorMsg = $state('');
+	let userEmail = $state('');
+
+	onMount(async () => {
+		const token = $page.url.searchParams.get('token');
+
+		if (!token) {
+			status = 'error';
+			errorMsg = 'Token de vérification manquant.';
+			return;
+		}
+
+		try {
+			const res = await fetch('/api/v1/auth/verify-email', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ token }),
+			});
+
+			const data = await res.json();
+
+			if (res.ok && data.success) {
+				status = 'success';
+				userEmail = data.data?.user?.email || '';
+			} else {
+				status = 'error';
+				errorMsg = data.message || 'Vérification échouée.';
+			}
+		} catch {
+			status = 'error';
+			errorMsg = 'Erreur réseau. Réessaie plus tard.';
+		}
+	});
+</script>
+
+<svelte:head>
+	<title>Vérification email — SuperOAuth</title>
+</svelte:head>
+
+<div class="verify-page">
+	{#if status === 'loading'}
+		<div class="spinner"></div>
+		<p>Vérification en cours...</p>
+	{:else if status === 'success'}
+		<div class="success-icon">✓</div>
+		<h2>Email vérifié !</h2>
+		<p>Ton compte <strong>{userEmail}</strong> est maintenant actif.</p>
+		<p class="hint">Tu peux fermer cette page et te reconnecter sur ton application.</p>
+	{:else if status === 'error'}
+		<div class="error-icon">✕</div>
+		<h2>Vérification échouée</h2>
+		<p class="error-text">{errorMsg}</p>
+		<a href="/login" class="btn btn-ghost">Retour au login</a>
+	{/if}
+</div>
+
+<style>
+	.verify-page {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		min-height: calc(100vh - var(--header-height));
+		gap: var(--space-md);
+		color: var(--text-secondary);
+		text-align: center;
+		padding: var(--space-xl);
+	}
+
+	.success-icon {
+		width: 64px;
+		height: 64px;
+		border-radius: 50%;
+		background: var(--accent);
+		color: var(--bg);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 32px;
+		font-weight: bold;
+	}
+
+	.error-icon {
+		width: 64px;
+		height: 64px;
+		border-radius: 50%;
+		background: var(--danger);
+		color: var(--bg);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 32px;
+		font-weight: bold;
+	}
+
+	h2 { color: var(--text-primary); margin: 0; }
+	.hint { color: var(--text-muted); font-size: 14px; }
+	.error-text { color: var(--danger); }
+
+	.spinner {
+		width: 32px;
+		height: 32px;
+		border: 3px solid var(--border);
+		border-top-color: var(--accent);
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
+</style>
