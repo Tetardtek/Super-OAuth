@@ -32,7 +32,7 @@ export class EmailService {
   }
 
   async sendVerificationEmail(to: string, token: string, tenantId: string): Promise<void> {
-    const baseUrl = process.env.FRONTEND_URL || 'https://superoauth.tetardtek.com';
+    const baseUrl = process.env.SUPEROAUTH_PUBLIC_URL || 'https://superoauth.tetardtek.com';
     const verifyUrl = `${baseUrl}/verify-email?token=${token}&tenant=${tenantId}`;
 
     await this.send({
@@ -59,7 +59,7 @@ export class EmailService {
   }
 
   async sendMergeEmail(to: string, token: string, provider: string, tenantId: string): Promise<void> {
-    const baseUrl = process.env.FRONTEND_URL || 'https://superoauth.tetardtek.com';
+    const baseUrl = process.env.SUPEROAUTH_PUBLIC_URL || 'https://superoauth.tetardtek.com';
     const mergeUrl = `${baseUrl}/confirm-merge?token=${token}&tenant=${tenantId}`;
 
     await this.send({
