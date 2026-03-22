@@ -14,19 +14,14 @@ export class Nickname {
       throw new Error('Nickname cannot exceed 32 characters');
     }
 
-    // Only alphanumeric, underscores, hyphens allowed
-    const validPattern = /^[a-zA-Z0-9_-]+$/;
+    // Only alphanumeric, underscores, hyphens, dots allowed (GitHub allows dots)
+    const validPattern = /^[a-zA-Z0-9_.\-]+$/;
     if (!validPattern.test(nickname)) {
-      throw new Error('Nickname can only contain letters, numbers, underscores, and hyphens');
+      throw new Error('Nickname can only contain letters, numbers, underscores, hyphens, and dots');
     }
 
     // Cannot start or end with special characters
-    if (
-      nickname.startsWith('_') ||
-      nickname.startsWith('-') ||
-      nickname.endsWith('_') ||
-      nickname.endsWith('-')
-    ) {
+    if (/^[_.\-]|[_.\-]$/.test(nickname)) {
       throw new Error('Nickname cannot start or end with special characters');
     }
 
