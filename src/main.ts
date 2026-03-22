@@ -86,7 +86,7 @@ class SuperOAuthServer {
           directives: {
             defaultSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-            scriptSrc: ["'self'", `'nonce-${res.locals.nonce}'`, "'unsafe-inline'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
             fontSrc: ["'self'", 'https://fonts.gstatic.com'],
             imgSrc: ["'self'", 'data:', 'https:'],
             connectSrc: ["'self'"],
