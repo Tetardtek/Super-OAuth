@@ -6,6 +6,8 @@ import {
   IOAuthService,
   ITenantTokenService,
   IAuditLogService,
+  IEmailService,
+  IEmailTokenService,
 } from '../../../src/application/interfaces/repositories.interface';
 import { User } from '../../../src/domain/entities';
 import { Email } from '../../../src/domain/value-objects/email.vo';
@@ -20,6 +22,8 @@ describe('CompleteOAuthUseCase', () => {
   let mockOAuthService: jest.Mocked<IOAuthService>;
   let mockTenantTokenService: jest.Mocked<ITenantTokenService>;
   let mockAuditLogService: jest.Mocked<IAuditLogService>;
+  let mockEmailService: jest.Mocked<IEmailService>;
+  let mockEmailTokenService: jest.Mocked<IEmailTokenService>;
   let mockOAuthResult: {
     accessToken: string;
     refreshToken?: string;
@@ -71,6 +75,16 @@ describe('CompleteOAuthUseCase', () => {
       log: jest.fn().mockResolvedValue(undefined),
     };
 
+    mockEmailService = {
+      sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+      sendMergeEmail: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockEmailTokenService = {
+      createVerificationToken: jest.fn().mockResolvedValue({ rawToken: 'verify-token', expiresAt: new Date() }),
+      createMergeToken: jest.fn().mockResolvedValue({ rawToken: 'merge-token', expiresAt: new Date() }),
+    };
+
     // Mock OAuth result
     mockOAuthResult = {
       accessToken: 'oauth-access-token',
@@ -90,7 +104,9 @@ describe('CompleteOAuthUseCase', () => {
       mockSessionRepository,
       mockOAuthService,
       mockTenantTokenService,
-      mockAuditLogService
+      mockAuditLogService,
+      mockEmailService,
+      mockEmailTokenService
     );
   });
 
@@ -130,9 +146,12 @@ describe('CompleteOAuthUseCase', () => {
       expect(mockOAuthService.exchangeCodeForTokens).toHaveBeenCalledWith('google', 'auth-code-123', 'state-token');
       expect(mockUserRepository.findByProvider).toHaveBeenCalledWith('google', 'google-user-123', 'test-tenant');
       expect(mockUserRepository.save).toHaveBeenCalledWith(existingUser);
-      expect(result.accessToken).toBe('jwt-access-token');
-      expect(result.refreshToken).toBe('jwt-refresh-token');
-      expect(result.user.email).toBe('oauth@example.com');
+      expect(result.type).toBe('authenticated');
+      if (result.type === 'authenticated') {
+        expect(result.data.accessToken).toBe('jwt-access-token');
+        expect(result.data.refreshToken).toBe('jwt-refresh-token');
+        expect(result.data.user.email).toBe('oauth@example.com');
+      }
     });
 
     it('should update login statistics for existing user', async () => {
@@ -198,8 +217,9 @@ describe('CompleteOAuthUseCase', () => {
       const savedUser = (mockUserRepository.save as jest.Mock).mock.calls[0][0];
       expect(savedUser).toBeInstanceOf(User);
       expect(savedUser.nickname.toString()).toBe('oauthuser');
-      expect(result.accessToken).toBe('new-access-token');
-      expect(result.user.nickname).toBe('oauthuser');
+      // New user with email → verification_pending (no tokens)
+      expect(result.type).toBe('verification_pending');
+      expect(mockEmailService.sendVerificationEmail).toHaveBeenCalled();
     });
 
     it('should create user with limited email from OAuth provider', async () => {
@@ -231,8 +251,9 @@ describe('CompleteOAuthUseCase', () => {
       const result = await useCase.execute(dto);
 
       // Assert
-      expect(result.user.email).toBe('discord@example.com');
-      expect(result.user.nickname).toBe('discorduser');
+      // New user with email → verification pending
+      expect(result.type).toBe('verification_pending');
+      expect(mockEmailService.sendVerificationEmail).toHaveBeenCalled();
     });
   });
 
@@ -266,9 +287,10 @@ describe('CompleteOAuthUseCase', () => {
 
       // Assert
       expect(mockUserRepository.findByEmail).toHaveBeenCalledWith('oauth@example.com', 'test-tenant');
-      expect(existingUser.linkedProviders).toContain('google');
-      expect(mockUserRepository.save).toHaveBeenCalledWith(existingUser);
-      expect(result.user.linkedProviders).toContain('google');
+      // No longer auto-links — sends merge email instead
+      expect(result.type).toBe('merge_pending');
+      expect(mockEmailTokenService.createMergeToken).toHaveBeenCalled();
+      expect(mockEmailService.sendMergeEmail).toHaveBeenCalled();
     });
   });
 
@@ -354,21 +376,12 @@ describe('CompleteOAuthUseCase', () => {
       mockTokenService.generateRefreshToken.mockReturnValue('refresh');
 
       // Act
-      await useCase.execute(dto);
+      const result = await useCase.execute(dto);
 
-      // Assert
-      expect(mockSessionRepository.create).toHaveBeenCalledWith(
-        expect.any(String),
-        'refresh',
-        expect.any(Date)
-      );
-
-      const createCall = (mockSessionRepository.create as jest.Mock).mock.calls[0];
-      const expiresAt = createCall[2] as Date;
-      const expectedExpiration = Date.now() + 604800000; // 7 days
-
-      expect(expiresAt.getTime()).toBeGreaterThanOrEqual(expectedExpiration - 1000);
-      expect(expiresAt.getTime()).toBeLessThanOrEqual(expectedExpiration + 1000);
+      // New user with email → verification pending, no session created
+      expect(result.type).toBe('verification_pending');
+      expect(mockSessionRepository.create).not.toHaveBeenCalled();
+      expect(mockEmailService.sendVerificationEmail).toHaveBeenCalled();
     });
   });
 
@@ -398,9 +411,9 @@ describe('CompleteOAuthUseCase', () => {
       // Act
       const result = await useCase.execute(dto);
 
-      // Assert - Should still work, our JWT tokens are independent
-      expect(result.accessToken).toBe('access');
-      expect(result.refreshToken).toBe('refresh');
+      // No email on provider → verification pending
+      expect(result.type).toBe('verification_pending');
+      expect(mockEmailService.sendVerificationEmail).toHaveBeenCalled();
     });
 
     it('should handle multiple OAuth providers for same user', async () => {
@@ -437,9 +450,10 @@ describe('CompleteOAuthUseCase', () => {
       // Act
       const result = await useCase.execute(dto);
 
-      // Assert
-      expect(existingUser.linkedProviders).toContain('github');
-      expect(result.user.linkedProviders).toContain('github');
+      // Assert — merge pending (email exists, sends merge token)
+      expect(result.type).toBe('merge_pending');
+      expect(mockEmailTokenService.createMergeToken).toHaveBeenCalled();
+      expect(mockEmailService.sendMergeEmail).toHaveBeenCalled();
     });
   });
 });

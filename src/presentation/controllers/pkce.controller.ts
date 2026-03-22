@@ -285,25 +285,82 @@ export class PkceController {
         tenantCreds
       );
 
-      // Find or create user in SuperOAuth
+      // Find or create user in SuperOAuth (email sovereign model)
       let user = await userService.findByOAuthProvider(provider, userInfo.id, resolvedTenantId);
 
-      if (!user) {
+      if (user) {
+        // Existing linked user — update info and proceed
+        await userService.updateOAuthInfo(user.id, provider, userInfo);
+      } else {
+        // Check if email already taken by another account
         if (userInfo.email) {
           const existingEmailUser = await userService.findByEmail(userInfo.email, resolvedTenantId);
-          if (existingEmailUser && userInfo.emailVerified && existingEmailUser.emailVerified) {
-            await userService.linkOAuthAccount(existingEmailUser.id, provider, userInfo, resolvedTenantId);
-            user = existingEmailUser;
+
+          if (existingEmailUser) {
+            // Email exists — send merge token instead of auto-linking
+            const { EmailTokenService } = await import('../../infrastructure/services/email-token.service');
+            const { EmailService } = await import('../../infrastructure/email/email.service');
+            const emailTokenService = new EmailTokenService();
+            const emailService = new EmailService();
+
+            const { rawToken } = await emailTokenService.createMergeToken({
+              userId: existingEmailUser.id,
+              tenantId: resolvedTenantId,
+              provider,
+              providerId: userInfo.id,
+              providerDisplayName: userInfo.nickname,
+              providerEmail: userInfo.email,
+            });
+
+            await emailService.sendMergeEmail(userInfo.email, rawToken, provider, resolvedTenantId);
+
+            // Redirect to client with merge_pending status
+            const redirectParams = new URLSearchParams({
+              status: 'merge_pending',
+              email: userInfo.email,
+              provider,
+            });
+            if (pkceData.clientState) redirectParams.set('state', pkceData.clientState);
+
+            logger.info('PKCE callback: merge email sent', { provider, tenantId: resolvedTenantId, email: userInfo.email });
+
+            res.redirect(`${pkceData.clientRedirectUri}?${redirectParams.toString()}`);
+            return true;
           }
         }
 
-        if (!user) {
-          user = await userService.createFromOAuth(userInfo, resolvedTenantId);
+        // No existing account — create new user (emailVerified=false)
+        user = await userService.createFromOAuth(userInfo, resolvedTenantId);
+
+        // Send verification email
+        if (userInfo.email) {
+          const { EmailTokenService } = await import('../../infrastructure/services/email-token.service');
+          const { EmailService } = await import('../../infrastructure/email/email.service');
+          const emailTokenService = new EmailTokenService();
+          const emailService = new EmailService();
+
+          const { rawToken } = await emailTokenService.createVerificationToken({
+            userId: user.id,
+            tenantId: resolvedTenantId,
+          });
+
+          await emailService.sendVerificationEmail(userInfo.email, rawToken, resolvedTenantId);
+
+          // Redirect to client with verification_pending status
+          const redirectParams = new URLSearchParams({
+            status: 'verification_pending',
+            email: userInfo.email,
+          });
+          if (pkceData.clientState) redirectParams.set('state', pkceData.clientState);
+
+          logger.info('PKCE callback: verification email sent', { provider, tenantId: resolvedTenantId, userId: user.id });
+
+          res.redirect(`${pkceData.clientRedirectUri}?${redirectParams.toString()}`);
+          return true;
         }
-      } else {
-        await userService.updateOAuthInfo(user.id, provider, userInfo);
       }
 
+      // User is linked and verified — issue authorization code
       // [SG-PKCE-3] Generate SuperOAuth authorization code
       const { code: authCode } = await getAuthCodeService().create({
         tenantId: resolvedTenantId,

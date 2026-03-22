@@ -38,28 +38,17 @@ export class AuthController {
         tenantId: (req as { tenantId?: string }).tenantId || 'origins',
       });
 
-      logger.info('User registered successfully', {
-        userId: result.user.id,
-        email: result.user.email,
-        nickname: result.user.nickname,
+      logger.info('Registration initiated — verification email sent', {
+        email: result.email,
+        tenantId: result.tenantId,
       });
 
-      res.status(201).json({
+      res.status(202).json({
         success: true,
-        message: 'User registered successfully',
+        message: result.message,
         data: {
-          user: {
-            id: result.user.id,
-            email: result.user.email,
-            nickname: result.user.nickname,
-            emailVerified: result.user.emailVerified,
-            isActive: result.user.isActive,
-            createdAt: result.user.createdAt,
-          },
-          tokens: {
-            accessToken: result.accessToken,
-            refreshToken: result.refreshToken,
-          },
+          email: result.email,
+          tenantId: result.tenantId,
         },
       });
     } catch (error) {
@@ -364,34 +353,36 @@ export class AuthController {
         state: state as string,
       });
 
-      // Note: We'll need to determine if this is a new user based on the result
-      // For now, we'll assume the result includes this information
-      const isNewUser = false; // This should come from the use case
+      if (result.type === 'authenticated') {
+        logger.info('OAuth authentication completed', {
+          userId: result.data.user.id,
+        });
 
-      logger.info('OAuth authentication completed', {
-        userId: result.user.id,
-        isNewUser,
-      });
-
-      res.status(200).json({
-        success: true,
-        message: isNewUser ? 'User registered via OAuth' : 'OAuth login successful',
-        data: {
-          user: {
-            id: result.user.id,
-            email: result.user.email,
-            nickname: result.user.nickname,
-            emailVerified: result.user.emailVerified,
-            isActive: result.user.isActive,
-            createdAt: result.user.createdAt,
+        res.status(200).json({
+          success: true,
+          message: 'OAuth login successful',
+          data: {
+            user: result.data.user,
+            tokens: {
+              accessToken: result.data.accessToken,
+              refreshToken: result.data.refreshToken,
+            },
           },
-          tokens: {
-            accessToken: result.accessToken,
-            refreshToken: result.refreshToken,
-          },
-          isNewUser,
-        },
-      });
+        });
+      } else if (result.type === 'merge_pending') {
+        res.status(202).json({
+          success: true,
+          message: result.data.message,
+          data: result.data,
+        });
+      } else {
+        // verification_pending
+        res.status(202).json({
+          success: true,
+          message: result.data.message,
+          data: result.data,
+        });
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('OAuth callback failed', error instanceof Error ? error : undefined, {

@@ -40,6 +40,19 @@ export interface UserDto {
   loginCount: number;
 }
 
+export interface RegisterPendingResponseDto {
+  message: string;
+  email: string;
+  tenantId: string;
+}
+
+export interface MergePendingResponseDto {
+  message: string;
+  email: string;
+  provider: string;
+  tenantId: string;
+}
+
 export interface OAuthProviderDto {
   provider: string;
   providerId: string;

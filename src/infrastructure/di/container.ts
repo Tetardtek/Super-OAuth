@@ -10,6 +10,8 @@ import {
 } from '../../application/use-cases';
 import { LinkProviderUseCase } from '../../application/use-cases/link-provider.use-case';
 import { MergeAccountsUseCase } from '../../application/use-cases/merge-accounts.use-case';
+import { VerifyEmailUseCase } from '../../application/use-cases/verify-email.use-case';
+import { ConfirmMergeUseCase } from '../../application/use-cases/confirm-merge.use-case';
 
 import {
   TokenService,
@@ -23,6 +25,8 @@ import {
   AuditLogService,
 } from '../services';
 import { TokenBlacklistService } from '../services/token-blacklist.service';
+import { EmailService } from '../email/email.service';
+import { EmailTokenService } from '../services/email-token.service';
 import { DatabaseConnection } from '../database/config/database.config';
 
 import {
@@ -33,6 +37,8 @@ import {
   ITokenBlacklist,
   ITenantTokenService,
   IAuditLogService,
+  IEmailService,
+  IEmailTokenService,
 } from '../../application/interfaces/repositories.interface';
 
 export class DIContainer {
@@ -59,6 +65,10 @@ export class DIContainer {
     this.services.set('PasswordService', new PasswordService());
     this.services.set('TokenBlacklistService', new TokenBlacklistService());
 
+    // Email services
+    this.services.set('EmailService', new EmailService());
+    this.services.set('EmailTokenService', new EmailTokenService());
+
     // Tier 3 — Tenant-scoped services
     const tenantCrypto = new TenantCryptoService();
     this.services.set('TenantCryptoService', tenantCrypto);
@@ -72,9 +82,9 @@ export class DIContainer {
       'RegisterClassicUseCase',
       new RegisterClassicUseCase(
         this.get<IUserRepository>('UserRepository'),
-        this.get<ITokenService>('TokenService'),
-        this.get<ITenantTokenService>('TenantTokenService'),
-        this.get<IAuditLogService>('AuditLogService')
+        this.get<IAuditLogService>('AuditLogService'),
+        this.get<IEmailService>('EmailService'),
+        this.get<IEmailTokenService>('EmailTokenService')
       )
     );
 
@@ -121,7 +131,9 @@ export class DIContainer {
         this.get<ISessionRepository>('SessionRepository'),
         this.get<IOAuthService>('OAuthService'),
         this.get<ITenantTokenService>('TenantTokenService'),
-        this.get<IAuditLogService>('AuditLogService')
+        this.get<IAuditLogService>('AuditLogService'),
+        this.get<IEmailService>('EmailService'),
+        this.get<IEmailTokenService>('EmailTokenService')
       )
     );
 
@@ -152,6 +164,30 @@ export class DIContainer {
         DatabaseConnection.getDataSource(),
         this.get<ITenantTokenService>('TenantTokenService'),
         this.get<IAuditLogService>('AuditLogService')
+      )
+    );
+
+    this.services.set(
+      'VerifyEmailUseCase',
+      new VerifyEmailUseCase(
+        this.get<IUserRepository>('UserRepository'),
+        this.get<ITokenService>('TokenService'),
+        this.get<ISessionRepository>('SessionRepository'),
+        this.get<ITenantTokenService>('TenantTokenService'),
+        this.get<IAuditLogService>('AuditLogService'),
+        this.get<EmailTokenService>('EmailTokenService')
+      )
+    );
+
+    this.services.set(
+      'ConfirmMergeUseCase',
+      new ConfirmMergeUseCase(
+        this.get<IUserRepository>('UserRepository'),
+        this.get<ITokenService>('TokenService'),
+        this.get<ISessionRepository>('SessionRepository'),
+        this.get<ITenantTokenService>('TenantTokenService'),
+        this.get<IAuditLogService>('AuditLogService'),
+        this.get<EmailTokenService>('EmailTokenService')
       )
     );
   }
@@ -199,5 +235,13 @@ export class DIContainer {
 
   getMergeAccountsUseCase(): MergeAccountsUseCase {
     return this.get<MergeAccountsUseCase>('MergeAccountsUseCase');
+  }
+
+  getVerifyEmailUseCase(): VerifyEmailUseCase {
+    return this.get<VerifyEmailUseCase>('VerifyEmailUseCase');
+  }
+
+  getConfirmMergeUseCase(): ConfirmMergeUseCase {
+    return this.get<ConfirmMergeUseCase>('ConfirmMergeUseCase');
   }
 }

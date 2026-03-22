@@ -68,6 +68,24 @@ export interface IPasswordService {
   verify(password: string, hash: string): Promise<boolean>;
 }
 
+export interface IEmailService {
+  sendVerificationEmail(to: string, token: string, tenantId: string): Promise<void>;
+  sendMergeEmail(to: string, token: string, provider: string, tenantId: string): Promise<void>;
+}
+
+export interface IEmailTokenService {
+  createVerificationToken(data: { userId: string; tenantId: string }): Promise<{ rawToken: string; expiresAt: Date }>;
+  createMergeToken(data: {
+    userId: string;
+    tenantId: string;
+    provider: string;
+    providerId: string;
+    providerDisplayName?: string;
+    providerEmail?: string;
+    providerMetadata?: Record<string, unknown>;
+  }): Promise<{ rawToken: string; expiresAt: Date }>;
+}
+
 export interface IOAuthService {
   generateAuthUrl(
     provider: string,

@@ -50,27 +50,17 @@ router.post('/register', (req, res, next) => void validateTenant(req, res, next)
     const registerUseCase = container.getRegisterClassicUseCase();
     const result = await registerUseCase.execute({ email, password, nickname, tenantId: (req as { tenantId?: string }).tenantId || 'origins' });
 
-    logger.info('User registered successfully', {
-      userId: result.user.id,
-      email: result.user.email,
+    logger.info('Registration initiated — verification email sent', {
+      email: result.email,
+      tenantId: result.tenantId,
     });
 
-    res.status(201).json({
+    res.status(202).json({
       success: true,
-      message: 'User registered successfully',
+      message: result.message,
       data: {
-        user: {
-          id: result.user.id,
-          email: result.user.email,
-          nickname: result.user.nickname,
-          emailVerified: result.user.emailVerified,
-          isActive: result.user.isActive,
-          createdAt: result.user.createdAt,
-        },
-        tokens: {
-          accessToken: result.accessToken,
-          refreshToken: result.refreshToken,
-        },
+        email: result.email,
+        tenantId: result.tenantId,
       },
     });
   } catch (error) {
@@ -368,26 +358,26 @@ router.get(
         state: state as string,
       });
 
-      logger.info('OAuth authentication completed', { userId: result.user.id });
-
-      res.status(200).json({
-        success: true,
-        message: 'OAuth authentication successful',
-        data: {
-          user: {
-            id: result.user.id,
-            email: result.user.email,
-            nickname: result.user.nickname,
-            emailVerified: result.user.emailVerified,
-            isActive: result.user.isActive,
-            createdAt: result.user.createdAt,
+      if (result.type === 'authenticated') {
+        logger.info('OAuth authentication completed', { userId: result.data.user.id });
+        res.status(200).json({
+          success: true,
+          message: 'OAuth authentication successful',
+          data: {
+            user: result.data.user,
+            tokens: {
+              accessToken: result.data.accessToken,
+              refreshToken: result.data.refreshToken,
+            },
           },
-          tokens: {
-            accessToken: result.accessToken,
-            refreshToken: result.refreshToken,
-          },
-        },
-      });
+        });
+      } else {
+        res.status(202).json({
+          success: true,
+          message: result.data.message,
+          data: result.data,
+        });
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('OAuth callback failed', error as Error, { ip: req.ip });

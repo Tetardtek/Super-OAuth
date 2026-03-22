@@ -104,6 +104,137 @@ router.get('/me', (req, res, next) => void authenticateToken(req, res, next), (r
   });
 });
 
+/**
+ * @route POST /auth/verify-email
+ * @desc Verify email with token — activates account and returns auth tokens
+ * @access Public
+ */
+router.post(
+  '/verify-email',
+  authRateLimit,
+  asyncHandler(async (req: Request, res: Response) => {
+    const { token } = req.body;
+
+    if (!token || typeof token !== 'string') {
+      res.status(400).json({
+        success: false,
+        error: 'INVALID_REQUEST',
+        message: 'Token is required',
+      });
+      return;
+    }
+
+    const { DIContainer } = await import('../../infrastructure/di/container');
+    const verifyEmailUseCase = DIContainer.getInstance().getVerifyEmailUseCase();
+
+    try {
+      const result = await verifyEmailUseCase.execute(token);
+      res.status(200).json({
+        success: true,
+        message: 'Email verified successfully',
+        data: {
+          user: result.user,
+          tokens: {
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+          },
+        },
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      if (msg === 'INVALID_OR_EXPIRED_TOKEN') {
+        res.status(400).json({ success: false, error: 'INVALID_TOKEN', message: 'Invalid or expired verification token' });
+      } else {
+        res.status(500).json({ success: false, error: 'SERVER_ERROR', message: 'Verification failed' });
+      }
+    }
+  })
+);
+
+/**
+ * @route POST /auth/confirm-merge
+ * @desc Confirm merge via email token — links provider to existing account
+ * @access Public
+ */
+router.post(
+  '/confirm-merge',
+  authRateLimit,
+  asyncHandler(async (req: Request, res: Response) => {
+    const { token } = req.body;
+
+    if (!token || typeof token !== 'string') {
+      res.status(400).json({
+        success: false,
+        error: 'INVALID_REQUEST',
+        message: 'Token is required',
+      });
+      return;
+    }
+
+    const { DIContainer } = await import('../../infrastructure/di/container');
+    const confirmMergeUseCase = DIContainer.getInstance().getConfirmMergeUseCase();
+
+    try {
+      const result = await confirmMergeUseCase.execute(token);
+      res.status(200).json({
+        success: true,
+        message: 'Account merged successfully',
+        data: {
+          user: result.user,
+          tokens: {
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+          },
+        },
+      });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      if (msg === 'INVALID_OR_EXPIRED_TOKEN' || msg === 'INVALID_MERGE_TOKEN') {
+        res.status(400).json({ success: false, error: 'INVALID_TOKEN', message: 'Invalid or expired merge token' });
+      } else {
+        res.status(500).json({ success: false, error: 'SERVER_ERROR', message: 'Merge failed' });
+      }
+    }
+  })
+);
+
+/**
+ * @route POST /auth/resend-verification
+ * @desc Resend verification email
+ * @access Public
+ */
+router.post(
+  '/resend-verification',
+  registerRateLimit,
+  asyncHandler(async (req: Request, res: Response) => {
+    const { email, tenantId } = req.body;
+
+    if (!email || typeof email !== 'string') {
+      res.status(400).json({ success: false, error: 'INVALID_REQUEST', message: 'Email is required' });
+      return;
+    }
+
+    const { DIContainer } = await import('../../infrastructure/di/container');
+    const userRepo = DIContainer.getInstance().get<import('../../application/interfaces/repositories.interface').IUserRepository>('UserRepository');
+    const emailTokenService = DIContainer.getInstance().get<import('../../infrastructure/services/email-token.service').EmailTokenService>('EmailTokenService');
+    const emailService = DIContainer.getInstance().get<import('../../infrastructure/email/email.service').EmailService>('EmailService');
+
+    const tenant = tenantId || 'origins';
+    const user = await userRepo.findByEmail(email, tenant);
+
+    if (!user || user.emailVerified) {
+      // Don't reveal whether user exists
+      res.status(200).json({ success: true, message: 'If the email exists, a verification link has been sent' });
+      return;
+    }
+
+    const { rawToken } = await emailTokenService.createVerificationToken({ userId: user.id, tenantId: tenant });
+    await emailService.sendVerificationEmail(email, rawToken, tenant);
+
+    res.status(200).json({ success: true, message: 'Verification email sent' });
+  })
+);
+
 // CSRF error handler (doit être après les routes)
 router.use(csrfErrorHandler);
 
