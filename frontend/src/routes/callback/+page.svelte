@@ -36,8 +36,8 @@
 
 			if (!res.ok) throw new Error('Token invalide');
 
-			const user = await res.json();
-			auth.setUser(user, token);
+			const body = await res.json();
+			auth.setUser(body.data.user, token);
 			status = 'success';
 			toast.success('Connexion réussie');
 			goto('/dashboard');

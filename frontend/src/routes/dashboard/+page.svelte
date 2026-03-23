@@ -16,10 +16,10 @@
 
 	onMount(async () => {
 		try {
-			const res = await api.get<User>('/auth/me');
-			user = res;
-			auth.setUser(res, localStorage.getItem('accessToken') || '');
-			linkedProviders = (res.linkedAccounts || []).map((a) => a.provider);
+			const res = await api.get<{ success: boolean; data: { user: User } }>('/auth/me');
+			user = res.data.user;
+			auth.setUser(user, localStorage.getItem('accessToken') || '');
+			linkedProviders = (user.linkedAccounts || []).map((a) => a.provider);
 		} catch {
 			toast.error('Session expirée');
 			goto('/login');
@@ -50,9 +50,9 @@
 			toast.success('Comptes fusionnés');
 			mergeToken = '';
 			// Refresh user data
-			const res = await api.get<User>('/auth/me');
-			user = res;
-			linkedProviders = (res.linkedAccounts || []).map((a) => a.provider);
+			const res = await api.get<{ success: boolean; data: { user: User } }>('/auth/me');
+			user = res.data.user;
+			linkedProviders = (user.linkedAccounts || []).map((a) => a.provider);
 		} catch (err: any) {
 			toast.error(err.message);
 		}
