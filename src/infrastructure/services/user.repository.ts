@@ -5,6 +5,7 @@ import { Nickname, UserId, Email } from '../../domain/value-objects';
 import { LinkedAccountId } from '../../domain/value-objects/linked-account-id';
 import { Repository } from 'typeorm';
 import { UserEntity } from '../database/entities/user.entity';
+import { LinkedAccountEntity } from '../database/entities/linked-account.entity';
 import { DatabaseConnection } from '../database/config/database.config';
 import { UserMapper } from '../database/repositories/mappers/user.mapper';
 
@@ -178,7 +179,7 @@ export class UserRepository implements IUserRepository {
   }
 
   /**
-   * Unlink OAuth provider from user
+   * Unlink OAuth provider from user — direct DELETE (cascade via save() unreliable)
    */
   async unlinkOAuthProvider(userId: string, provider: string): Promise<void> {
     const user = await this.findById(userId);
@@ -186,8 +187,12 @@ export class UserRepository implements IUserRepository {
       throw new Error(`User not found: ${userId}`);
     }
 
+    // Business rule check via domain entity
     user.unlinkAccount(provider);
-    await this.save(user);
+
+    // Direct DELETE — same pattern as confirm-merge (ac7eb17)
+    const laRepo = DatabaseConnection.getInstance().getRepository(LinkedAccountEntity);
+    await laRepo.delete({ userId, provider });
   }
 
   /**
