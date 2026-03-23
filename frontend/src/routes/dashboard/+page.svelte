@@ -115,11 +115,11 @@
 				<div class="tab-content">
 					<div class="profile-card card">
 						<div class="avatar">
-							{user.nickname?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+							{user.nickname?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || '?'}
 						</div>
 						<div class="profile-info">
 							<h2>{user.nickname || 'Utilisateur'}</h2>
-							<p class="text-secondary">{user.email}</p>
+							<p class="text-secondary">{user.email || 'Aucun email'}</p>
 							<div class="profile-meta">
 								<span class="badge {user.emailVerified ? 'badge-success' : 'badge-demo'}">
 									{user.emailVerified ? 'Email vérifié' : 'Non vérifié'}
