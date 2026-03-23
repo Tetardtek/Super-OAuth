@@ -5,6 +5,7 @@ export interface IUserRepository {
   findByEmail(email: string, tenantId: string): Promise<User | null>;
   findByProvider(provider: string, providerId: string, tenantId: string): Promise<User | null>;
   save(user: User): Promise<User>;
+  updateFields(id: string, fields: Partial<{ emailVerified: boolean; lastLogin: Date; nickname: string }>): Promise<void>;
   delete(id: string): Promise<void>;
   exists(id: string): Promise<boolean>;
 }

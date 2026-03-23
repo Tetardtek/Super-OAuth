@@ -70,13 +70,16 @@ export class ConfirmMergeUseCase {
     });
     await laRepo.save(laEntity);
 
-    // Also verify email if not already (merge = proof of email ownership)
-    if (!user.emailVerified) {
-      user.verifyEmail();
-    }
+    // Update user fields directly — save(user) would trigger cascade on linkedAccounts
+    // and corrupt the just-inserted linked account (user_id = NULL)
+    await this.userRepository.updateFields(user.id, {
+      emailVerified: true,
+      lastLogin: new Date(),
+    });
 
+    // Refresh domain object for token generation
+    user.verifyEmail();
     user.recordLogin();
-    await this.userRepository.save(user);
 
     // 5. Audit
     this.auditLog

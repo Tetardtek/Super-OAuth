@@ -90,6 +90,18 @@ export class UserRepository implements IUserRepository {
     return UserMapper.toDomain(savedEntity);
   }
 
+  /**
+   * Partial update — no cascade, no linkedAccounts touched.
+   * Use this after direct DB inserts on linked_accounts to avoid cascade corruption.
+   */
+  async updateFields(id: string, fields: Partial<{ emailVerified: boolean; lastLogin: Date; nickname: string }>): Promise<void> {
+    const update: Record<string, unknown> = {};
+    if (fields.emailVerified !== undefined) update.emailVerified = fields.emailVerified;
+    if (fields.lastLogin !== undefined) update.lastLogin = fields.lastLogin;
+    if (fields.nickname !== undefined) update.nickname = fields.nickname;
+    await this.repository.update(id, update);
+  }
+
   async delete(id: string): Promise<void> {
     await this.repository.delete({ id });
   }

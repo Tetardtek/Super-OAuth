@@ -40,6 +40,7 @@ describe('CompleteOAuthUseCase', () => {
       save: jest.fn(),
       delete: jest.fn(),
       exists: jest.fn(),
+      updateFields: jest.fn(),
     };
 
     mockTokenService = {
