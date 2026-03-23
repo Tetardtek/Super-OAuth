@@ -105,12 +105,13 @@ describe('authenticateToken Middleware', () => {
       expect(jwt.verify).toHaveBeenCalledWith('valid-token', 'test-secret');
       expect(mockUserRepository.findById).toHaveBeenCalledWith('user-id-123');
       expect(next).toHaveBeenCalled();
-      expect((req as Request & { user: AuthenticatedUser }).user).toEqual({
-        id: 'user-id-123',
-        email: 'test@example.com',
-        nickname: 'testuser',
-        isActive: true,
-      });
+      const attachedUser = (req as Request & { user: AuthenticatedUser }).user;
+      expect(attachedUser.id).toBe('user-id-123');
+      expect(attachedUser.email).toBe('test@example.com');
+      expect(attachedUser.nickname).toBe('testuser');
+      expect(attachedUser.isActive).toBe(true);
+      expect(attachedUser.emailVerified).toBe(false);
+      expect(attachedUser.linkedAccounts).toEqual([]);
       expect(statusMock).not.toHaveBeenCalled();
     });
 
@@ -392,12 +393,12 @@ describe('optionalAuth Middleware', () => {
 
       // Assert
       expect(next).toHaveBeenCalled();
-      expect((req as Request & { user: AuthenticatedUser }).user).toEqual({
-        id: 'user-id-123',
-        email: 'test@example.com',
-        nickname: 'testuser',
-        isActive: true,
-      });
+      const attachedUser = (req as Request & { user: AuthenticatedUser }).user;
+      expect(attachedUser.id).toBe('user-id-123');
+      expect(attachedUser.email).toBe('test@example.com');
+      expect(attachedUser.nickname).toBe('testuser');
+      expect(attachedUser.isActive).toBe(true);
+      expect(attachedUser.linkedAccounts).toEqual([]);
     });
 
     it('should continue without attaching user if token is invalid', () => {

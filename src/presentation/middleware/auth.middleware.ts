@@ -10,6 +10,10 @@ export interface AuthenticatedUser {
   email?: string | undefined;
   nickname: string;
   isActive: boolean;
+  emailVerified: boolean;
+  createdAt: Date;
+  lastLoginAt?: Date | null;
+  linkedAccounts: { provider: string; providerUserId: string; providerEmail?: string; linkedAt: Date }[];
 }
 
 interface AccessTokenPayload extends JwtPayload {
@@ -107,12 +111,21 @@ export const authenticateToken = async (
       return;
     }
 
-    // Attach user info to request
+    // Attach user info to request (includes linkedAccounts for /auth/me)
     (req as Request & { user: AuthenticatedUser }).user = {
       id: user.id,
       email: user.email?.toString() || '',
       nickname: user.nickname.toString(),
       isActive: user.isActive,
+      emailVerified: user.emailVerified,
+      createdAt: user.createdAt,
+      lastLoginAt: user.lastLogin,
+      linkedAccounts: user.linkedAccounts.map((la) => ({
+        provider: la.getProvider(),
+        providerUserId: la.getProviderId(),
+        providerEmail: la.getEmail(),
+        linkedAt: la.getCreatedAt(),
+      })),
     };
 
     next();
@@ -172,6 +185,10 @@ export const optionalAuth = (req: Request, _res: Response, next: NextFunction): 
         email: decoded.email,
         nickname: decoded.nickname || '',
         isActive: decoded.isActive || true,
+        emailVerified: false,
+        createdAt: new Date(),
+        lastLoginAt: null,
+        linkedAccounts: [],
       };
     }
 
