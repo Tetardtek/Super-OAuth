@@ -204,7 +204,6 @@ jobs:
             npm ci
             npm run build
             MYSQL_HOST=172.17.0.1 npm run migration:run:prod
-            # Reload 0-downtime — fonctionne grâce au cluster mode (2 instances)
-            # Premier déploiement : pm2 start ecosystem.config.js --env production && pm2 save
-            pm2 reload super-oauth --update-env
+            # pm2 runs under tetardtek-brain — reload via su
+            sudo -u tetardtek-brain PM2_HOME=/home/tetardtek-brain/.pm2 pm2 reload super-oauth --update-env
             echo "Deploy complete"
