@@ -127,7 +127,22 @@ export class UserRepository implements IUserRepository {
       ? User.createWithProvider(userId.toString(), nickname, linkedAccount, userData.tenantId, email, emailVerified)
       : User.createWithEmail(userId.toString(), email!, nickname, { hash: () => '' } as never, userData.tenantId);
 
-    return await this.save(user);
+    try {
+      return await this.save(user);
+    } catch (err: unknown) {
+      // Duplicate nickname — append random suffix and retry once
+      const isDuplicate = err instanceof Error && 'code' in err && (err as { code: string }).code === 'ER_DUP_ENTRY'
+        && err.message.includes('nickname');
+      if (!isDuplicate) throw err;
+
+      const suffix = Math.floor(Math.random() * 9000 + 1000).toString();
+      const fallbackNickname = Nickname.create(`${userData.nickname}_${suffix}`);
+      const retryUser = linkedAccount
+        ? User.createWithProvider(userId.toString(), fallbackNickname, linkedAccount, userData.tenantId, email, emailVerified)
+        : User.createWithEmail(userId.toString(), email!, fallbackNickname, { hash: () => '' } as never, userData.tenantId);
+
+      return await this.save(retryUser);
+    }
   }
 
   /**
