@@ -39,16 +39,16 @@ router.get(
     res.json(
       ApiResponse.success({
         user: {
-          id: user.id,
+          id: user.id.toString(),
           email: user.email?.toString() ?? null,
-          nickname: user.nickname,
+          nickname: user.nickname?.toString() ?? null,
           emailVerified: user.emailVerified,
           createdAt: user.createdAt,
         },
         linkedProviders: linkedAccounts.map((a) => ({
           provider: a.provider,
-          nickname: a.nickname ?? null,
-          avatar: a.avatar ?? null,
+          nickname: a.nickname?.toString() ?? null,
+          avatar: a.avatar?.toString() ?? null,
           linkedAt: a.linkedAt,
         })),
       })
@@ -86,7 +86,7 @@ router.put(
     res.json(
       ApiResponse.success({
         user: {
-          id: user.id,
+          id: user.id.toString(),
           email: user.email?.toString() ?? null,
           nickname: trimmed,
           emailVerified: user.emailVerified,
