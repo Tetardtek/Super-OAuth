@@ -100,6 +100,7 @@ export class OAuthController {
     const { provider } = req.params as unknown as OAuthParams;
     const userId = req.user?.id;
     const tenantId = req.tenantId;
+    const { returnUrl } = req.body as { returnUrl?: string };
 
     if (!userId || !tenantId) {
       res.status(401).json(ApiResponse.error('Authentication required', 'UNAUTHORIZED'));
@@ -109,13 +110,14 @@ export class OAuthController {
     // [SG1] tenantId from JWT validated by validateAuthenticatedTenant middleware
 
     try {
-      logger.info(`🔗 Starting OAuth link flow for ${provider}`, { userId, provider, tenantId });
+      logger.info(`🔗 Starting OAuth link flow for ${provider}`, { userId, provider, tenantId, returnUrl });
 
       // [SG5] userId stored in Redis state as linkingUserId — NOT sent back at callback
+      // returnUrl stored in redirectUrl field — used after link callback to return to tenant
       const { authUrl, state } = await oauthService.generateAuthUrl(
         provider,
         tenantId,
-        undefined,
+        returnUrl,
         'link',
         userId
       );
@@ -203,11 +205,12 @@ export class OAuthController {
 
       // ── Link flow bifurcation ──────────────────────────────────────────────
       if (mode === 'link') {
+        // returnUrl: tenant's URL (from startLink body) or SuperOAuth dashboard fallback
+        const returnBase = stateRedirectUrl || `${process.env.FRONTEND_URL}/settings`;
+
         if (!linkingUserId) {
           logger.error('Link callback missing linkingUserId in Redis state', undefined, { provider });
-          res.redirect(
-            `${process.env.FRONTEND_URL}/settings/error?error=link_state_invalid&provider=${provider}`
-          );
+          res.redirect(`${returnBase}?error=link_state_invalid&provider=${provider}`);
           return;
         }
 
@@ -217,9 +220,7 @@ export class OAuthController {
         } catch (linkError) {
           const msg = linkError instanceof Error ? linkError.message : 'LINK_FAILED';
           logger.warn(`⚠️ LinkProvider failed for ${provider}`, { provider, userId: linkingUserId, error: msg });
-          res.redirect(
-            `${process.env.FRONTEND_URL}/settings/error?error=${encodeURIComponent(msg)}&provider=${provider}`
-          );
+          res.redirect(`${returnBase}?error=${encodeURIComponent(msg)}&provider=${provider}`);
           return;
         }
 
@@ -229,7 +230,7 @@ export class OAuthController {
           tenantId,
         });
 
-        res.redirect(`${process.env.FRONTEND_URL}/settings/linked?provider=${provider}`);
+        res.redirect(`${returnBase}?linked=${provider}`);
         return;
       }
 
