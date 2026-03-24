@@ -5,7 +5,7 @@ import { authValidators } from '../validators/request.validators';
 import { DIContainer } from '../../infrastructure/di/container';
 import { logger } from '../../shared/utils/logger.util';
 import { asyncHandler } from '../../shared/utils/async-handler.util';
-import { authRateLimit, apiRateLimit } from '../middleware/rate-limit.middleware';
+import { apiRateLimit } from '../middleware/rate-limit.middleware';
 import { validateTenant } from '../../shared/middleware/tenant.middleware';
 import Joi from 'joi';
 
