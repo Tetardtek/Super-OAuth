@@ -25,13 +25,13 @@ const TENANTS_TO_SEED = [
   },
   {
     name: 'tetardpg',
-    allowedOrigins: ['https://tetardpg.tetardtek.com'],
-    redirectUris: ['https://tetardpg.tetardtek.com/auth/callback'],
+    allowedOrigins: ['https://tetardpg.tetardtek.com', 'http://localhost:5173'],
+    redirectUris: ['https://tetardpg.tetardtek.com/auth/callback', 'http://localhost:5173/auth/callback'],
   },
   {
     name: 'clickerz',
-    allowedOrigins: ['https://clickerz.tetardtek.com'],
-    redirectUris: ['https://clickerz.tetardtek.com/callback'],
+    allowedOrigins: ['https://clickerz.tetardtek.com', 'http://localhost:3000'],
+    redirectUris: ['https://clickerz.tetardtek.com/callback', 'http://localhost:3000/callback'],
   },
 ];
 
