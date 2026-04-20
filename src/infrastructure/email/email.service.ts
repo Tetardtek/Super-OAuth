@@ -58,6 +58,63 @@ export class EmailService {
     logger.info('Verification email sent', { to, tenantId });
   }
 
+  async sendPlatformVerificationEmail(to: string, token: string): Promise<void> {
+    const baseUrl = process.env.SUPEROAUTH_PUBLIC_URL || 'https://superoauth.tetardtek.com';
+    const verifyUrl = `${baseUrl}/api/v1/platform/auth/verify-email/${token}`;
+
+    await this.send({
+      to,
+      subject: 'Vérifie ton adresse email — SuperOAuth',
+      html: `
+        <div style="font-family: Inter, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+          <h2 style="color: #c8a44e;">SuperOAuth</h2>
+          <p>Bienvenue sur SuperOAuth. Clique sur le lien ci-dessous pour vérifier ton adresse email :</p>
+          <a href="${verifyUrl}"
+             style="display: inline-block; padding: 12px 24px; background: #c8a44e; color: #0a0a0a;
+                    text-decoration: none; border-radius: 6px; font-weight: 600;">
+            Vérifier mon email
+          </a>
+          <p style="color: #888; font-size: 14px; margin-top: 24px;">
+            Ce lien expire dans 24 heures.<br>
+            Si tu n'as pas créé de compte SuperOAuth, ignore cet email.
+          </p>
+        </div>
+      `,
+    });
+
+    logger.info('Platform verification email sent', { to });
+  }
+
+  async sendPlatformPasswordResetEmail(to: string, token: string): Promise<void> {
+    const baseUrl = process.env.SUPEROAUTH_PUBLIC_URL || 'https://superoauth.tetardtek.com';
+    const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+
+    await this.send({
+      to,
+      subject: 'Réinitialisation de ton mot de passe — SuperOAuth',
+      html: `
+        <div style="font-family: Inter, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+          <h2 style="color: #c8a44e;">SuperOAuth</h2>
+          <p>Une demande de réinitialisation de mot de passe a été reçue pour ton compte.</p>
+          <a href="${resetUrl}"
+             style="display: inline-block; padding: 12px 24px; background: #c8a44e; color: #0a0a0a;
+                    text-decoration: none; border-radius: 6px; font-weight: 600;">
+            Réinitialiser mon mot de passe
+          </a>
+          <p style="color: #888; font-size: 14px; margin-top: 24px;">
+            Ce lien expire dans 1 heure.<br>
+            Si ce n'est pas toi, ignore cet email — ton mot de passe reste inchangé.
+          </p>
+          <p style="color: #bbb; font-size: 12px; margin-top: 32px; border-top: 1px solid #333; padding-top: 12px;">
+            Token brut (usage avancé) : <code style="font-family: monospace; font-size: 11px; word-break: break-all;">${token}</code>
+          </p>
+        </div>
+      `,
+    });
+
+    logger.info('Platform password reset email sent', { to });
+  }
+
   async sendAdminInvitationEmail(
     to: string,
     token: string,

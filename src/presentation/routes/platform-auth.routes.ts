@@ -6,6 +6,7 @@ import { logger } from '../../shared/utils/logger.util';
 import { asyncHandler } from '../../shared/utils/async-handler.util';
 import { apiRateLimit } from '../middleware/rate-limit.middleware';
 import { PlatformPasswordResetService } from '../../infrastructure/services/platform-password-reset.service';
+import { EmailService } from '../../infrastructure/email/email.service';
 
 const router = Router();
 const container = DIContainer.getInstance();
@@ -58,6 +59,17 @@ router.post(
         logger.debug('Platform verification token (dev only)', {
           token: result.verificationToken,
         });
+      }
+
+      const emailService = container.get<EmailService>('EmailService');
+      try {
+        await emailService.sendPlatformVerificationEmail(result.email, result.verificationToken);
+      } catch (err) {
+        logger.error(
+          'Failed to dispatch platform verification email',
+          err instanceof Error ? err : undefined,
+          { email: result.email, status: result.status }
+        );
       }
 
       res.status(202).json({
@@ -244,6 +256,19 @@ router.post(
       logger.debug('Platform password reset token (dev only)', {
         token: result.rawToken,
       });
+    }
+
+    if (result.issued && result.rawToken) {
+      const emailService = container.get<EmailService>('EmailService');
+      try {
+        await emailService.sendPlatformPasswordResetEmail(email, result.rawToken);
+      } catch (err) {
+        logger.error(
+          'Failed to dispatch platform password reset email',
+          err instanceof Error ? err : undefined,
+          { email }
+        );
+      }
     }
 
     res.status(202).json({
