@@ -22,6 +22,7 @@ import {
   DeleteTenantUseCase,
   InviteTenantAdminUseCase,
   CancelTenantInvitationUseCase,
+  AcceptTenantInvitationUseCase,
 } from '../../application/use-cases/platform';
 import { PlatformUserRepository } from '../database/repositories/platform-user.repository';
 import { TenantAdminRepository } from '../database/repositories/tenant-admin.repository';
@@ -266,6 +267,17 @@ export class DIContainer {
         this.get<TenantInvitationRepository>('TenantInvitationRepository')
       )
     );
+
+    this.services.set(
+      'AcceptTenantInvitationUseCase',
+      new AcceptTenantInvitationUseCase(
+        this.get<IPlatformUserRepository>('PlatformUserRepository'),
+        this.get<TenantInvitationRepository>('TenantInvitationRepository'),
+        this.get<TenantAdminRepository>('TenantAdminRepository'),
+        this.get<PlatformTokenService>('PlatformTokenService'),
+        this.get<PlatformSessionService>('PlatformSessionService')
+      )
+    );
   }
 
   get<T>(serviceName: string): T {
@@ -356,5 +368,9 @@ export class DIContainer {
 
   getCancelTenantInvitationUseCase(): CancelTenantInvitationUseCase {
     return this.get<CancelTenantInvitationUseCase>('CancelTenantInvitationUseCase');
+  }
+
+  getAcceptTenantInvitationUseCase(): AcceptTenantInvitationUseCase {
+    return this.get<AcceptTenantInvitationUseCase>('AcceptTenantInvitationUseCase');
   }
 }

@@ -38,3 +38,8 @@ export type {
   CancelTenantInvitationInput,
   CancelTenantInvitationOutcome,
 } from './cancel-tenant-invitation.use-case';
+export { AcceptTenantInvitationUseCase } from './accept-tenant-invitation.use-case';
+export type {
+  AcceptTenantInvitationInput,
+  AcceptTenantInvitationOutcome,
+} from './accept-tenant-invitation.use-case';
