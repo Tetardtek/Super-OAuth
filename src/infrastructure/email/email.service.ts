@@ -58,6 +58,39 @@ export class EmailService {
     logger.info('Verification email sent', { to, tenantId });
   }
 
+  async sendAdminInvitationEmail(
+    to: string,
+    token: string,
+    tenantName: string,
+    inviterEmail: string
+  ): Promise<void> {
+    const baseUrl = process.env.SUPEROAUTH_PUBLIC_URL || 'https://superoauth.tetardtek.com';
+    const acceptUrl = `${baseUrl}/accept-invitation?token=${token}`;
+
+    await this.send({
+      to,
+      subject: `Invitation admin — ${tenantName} sur SuperOAuth`,
+      html: `
+        <div style="font-family: Inter, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+          <h2 style="color: #c8a44e;">SuperOAuth</h2>
+          <p><strong>${inviterEmail}</strong> t'invite comme administrateur du tenant <strong>${tenantName}</strong>.</p>
+          <p>Clique sur le lien ci-dessous pour accepter l'invitation :</p>
+          <a href="${acceptUrl}"
+             style="display: inline-block; padding: 12px 24px; background: #c8a44e; color: #0a0a0a;
+                    text-decoration: none; border-radius: 6px; font-weight: 600;">
+            Accepter l'invitation
+          </a>
+          <p style="color: #888; font-size: 14px; margin-top: 24px;">
+            Ce lien expire dans 7 jours.<br>
+            Si tu ne connais pas ${inviterEmail}, ignore cet email.
+          </p>
+        </div>
+      `,
+    });
+
+    logger.info('Admin invitation email sent', { to, tenantName });
+  }
+
   async sendMergeEmail(to: string, token: string, provider: string, tenantId: string): Promise<void> {
     const baseUrl = process.env.SUPEROAUTH_PUBLIC_URL || 'https://superoauth.tetardtek.com';
     const mergeUrl = `${baseUrl}/confirm-merge?token=${token}&tenant=${tenantId}`;
