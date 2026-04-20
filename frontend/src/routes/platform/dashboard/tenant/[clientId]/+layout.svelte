@@ -127,7 +127,13 @@
 				>
 					Providers
 				</a>
-				<span class="tab disabled" title="À venir">Settings</span>
+				<a
+					href="/platform/dashboard/tenant/{clientId}/settings"
+					class="tab"
+					class:active={tabActive('settings')}
+				>
+					Settings
+				</a>
 			</nav>
 
 			<section class="tab-content">
