@@ -115,6 +115,68 @@ export class EmailService {
     logger.info('Platform password reset email sent', { to });
   }
 
+  async sendOwnershipTransferEmail(
+    targetEmail: string,
+    token: string,
+    tenantName: string,
+    ownerEmail: string
+  ): Promise<void> {
+    const baseUrl = process.env.SUPEROAUTH_PUBLIC_URL || 'https://superoauth.tetardtek.com';
+    const acceptUrl = `${baseUrl}/accept-ownership?token=${token}`;
+
+    await this.send({
+      to: targetEmail,
+      subject: `Transfert de propriété — ${tenantName} sur SuperOAuth`,
+      html: `
+        <div style="font-family: Inter, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+          <h2 style="color: #c8a44e;">SuperOAuth</h2>
+          <p><strong>${ownerEmail}</strong> te propose de devenir le nouveau propriétaire du tenant <strong>${tenantName}</strong>.</p>
+          <p>En acceptant, tu récupères le contrôle complet : billing, invitations, suppression. L'ancien propriétaire bascule en rôle administrateur.</p>
+          <a href="${acceptUrl}"
+             style="display: inline-block; padding: 12px 24px; background: #c8a44e; color: #0a0a0a;
+                    text-decoration: none; border-radius: 6px; font-weight: 600;">
+            Examiner le transfert
+          </a>
+          <p style="color: #888; font-size: 14px; margin-top: 24px;">
+            Ce lien expire dans 7 jours.<br>
+            Tu devras confirmer avec ton mot de passe.<br>
+            Si tu ne t'attendais pas à ce transfert, ignore cet email ou décline.
+          </p>
+          <p style="color: #bbb; font-size: 12px; margin-top: 32px; border-top: 1px solid #333; padding-top: 12px;">
+            Token brut (usage avancé) : <code style="font-family: monospace; font-size: 11px; word-break: break-all;">${token}</code>
+          </p>
+        </div>
+      `,
+    });
+
+    logger.info('Ownership transfer email sent', { targetEmail, tenantName });
+  }
+
+  async sendOwnershipTransferNoticeEmail(
+    ownerEmail: string,
+    targetEmail: string,
+    tenantName: string
+  ): Promise<void> {
+    await this.send({
+      to: ownerEmail,
+      subject: `Transfert de propriété initié — ${tenantName}`,
+      html: `
+        <div style="font-family: Inter, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+          <h2 style="color: #c8a44e;">SuperOAuth</h2>
+          <p>Tu as initié un transfert de propriété du tenant <strong>${tenantName}</strong> vers <strong>${targetEmail}</strong>.</p>
+          <p>Le transfert sera effectif dès que ${targetEmail} l'aura accepté avec son mot de passe.</p>
+          <p style="color: #888; font-size: 14px; margin-top: 24px;">
+            Tu restes propriétaire tant que le transfert n'est pas accepté.<br>
+            Le lien expire dans 7 jours. Tu peux annuler via le dashboard à tout moment.<br>
+            Si tu n'es pas à l'origine de cette demande, annule immédiatement et change ton mot de passe.
+          </p>
+        </div>
+      `,
+    });
+
+    logger.info('Ownership transfer notice sent to owner', { ownerEmail, targetEmail, tenantName });
+  }
+
   async sendAdminInvitationEmail(
     to: string,
     token: string,
