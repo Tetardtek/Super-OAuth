@@ -204,6 +204,7 @@ jobs:
             npm ci
             npm run build
             MYSQL_HOST=172.17.0.1 npm run migration:run:prod
-            # pm2 runs under tetardtek-brain (post ssh-hardening)
-            su - tetardtek-brain -c 'pm2 reload super-oauth --update-env'
+            # pm2 runs under deploy user (owns PM2 God process for all VPS apps)
+            # sudoers rule /etc/sudoers.d/super-oauth-deploy grants this exact command NOPASSWD
+            sudo -n -u deploy /usr/local/bin/pm2 reload super-oauth --update-env
             echo "Deploy complete"
