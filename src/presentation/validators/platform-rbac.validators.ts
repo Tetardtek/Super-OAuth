@@ -23,4 +23,10 @@ export const platformRbacValidators = {
   declineTransfer: Joi.object({
     token: Joi.string().hex().length(64).required(),
   }),
+
+  upsertProvider: Joi.object({
+    provider: Joi.string().valid('discord', 'github', 'google', 'twitch').required(),
+    clientId: Joi.string().min(1).max(255).required(),
+    clientSecret: Joi.string().min(1).max(255).required(),
+  }),
 };

@@ -49,6 +49,7 @@ import {
   TenantTokenService,
   AuditLogService,
 } from '../services';
+import { TenantProviderRepository } from '../services/tenant-provider.repository';
 import { TokenBlacklistService } from '../services/token-blacklist.service';
 import { EmailService } from '../email/email.service';
 import { EmailTokenService } from '../services/email-token.service';
@@ -115,6 +116,7 @@ export class DIContainer {
     this.services.set('TenantRepository', tenantRepository);
     this.services.set('TenantTokenService', new TenantTokenService(tenantRepository));
     this.services.set('AuditLogService', new AuditLogService());
+    this.services.set('TenantProviderRepository', new TenantProviderRepository(tenantCrypto));
 
     // Use Cases
     this.services.set(

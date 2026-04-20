@@ -437,4 +437,90 @@ router.delete(
   })
 );
 
+/**
+ * GET /platform/tenants/:clientId/providers  (any tenant member)
+ * Lists OAuth provider configs (no secrets) — returns { provider, clientId }[].
+ */
+router.get(
+  '/tenants/:clientId/providers',
+  requireAuthPlatform,
+  requireTenantAccess,
+  asyncHandler(async (req: TenantAuthenticatedRequest, res: Response) => {
+    const repo = container.get<
+      import('../../infrastructure/services/tenant-provider.repository').TenantProviderRepository
+    >('TenantProviderRepository');
+    const providers = await repo.listByTenant(req.tenantMembership!.tenantId);
+    res.status(200).json({ success: true, data: { providers } });
+  })
+);
+
+/**
+ * POST /platform/tenants/:clientId/providers  (owner only)
+ * Upsert OAuth provider config. Accepts { provider, clientId, clientSecret }.
+ * Secret is encrypted at rest.
+ */
+router.post(
+  '/tenants/:clientId/providers',
+  requireAuthPlatform,
+  requireTenantOwner,
+  apiRateLimit,
+  validateBody(platformRbacValidators.upsertProvider),
+  asyncHandler(async (req: TenantAuthenticatedRequest & ValidatedRequest, res: Response) => {
+    const body = (req.validatedBody ?? req.body) as {
+      provider: string;
+      clientId: string;
+      clientSecret: string;
+    };
+    const repo = container.get<
+      import('../../infrastructure/services/tenant-provider.repository').TenantProviderRepository
+    >('TenantProviderRepository');
+    await repo.upsert({
+      tenantId: req.tenantMembership!.tenantId,
+      provider: body.provider,
+      clientId: body.clientId,
+      clientSecretPlain: body.clientSecret,
+    });
+    logger.info('Provider config upserted', {
+      tenantId: req.tenantMembership!.tenantId,
+      provider: body.provider,
+    });
+    res.status(200).json({
+      success: true,
+      data: { provider: body.provider, clientId: body.clientId },
+    });
+  })
+);
+
+/**
+ * DELETE /platform/tenants/:clientId/providers/:provider  (owner only)
+ * Removes provider config. Tenant falls back to global creds after this.
+ */
+router.delete(
+  '/tenants/:clientId/providers/:provider',
+  requireAuthPlatform,
+  requireTenantOwner,
+  apiRateLimit,
+  asyncHandler(async (req: TenantAuthenticatedRequest, res: Response) => {
+    const provider = req.params.provider;
+    const VALID = ['discord', 'github', 'google', 'twitch'];
+    if (!VALID.includes(provider)) {
+      res.status(400).json({
+        success: false,
+        error: 'INVALID_PROVIDER',
+        message: `Provider must be one of: ${VALID.join(', ')}`,
+      });
+      return;
+    }
+    const repo = container.get<
+      import('../../infrastructure/services/tenant-provider.repository').TenantProviderRepository
+    >('TenantProviderRepository');
+    await repo.deleteByTenantAndProvider(req.tenantMembership!.tenantId, provider);
+    logger.info('Provider config deleted', {
+      tenantId: req.tenantMembership!.tenantId,
+      provider,
+    });
+    res.status(204).send();
+  })
+);
+
 export { router as platformRbacRoutes };
