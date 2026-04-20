@@ -35,6 +35,7 @@ import { DatabaseConnection } from './infrastructure/database/config/database.co
 import { getAppConfig, EnvironmentValidator } from './shared/config';
 import { logger } from './shared/utils/logger.util';
 import { authRoutes, oauthRoutes, pkceRoutes, adminRoutes, userRoutes, platformAuthRoutes, platformTenantsRoutes, platformRbacRoutes } from './presentation/routes';
+import { platformFeatureFlag } from './presentation/middleware/platform-feature-flag.middleware';
 import {
   errorHandler,
   notFoundHandler,
@@ -184,6 +185,15 @@ class SuperOAuthServer {
 
     // User Profile routes — Consumer-facing API for tenant frontends
     this.app.use('/api/v1/user', userRoutes);
+
+    // Platform feature flag — kill switch + status endpoint (SOA-002 P6)
+    this.app.get('/api/v1/platform/status', (_req, res) => {
+      res.json({
+        success: true,
+        data: { enabled: process.env.PLATFORM_USERS_ENABLED !== 'false' },
+      });
+    });
+    this.app.use('/api/v1/platform', platformFeatureFlag);
 
     // Platform auth routes (SOA-002) — SaaS client signup/login (platform_users)
     this.app.use('/api/v1/platform/auth', platformAuthRoutes);
