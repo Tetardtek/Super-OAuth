@@ -43,3 +43,8 @@ export type {
   AcceptTenantInvitationInput,
   AcceptTenantInvitationOutcome,
 } from './accept-tenant-invitation.use-case';
+export { RevokeTenantAdminUseCase } from './revoke-tenant-admin.use-case';
+export type {
+  RevokeTenantAdminInput,
+  RevokeTenantAdminOutcome,
+} from './revoke-tenant-admin.use-case';
