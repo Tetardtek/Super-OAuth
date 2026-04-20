@@ -28,6 +28,7 @@ import {
 import { PlatformUserRepository } from '../database/repositories/platform-user.repository';
 import { TenantAdminRepository } from '../database/repositories/tenant-admin.repository';
 import { TenantInvitationRepository } from '../database/repositories/tenant-invitation.repository';
+import { TenantTransferRepository } from '../database/repositories/tenant-transfer.repository';
 import { PlatformEmailTokenService } from '../services/platform-email-token.service';
 import { PlatformSessionService } from '../services/platform-session.service';
 import { PlatformTokenService } from '../services/platform-token.service';
@@ -91,6 +92,7 @@ export class DIContainer {
     this.services.set('PlatformUserRepository', new PlatformUserRepository());
     this.services.set('TenantAdminRepository', new TenantAdminRepository());
     this.services.set('TenantInvitationRepository', new TenantInvitationRepository());
+    this.services.set('TenantTransferRepository', new TenantTransferRepository());
     this.services.set('PlatformEmailTokenService', new PlatformEmailTokenService());
     this.services.set('PlatformSessionService', new PlatformSessionService());
     this.services.set('PlatformTokenService', new PlatformTokenService());
