@@ -58,3 +58,8 @@ export type {
   AcceptOwnershipTransferInput,
   AcceptOwnershipTransferOutcome,
 } from './accept-ownership-transfer.use-case';
+export { DeclineOwnershipTransferUseCase } from './decline-ownership-transfer.use-case';
+export type {
+  DeclineOwnershipTransferInput,
+  DeclineOwnershipTransferOutcome,
+} from './decline-ownership-transfer.use-case';
