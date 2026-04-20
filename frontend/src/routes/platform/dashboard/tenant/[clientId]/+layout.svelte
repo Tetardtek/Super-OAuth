@@ -120,8 +120,14 @@
 				>
 					Admins
 				</a>
-				<span class="tab disabled" title="À venir en P5.D">Providers</span>
-				<span class="tab disabled" title="À venir en P5.D">Settings</span>
+				<a
+					href="/platform/dashboard/tenant/{clientId}/providers"
+					class="tab"
+					class:active={tabActive('providers')}
+				>
+					Providers
+				</a>
+				<span class="tab disabled" title="À venir">Settings</span>
 			</nav>
 
 			<section class="tab-content">

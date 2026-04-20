@@ -24,6 +24,13 @@ export interface AccessibleTenant extends PlatformTenant {
 	role: TenantRole;
 }
 
+export type OAuthProvider = 'discord' | 'github' | 'google' | 'twitch';
+
+export interface TenantProviderConfig {
+	provider: OAuthProvider;
+	clientId: string;
+}
+
 export interface TenantAdmin {
 	platformUserId: string;
 	email: string;
