@@ -134,66 +134,26 @@ public/<br>
 
 <h3 aria-label="Contrôleurs et Routing" tabindex="0">🧩 Contrôleurs et Routing</h3>
 <p>
-<strong>SuperOAuth</strong> propose trois controllers complémentaires pour couvrir tous les usages d'authentification&nbsp;:
+<strong>SuperOAuth</strong> expose trois controllers complémentaires pour couvrir tous les usages d'authentification&nbsp;:
 </p>
 <ul>
   <li>
-    <strong>AuthController</strong> <em>(classique)</em>&nbsp;: Gère l’inscription, la connexion, le refresh et le logout par email/mot de passe. Indispensable pour les utilisateurs sans provider OAuth, ou pour lier un provider à un compte existant.
+    <strong>AuthController</strong> <em>(auth.routes.simple.ts)</em>&nbsp;: Auth classique email/mot de passe — inscription, connexion, refresh, logout, vérification email, confirm-merge. Réponses JSON pures, sans redirection.
   </li>
   <li>
-    <strong>OAuthController</strong>&nbsp;: Gère tout le flux OAuth (initiation, callback, gestion des comptes liés, unlink, etc.) avec redirections automatiques et sécurité renforcée.
+    <strong>OAuthController</strong> <em>(oauth.controller.ts)</em>&nbsp;: Flux OAuth multi-provider (Discord, Twitch, Google, GitHub) — initiation, callback avec bifurcation auth/link, comptes liés, unlink, merge.
   </li>
   <li>
-    <strong>AuthController Simple</strong> <em>(auth.controller.simple.ts)</em>&nbsp;: Version minimaliste, tout en JSON, sans redirection. Idéal pour API REST pure, tests automatisés, ou intégrations front custom (SPA/mobile).
+    <strong>PkceController</strong> <em>(pkce.controller.ts)</em>&nbsp;: Authorization Server PKCE (RFC 7636) — <code>/oauth/authorize</code> + <code>/oauth/token</code>. Flux recommandé pour tous les clients externes.
   </li>
 </ul>
-<p>
-<strong>Comparatif des controllers&nbsp;:</strong>
-</p>
-<table class="script-table">
-  <thead>
-    <tr>
-      <th>Controller</th>
-      <th>Auth classique</th>
-      <th>OAuth (init/callback)</th>
-      <th>Réponse</th>
-      <th>Redirection</th>
-      <th>Usage principal</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><strong>auth.controller.simple.ts</strong></td>
-      <td>✅</td>
-      <td>✅</td>
-      <td>JSON</td>
-      <td>❌</td>
-      <td>API pure, tests, front custom</td>
-    </tr>
-    <tr>
-      <td><strong>auth.controller.ts</strong></td>
-      <td>✅</td>
-      <td>(parfois, à éviter)</td>
-      <td>JSON</td>
-      <td>❌</td>
-      <td>Auth classique, prod</td>
-    </tr>
-    <tr>
-      <td><strong>oauth.controller.ts</strong></td>
-      <td>❌</td>
-      <td>✅</td>
-      <td>Redirection/JSON</td>
-      <td>✅</td>
-      <td>OAuth web, UX fluide, prod</td>
-    </tr>
-  </tbody>
-</table>
 <p>
 <strong>Routes principales&nbsp;:</strong>
 </p>
 <ul>
-  <li><code>/api/v1/auth/*</code> → Auth classique (register, login, refresh, logout)</li>
-  <li><code>/api/v1/oauth/*</code> → Flux OAuth complet (init, callback, gestion des providers, comptes liés)</li>
+  <li><code>/api/v1/auth/*</code> → Auth classique (register, login, refresh, logout, verify-email, confirm-merge)</li>
+  <li><code>/api/v1/oauth/*</code> → Flux OAuth complet (init, callback, linked accounts, unlink, merge)</li>
+  <li><code>/oauth/*</code> → Authorization Server PKCE (authorize, token)</li>
 </ul>
 <p>
 Le routing principal (<code>main.ts</code>) monte ces routes sur des espaces dédiés, garantissant l’absence de conflit et une architecture claire et évolutive.

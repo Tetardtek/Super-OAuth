@@ -4,8 +4,6 @@ import {
   LoginClassicUseCase,
   RefreshTokenUseCase,
   LogoutUseCase,
-  StartOAuthUseCase,
-  CompleteOAuthUseCase,
   ValidateTokenUseCase,
 } from '../../application/use-cases';
 import { LinkProviderUseCase } from '../../application/use-cases/link-provider.use-case';
@@ -17,7 +15,6 @@ import {
   TokenService,
   SessionRepository,
   UserRepository,
-  OAuthService,
   PasswordService,
   TenantCryptoService,
   TenantRepository,
@@ -33,7 +30,6 @@ import {
   ITokenService,
   ISessionRepository,
   IUserRepository,
-  IOAuthService,
   ITokenBlacklist,
   ITenantTokenService,
   IAuditLogService,
@@ -61,7 +57,6 @@ export class DIContainer {
     this.services.set('TokenService', new TokenService());
     this.services.set('SessionRepository', new SessionRepository());
     this.services.set('UserRepository', new UserRepository());
-    this.services.set('OAuthService', new OAuthService());
     this.services.set('PasswordService', new PasswordService());
     this.services.set('TokenBlacklistService', new TokenBlacklistService());
 
@@ -115,25 +110,6 @@ export class DIContainer {
       new LogoutUseCase(
         this.get<ISessionRepository>('SessionRepository'),
         this.get<ITokenBlacklist>('TokenBlacklistService')
-      )
-    );
-
-    this.services.set(
-      'StartOAuthUseCase',
-      new StartOAuthUseCase(this.get<IOAuthService>('OAuthService'))
-    );
-
-    this.services.set(
-      'CompleteOAuthUseCase',
-      new CompleteOAuthUseCase(
-        this.get<IUserRepository>('UserRepository'),
-        this.get<ITokenService>('TokenService'),
-        this.get<ISessionRepository>('SessionRepository'),
-        this.get<IOAuthService>('OAuthService'),
-        this.get<ITenantTokenService>('TenantTokenService'),
-        this.get<IAuditLogService>('AuditLogService'),
-        this.get<IEmailService>('EmailService'),
-        this.get<IEmailTokenService>('EmailTokenService')
       )
     );
 
@@ -215,14 +191,6 @@ export class DIContainer {
 
   getLogoutUseCase(): LogoutUseCase {
     return this.get<LogoutUseCase>('LogoutUseCase');
-  }
-
-  getStartOAuthUseCase(): StartOAuthUseCase {
-    return this.get<StartOAuthUseCase>('StartOAuthUseCase');
-  }
-
-  getCompleteOAuthUseCase(): CompleteOAuthUseCase {
-    return this.get<CompleteOAuthUseCase>('CompleteOAuthUseCase');
   }
 
   getValidateTokenUseCase(): ValidateTokenUseCase {

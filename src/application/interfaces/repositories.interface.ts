@@ -87,25 +87,3 @@ export interface IEmailTokenService {
   }): Promise<{ rawToken: string; expiresAt: Date }>;
 }
 
-export interface IOAuthService {
-  generateAuthUrl(
-    provider: string,
-    tenantId: string,
-    redirectUri?: string
-  ): Promise<{ authUrl: string; state: string }>;
-  exchangeCodeForTokens(
-    provider: string,
-    code: string,
-    state: string
-  ): Promise<{
-    accessToken: string;
-    refreshToken?: string;
-    tenantId: string;
-    userInfo: {
-      id: string;
-      email?: string;
-      emailVerified: boolean;
-      nickname: string;
-    };
-  }>;
-}

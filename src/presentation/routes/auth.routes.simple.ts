@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { validateBody, validateParams, ValidatedRequest } from '../middleware/validation.middleware';
+import { validateBody, ValidatedRequest } from '../middleware/validation.middleware';
 import { authenticateToken } from '../middleware/auth.middleware';
 import { authValidators } from '../validators/request.validators';
 import { DIContainer } from '../../infrastructure/di/container';
@@ -7,7 +7,6 @@ import { logger } from '../../shared/utils/logger.util';
 import { asyncHandler } from '../../shared/utils/async-handler.util';
 import { apiRateLimit } from '../middleware/rate-limit.middleware';
 import { validateTenant } from '../../shared/middleware/tenant.middleware';
-import Joi from 'joi';
 
 interface AuthenticatedRequest extends ValidatedRequest {
   user?: { id: string; email?: string };
@@ -31,11 +30,6 @@ interface RefreshTokenBody {
 
 const router = Router();
 const container = DIContainer.getInstance();
-
-// Parameter validation schemas
-const providerParamSchema = Joi.object({
-  provider: Joi.string().valid('discord', 'twitch', 'google', 'github').required(),
-});
 
 /**
  * POST /auth/register
@@ -282,132 +276,6 @@ router.post('/token/validate', apiRateLimit, asyncHandler(async (req: Request, r
     });
   }
 }));
-
-/**
- * GET /auth/oauth/:provider
- * Start OAuth flow for provider
- */
-router.get(
-  '/oauth/:provider',
-  validateParams(providerParamSchema),
-  asyncHandler(async (req: Request, res: Response) => {
-    try {
-      const { provider } = req.params;
-      const redirectUri = req.query.redirect_uri as string;
-
-      logger.info('OAuth flow start', { provider, redirectUri, ip: req.ip });
-
-      const startOAuthUseCase = container.getStartOAuthUseCase();
-      const result = await startOAuthUseCase.execute({
-        provider: provider as 'discord' | 'twitch' | 'google' | 'github',
-        tenantId: (req as { tenantId?: string }).tenantId || 'origins',
-        redirectUri,
-      });
-
-      logger.info('OAuth URL generated', { provider, state: result.state });
-
-      res.status(200).json({
-        success: true,
-        message: 'OAuth flow initiated',
-        data: {
-          authUrl: result.authUrl,
-          state: result.state,
-          provider,
-        },
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('OAuth start failed', error as Error, { ip: req.ip });
-
-      if (errorMessage.includes('Unsupported')) {
-        res.status(400).json({
-          success: false,
-          error: 'UNSUPPORTED_PROVIDER',
-          message: 'OAuth provider not supported',
-        });
-        return;
-      }
-
-      res.status(500).json({
-        success: false,
-        error: 'INTERNAL_ERROR',
-        message: 'OAuth initialization failed',
-      });
-    }
-  })
-);
-
-/**
- * GET /auth/callback/:provider
- * Handle OAuth callback from provider
- */
-router.get(
-  '/callback/:provider',
-  validateParams(providerParamSchema),
-  asyncHandler(async (req: Request, res: Response) => {
-    try {
-      const { provider } = req.params;
-      const { code, state } = req.query;
-
-      logger.info('OAuth callback received', { provider, state, ip: req.ip });
-
-      const completeOAuthUseCase = container.getCompleteOAuthUseCase();
-      const result = await completeOAuthUseCase.execute({
-        provider: provider as 'discord' | 'twitch' | 'google' | 'github',
-        code: code as string,
-        state: state as string,
-      });
-
-      if (result.type === 'authenticated') {
-        logger.info('OAuth authentication completed', { userId: result.data.user.id });
-        res.status(200).json({
-          success: true,
-          message: 'OAuth authentication successful',
-          data: {
-            user: result.data.user,
-            tokens: {
-              accessToken: result.data.accessToken,
-              refreshToken: result.data.refreshToken,
-            },
-          },
-        });
-      } else {
-        res.status(202).json({
-          success: true,
-          message: result.data.message,
-          data: result.data,
-        });
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('OAuth callback failed', error as Error, { ip: req.ip });
-
-      if (errorMessage.includes('Invalid state') || errorMessage.includes('CSRF')) {
-        res.status(400).json({
-          success: false,
-          error: 'INVALID_STATE',
-          message: 'Invalid OAuth state parameter',
-        });
-        return;
-      }
-
-      if (errorMessage.includes('Invalid code') || errorMessage.includes('authorization')) {
-        res.status(400).json({
-          success: false,
-          error: 'INVALID_AUTHORIZATION_CODE',
-          message: 'Invalid authorization code',
-        });
-        return;
-      }
-
-      res.status(500).json({
-        success: false,
-        error: 'INTERNAL_ERROR',
-        message: 'OAuth authentication failed',
-      });
-    }
-  })
-);
 
 /**
  * GET /auth/me
