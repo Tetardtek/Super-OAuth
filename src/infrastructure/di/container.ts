@@ -25,6 +25,7 @@ import {
   AcceptTenantInvitationUseCase,
   RevokeTenantAdminUseCase,
   InitiateOwnershipTransferUseCase,
+  AcceptOwnershipTransferUseCase,
 } from '../../application/use-cases/platform';
 import { PlatformUserRepository } from '../database/repositories/platform-user.repository';
 import { TenantAdminRepository } from '../database/repositories/tenant-admin.repository';
@@ -300,6 +301,16 @@ export class DIContainer {
         this.get<EmailService>('EmailService')
       )
     );
+
+    this.services.set(
+      'AcceptOwnershipTransferUseCase',
+      new AcceptOwnershipTransferUseCase(
+        this.get<IPlatformUserRepository>('PlatformUserRepository'),
+        this.get<TenantTransferRepository>('TenantTransferRepository'),
+        this.get<PlatformTokenService>('PlatformTokenService'),
+        this.get<PlatformSessionService>('PlatformSessionService')
+      )
+    );
   }
 
   get<T>(serviceName: string): T {
@@ -402,5 +413,9 @@ export class DIContainer {
 
   getInitiateOwnershipTransferUseCase(): InitiateOwnershipTransferUseCase {
     return this.get<InitiateOwnershipTransferUseCase>('InitiateOwnershipTransferUseCase');
+  }
+
+  getAcceptOwnershipTransferUseCase(): AcceptOwnershipTransferUseCase {
+    return this.get<AcceptOwnershipTransferUseCase>('AcceptOwnershipTransferUseCase');
   }
 }
