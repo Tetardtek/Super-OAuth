@@ -261,4 +261,179 @@ router.delete(
   })
 );
 
+/**
+ * POST /platform/tenants/:clientId/transfer  (owner only)
+ * Initiates an ownership transfer to an existing admin of the tenant.
+ * Requires owner's current password (invariant #7). Target must already be
+ * an admin (invariant #8). Only one pending transfer per tenant.
+ */
+router.post(
+  '/tenants/:clientId/transfer',
+  requireAuthPlatform,
+  requireTenantOwner,
+  apiRateLimit,
+  validateBody(platformRbacValidators.initiateTransfer),
+  asyncHandler(async (req: TenantAuthenticatedRequest & ValidatedRequest, res: Response) => {
+    const body = (req.validatedBody ?? req.body) as {
+      targetPlatformUserId: string;
+      currentPassword: string;
+    };
+
+    const result = await container.getInitiateOwnershipTransferUseCase().execute({
+      tenantId: req.tenantMembership!.tenantId,
+      ownerPlatformUserId: req.platformUser!.id,
+      currentPassword: body.currentPassword,
+      targetPlatformUserId: body.targetPlatformUserId,
+    });
+
+    if (result.status === 'initiated') {
+      logger.info('Ownership transfer initiated', {
+        tenantId: req.tenantMembership!.tenantId,
+        targetPlatformUserId: body.targetPlatformUserId,
+      });
+      res.status(201).json({
+        success: true,
+        data: { status: 'initiated', expiresAt: result.expiresAt.toISOString() },
+      });
+      return;
+    }
+
+    const codeMap: Record<string, { status: number; message: string }> = {
+      invalid_credentials: { status: 401, message: 'Current password is incorrect' },
+      target_not_admin: { status: 400, message: 'Target must be an existing admin of the tenant' },
+      pending_transfer_exists: { status: 409, message: 'A pending ownership transfer already exists for this tenant' },
+      tenant_not_found: { status: 404, message: 'Tenant not found' },
+    };
+    const mapped = codeMap[result.status];
+    res.status(mapped.status).json({
+      success: false,
+      error: result.status.toUpperCase(),
+      message: mapped.message,
+    });
+  })
+);
+
+/**
+ * POST /platform/transfers/accept  (public — token + password)
+ * Target accepts a pending transfer. Atomic role swap in a single transaction.
+ */
+router.post(
+  '/transfers/accept',
+  apiRateLimit,
+  validateBody(platformRbacValidators.acceptTransfer),
+  asyncHandler(async (req: ValidatedRequest, res: Response) => {
+    const body = (req.validatedBody ?? req.body) as { token: string; password: string };
+
+    const metadata: { ipAddress?: string; userAgent?: string } = {};
+    if (req.ip) metadata.ipAddress = req.ip;
+    const userAgent = req.get('user-agent');
+    if (userAgent) metadata.userAgent = userAgent;
+
+    const result = await container.getAcceptOwnershipTransferUseCase().execute({
+      rawToken: body.token,
+      password: body.password,
+      metadata,
+    });
+
+    if (result.status === 'accepted') {
+      logger.info('Ownership transfer accepted', {
+        platformUserId: result.platformUser.id,
+        tenantId: result.tenant.clientId,
+      });
+      res.status(200).json({
+        success: true,
+        data: {
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          platformUser: result.platformUser,
+          tenant: result.tenant,
+        },
+      });
+      return;
+    }
+
+    const codeMap: Record<string, { status: number; message: string }> = {
+      invalid_token: { status: 404, message: 'Transfer not found or invalid' },
+      expired: { status: 410, message: 'Transfer has expired' },
+      already_completed: { status: 409, message: 'Transfer has already been completed' },
+      already_declined: { status: 409, message: 'Transfer has already been declined' },
+      already_cancelled: { status: 409, message: 'Transfer has been cancelled' },
+      invalid_credentials: { status: 401, message: 'Invalid credentials' },
+    };
+    const mapped = codeMap[result.status];
+    res.status(mapped.status).json({
+      success: false,
+      error: result.status.toUpperCase(),
+      message: mapped.message,
+    });
+  })
+);
+
+/**
+ * POST /platform/transfers/decline  (public — token only)
+ * Target declines a pending transfer. No password required by design.
+ */
+router.post(
+  '/transfers/decline',
+  apiRateLimit,
+  validateBody(platformRbacValidators.declineTransfer),
+  asyncHandler(async (req: ValidatedRequest, res: Response) => {
+    const body = (req.validatedBody ?? req.body) as { token: string };
+
+    const result = await container.getDeclineOwnershipTransferUseCase().execute({
+      rawToken: body.token,
+    });
+
+    if (result.status === 'declined') {
+      res.status(200).json({ success: true, data: { status: 'declined' } });
+      return;
+    }
+
+    const codeMap: Record<string, { status: number; message: string }> = {
+      invalid_token: { status: 404, message: 'Transfer not found or invalid' },
+      expired: { status: 410, message: 'Transfer has expired' },
+      already_completed: { status: 409, message: 'Transfer has already been completed' },
+      already_declined: { status: 409, message: 'Transfer has already been declined' },
+      already_cancelled: { status: 409, message: 'Transfer has been cancelled' },
+    };
+    const mapped = codeMap[result.status];
+    res.status(mapped.status).json({
+      success: false,
+      error: result.status.toUpperCase(),
+      message: mapped.message,
+    });
+  })
+);
+
+/**
+ * DELETE /platform/tenants/:clientId/transfer  (owner only)
+ * Owner cancels the active pending transfer for their tenant (if any).
+ */
+router.delete(
+  '/tenants/:clientId/transfer',
+  requireAuthPlatform,
+  requireTenantOwner,
+  apiRateLimit,
+  asyncHandler(async (req: TenantAuthenticatedRequest, res: Response) => {
+    const result = await container.getCancelOwnershipTransferUseCase().execute({
+      tenantId: req.tenantMembership!.tenantId,
+      cancelledBy: req.platformUser!.id,
+    });
+
+    if (result.status === 'cancelled') {
+      logger.info('Ownership transfer cancelled by owner', {
+        tenantId: req.tenantMembership!.tenantId,
+      });
+      res.status(204).send();
+      return;
+    }
+
+    res.status(404).json({
+      success: false,
+      error: 'NO_PENDING_TRANSFER',
+      message: 'No pending transfer to cancel for this tenant',
+    });
+  })
+);
+
 export { router as platformRbacRoutes };
