@@ -87,7 +87,7 @@ export class EmailService {
 
   async sendPlatformPasswordResetEmail(to: string, token: string): Promise<void> {
     const baseUrl = process.env.SUPEROAUTH_PUBLIC_URL || 'https://superoauth.tetardtek.com';
-    const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+    const resetUrl = `${baseUrl}/platform/reset-password?token=${token}`;
 
     await this.send({
       to,
@@ -122,7 +122,7 @@ export class EmailService {
     ownerEmail: string
   ): Promise<void> {
     const baseUrl = process.env.SUPEROAUTH_PUBLIC_URL || 'https://superoauth.tetardtek.com';
-    const acceptUrl = `${baseUrl}/accept-ownership?token=${token}`;
+    const acceptUrl = `${baseUrl}/platform/accept-ownership?token=${token}`;
 
     await this.send({
       to: targetEmail,
@@ -184,7 +184,7 @@ export class EmailService {
     inviterEmail: string
   ): Promise<void> {
     const baseUrl = process.env.SUPEROAUTH_PUBLIC_URL || 'https://superoauth.tetardtek.com';
-    const acceptUrl = `${baseUrl}/accept-invitation?token=${token}`;
+    const acceptUrl = `${baseUrl}/platform/accept-invitation?token=${token}`;
 
     await this.send({
       to,
