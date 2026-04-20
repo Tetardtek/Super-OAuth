@@ -14,6 +14,7 @@ import { PlatformSessionEntity } from '../entities/platform-session.entity';
 import { PlatformUserEntity } from '../entities/platform-user.entity';
 import { TenantAdminEntity } from '../entities/tenant-admin.entity';
 import { TenantInvitationEntity } from '../entities/tenant-invitation.entity';
+import { TenantTransferEntity } from '../entities/tenant-transfer.entity';
 import { getDatabaseConfig } from '@shared/config/database.config';
 import { logger } from '@shared/utils/logger.util';
 
@@ -31,7 +32,7 @@ export class DatabaseConnection {
         username: config.username,
         password: config.password,
         database: config.database,
-        entities: [UserEntity, LinkedAccountEntity, SessionEntity, WebhookDeliveryEntity, TenantEntity, TenantProviderEntity, AuditLogEntity, AuthorizationCodeEntity, EmailTokenEntity, PlatformEmailTokenEntity, PlatformSessionEntity, PlatformUserEntity, TenantAdminEntity, TenantInvitationEntity],
+        entities: [UserEntity, LinkedAccountEntity, SessionEntity, WebhookDeliveryEntity, TenantEntity, TenantProviderEntity, AuditLogEntity, AuthorizationCodeEntity, EmailTokenEntity, PlatformEmailTokenEntity, PlatformSessionEntity, PlatformUserEntity, TenantAdminEntity, TenantInvitationEntity, TenantTransferEntity],
         migrations: ['dist/infrastructure/database/migrations/*.js'],
         migrationsRun: process.env.NODE_ENV !== 'production',
         synchronize: process.env.NODE_ENV === 'development',
