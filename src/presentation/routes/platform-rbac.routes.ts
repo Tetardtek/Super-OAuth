@@ -205,12 +205,13 @@ router.get(
     const repo = container.get<
       import('../../infrastructure/database/repositories/tenant-admin.repository').TenantAdminRepository
     >('TenantAdminRepository');
-    const rows = await repo.listByTenant(req.tenantMembership!.tenantId);
+    const rows = await repo.listByTenantWithUser(req.tenantMembership!.tenantId);
     res.status(200).json({
       success: true,
       data: {
         admins: rows.map((row) => ({
           platformUserId: row.platformUserId,
+          email: row.email,
           role: row.role,
           invitedBy: row.invitedBy,
           joinedAt: row.joinedAt.toISOString(),

@@ -26,6 +26,7 @@ export interface AccessibleTenant extends PlatformTenant {
 
 export interface TenantAdmin {
 	platformUserId: string;
+	email: string;
 	role: TenantRole;
 	invitedBy: string | null;
 	joinedAt: string;

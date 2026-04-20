@@ -208,7 +208,7 @@
 				<thead>
 					<tr>
 						<th>Rôle</th>
-						<th>Platform User ID</th>
+						<th>Email</th>
 						<th>Rejoint le</th>
 						<th class="action-col"></th>
 					</tr>
@@ -222,12 +222,12 @@
 								</span>
 							</td>
 							<td>
-								<code class="id-cell">
-									{admin.platformUserId}
+								<span class="email-cell" title={admin.platformUserId}>
+									{admin.email}
 									{#if admin.platformUserId === currentUserId}
 										<span class="you-tag">(toi)</span>
 									{/if}
-								</code>
+								</span>
 							</td>
 							<td class="text-secondary">{formatDate(admin.joinedAt)}</td>
 							<td class="action-col">
@@ -372,7 +372,7 @@
 						<option value="" disabled>Sélectionne un admin…</option>
 						{#each nonOwnerAdmins as admin}
 							<option value={admin.platformUserId}>
-								{admin.platformUserId.slice(0, 8)}… — rejoint {formatDate(admin.joinedAt)}
+								{admin.email} — rejoint {formatDate(admin.joinedAt)}
 							</option>
 						{/each}
 					</select>
@@ -475,9 +475,9 @@
 		color: var(--accent);
 		border: 1px solid rgba(200, 164, 78, 0.3);
 	}
-	.id-cell {
-		font-family: var(--font-mono, monospace);
-		font-size: var(--text-xs);
+	.email-cell {
+		font-size: var(--text-sm);
+		font-weight: 500;
 	}
 	.you-tag {
 		color: var(--accent);
