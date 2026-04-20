@@ -19,6 +19,11 @@ export interface PlatformTenant {
 
 export type TenantRole = 'owner' | 'admin';
 
+/** Tenant row returned by GET /tenants — includes the caller's role. */
+export interface AccessibleTenant extends PlatformTenant {
+	role: TenantRole;
+}
+
 export interface TenantAdmin {
 	platformUserId: string;
 	role: TenantRole;

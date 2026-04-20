@@ -4,9 +4,9 @@
 	import { platformApi, type ApiError } from '$services/platformApi';
 	import { platformAuth } from '$stores/platformAuth';
 	import { toast } from '$stores/toast';
-	import type { PlatformTenant } from '$types/platform';
+	import type { AccessibleTenant } from '$types/platform';
 
-	let tenants = $state<PlatformTenant[]>([]);
+	let tenants = $state<AccessibleTenant[]>([]);
 	let loading = $state(true);
 
 	onMount(async () => {
@@ -16,7 +16,7 @@
 			return;
 		}
 		try {
-			const res = await platformApi.get<{ success: true; data: { tenants: PlatformTenant[] } }>(
+			const res = await platformApi.get<{ success: true; data: { tenants: AccessibleTenant[] } }>(
 				'/tenants'
 			);
 			tenants = res.data.tenants;
@@ -83,7 +83,12 @@
 						href="/platform/dashboard/tenant/{tenant.clientId}"
 						class="tenant-card card"
 					>
-						<h3>{tenant.name}</h3>
+						<div class="card-top">
+							<h3>{tenant.name}</h3>
+							<span class="role-tag" data-role={tenant.role}>
+								{tenant.role === 'owner' ? 'Owner' : 'Admin'}
+							</span>
+						</div>
 						<p class="client-id text-muted">
 							<code>{tenant.clientId.slice(0, 8)}…</code>
 						</p>
@@ -153,10 +158,34 @@
 		transform: translateY(-2px);
 		border-color: var(--accent);
 	}
+	.card-top {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: var(--space-sm);
+		margin-bottom: var(--space-xs);
+	}
 	.tenant-card h3 {
 		font-size: var(--text-lg);
 		font-weight: 700;
-		margin-bottom: var(--space-xs);
+	}
+	.role-tag {
+		padding: 2px 8px;
+		border-radius: 4px;
+		font-size: var(--text-xs);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		flex-shrink: 0;
+	}
+	.role-tag[data-role='owner'] {
+		background: var(--accent);
+		color: var(--bg-page);
+	}
+	.role-tag[data-role='admin'] {
+		background: rgba(200, 164, 78, 0.15);
+		color: var(--accent);
+		border: 1px solid rgba(200, 164, 78, 0.3);
 	}
 	.client-id {
 		font-size: var(--text-xs);
