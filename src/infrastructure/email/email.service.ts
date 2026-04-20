@@ -60,7 +60,7 @@ export class EmailService {
 
   async sendPlatformVerificationEmail(to: string, token: string): Promise<void> {
     const baseUrl = process.env.SUPEROAUTH_PUBLIC_URL || 'https://superoauth.tetardtek.com';
-    const verifyUrl = `${baseUrl}/api/v1/platform/auth/verify-email/${token}`;
+    const verifyUrl = `${baseUrl}/platform/verify-email/${token}`;
 
     await this.send({
       to,
