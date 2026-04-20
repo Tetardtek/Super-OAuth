@@ -5,3 +5,4 @@ export { adminRoutes } from './admin.routes';
 export { default as userRoutes } from './user.routes';
 export { platformAuthRoutes } from './platform-auth.routes';
 export { platformTenantsRoutes } from './platform-tenants.routes';
+export { platformRbacRoutes } from './platform-rbac.routes';
