@@ -20,6 +20,7 @@ import {
   ListOwnedTenantsUseCase,
   UpdateTenantUseCase,
   DeleteTenantUseCase,
+  InviteTenantAdminUseCase,
 } from '../../application/use-cases/platform';
 import { PlatformUserRepository } from '../database/repositories/platform-user.repository';
 import { TenantAdminRepository } from '../database/repositories/tenant-admin.repository';
@@ -246,6 +247,17 @@ export class DIContainer {
     this.services.set('ListOwnedTenantsUseCase', new ListOwnedTenantsUseCase());
     this.services.set('UpdateTenantUseCase', new UpdateTenantUseCase());
     this.services.set('DeleteTenantUseCase', new DeleteTenantUseCase());
+
+    this.services.set(
+      'InviteTenantAdminUseCase',
+      new InviteTenantAdminUseCase(
+        this.get<IPlatformUserRepository>('PlatformUserRepository'),
+        this.get<TenantInvitationRepository>('TenantInvitationRepository'),
+        this.get<TenantAdminRepository>('TenantAdminRepository'),
+        this.get<TenantRepository>('TenantRepository'),
+        this.get<EmailService>('EmailService')
+      )
+    );
   }
 
   get<T>(serviceName: string): T {
@@ -328,5 +340,9 @@ export class DIContainer {
 
   getDeleteTenantUseCase(): DeleteTenantUseCase {
     return this.get<DeleteTenantUseCase>('DeleteTenantUseCase');
+  }
+
+  getInviteTenantAdminUseCase(): InviteTenantAdminUseCase {
+    return this.get<InviteTenantAdminUseCase>('InviteTenantAdminUseCase');
   }
 }

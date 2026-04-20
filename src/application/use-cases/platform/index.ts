@@ -28,3 +28,8 @@ export { UpdateTenantUseCase } from './update-tenant.use-case';
 export type { UpdateTenantInput, UpdateTenantOutcome } from './update-tenant.use-case';
 export { DeleteTenantUseCase } from './delete-tenant.use-case';
 export type { DeleteTenantInput, DeleteTenantOutcome } from './delete-tenant.use-case';
+export { InviteTenantAdminUseCase } from './invite-tenant-admin.use-case';
+export type {
+  InviteTenantAdminInput,
+  InviteTenantAdminOutcome,
+} from './invite-tenant-admin.use-case';
