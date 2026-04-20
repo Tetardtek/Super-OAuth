@@ -30,8 +30,8 @@
 			{#if $auth.user}
 				<a href="/dashboard" class="btn btn-ghost btn-sm">Dashboard</a>
 			{:else}
-				<a href="/login" class="btn btn-ghost btn-sm">Se connecter</a>
-				<a href="/register" class="btn btn-primary btn-sm">Commencer</a>
+				<a href="/platform/login" class="btn btn-ghost btn-sm">Se connecter</a>
+				<a href="/platform/signup" class="btn btn-primary btn-sm">Commencer</a>
 			{/if}
 		</div>
 
