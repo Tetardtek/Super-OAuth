@@ -6,6 +6,7 @@
 	const sections = [
 		{ href: '/docs', label: 'Démarrage rapide' },
 		{ href: '/docs/api', label: 'API Reference' },
+		{ href: '/docs/platform', label: 'Platform API' },
 		{ href: '/docs/integration', label: 'Intégration' },
 		{ href: '/docs/security', label: 'Sécurité' },
 		{ href: '/docs/architecture', label: 'Architecture' },
