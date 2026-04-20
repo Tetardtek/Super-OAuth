@@ -22,6 +22,8 @@ import {
   DeleteTenantUseCase,
 } from '../../application/use-cases/platform';
 import { PlatformUserRepository } from '../database/repositories/platform-user.repository';
+import { TenantAdminRepository } from '../database/repositories/tenant-admin.repository';
+import { TenantInvitationRepository } from '../database/repositories/tenant-invitation.repository';
 import { PlatformEmailTokenService } from '../services/platform-email-token.service';
 import { PlatformSessionService } from '../services/platform-session.service';
 import { PlatformTokenService } from '../services/platform-token.service';
@@ -83,6 +85,8 @@ export class DIContainer {
 
     // Platform (SOA-002) — services + repositories
     this.services.set('PlatformUserRepository', new PlatformUserRepository());
+    this.services.set('TenantAdminRepository', new TenantAdminRepository());
+    this.services.set('TenantInvitationRepository', new TenantInvitationRepository());
     this.services.set('PlatformEmailTokenService', new PlatformEmailTokenService());
     this.services.set('PlatformSessionService', new PlatformSessionService());
     this.services.set('PlatformTokenService', new PlatformTokenService());
