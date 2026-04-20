@@ -48,3 +48,8 @@ export type {
   RevokeTenantAdminInput,
   RevokeTenantAdminOutcome,
 } from './revoke-tenant-admin.use-case';
+export { InitiateOwnershipTransferUseCase } from './initiate-ownership-transfer.use-case';
+export type {
+  InitiateOwnershipTransferInput,
+  InitiateOwnershipTransferOutcome,
+} from './initiate-ownership-transfer.use-case';
