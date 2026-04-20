@@ -39,6 +39,9 @@ export class TenantEntity {
   @Column({ type: 'json', nullable: true, name: 'redirect_uris' })
   redirectUris?: string[] | null;
 
+  @Column({ type: 'varchar', length: 36, nullable: true, name: 'owner_platform_user_id' })
+  ownerPlatformUserId?: string | null;
+
   @Column({ type: 'int', default: 90, name: 'retention_days' })
   retentionDays!: number;
 

@@ -10,6 +10,23 @@ import { LinkProviderUseCase } from '../../application/use-cases/link-provider.u
 import { MergeAccountsUseCase } from '../../application/use-cases/merge-accounts.use-case';
 import { VerifyEmailUseCase } from '../../application/use-cases/verify-email.use-case';
 import { ConfirmMergeUseCase } from '../../application/use-cases/confirm-merge.use-case';
+import {
+  RegisterPlatformUserUseCase,
+  VerifyPlatformEmailUseCase,
+  LoginPlatformUserUseCase,
+  RefreshPlatformSessionUseCase,
+  LogoutPlatformUserUseCase,
+  CreateTenantUseCase,
+  ListOwnedTenantsUseCase,
+  UpdateTenantUseCase,
+  DeleteTenantUseCase,
+} from '../../application/use-cases/platform';
+import { PlatformUserRepository } from '../database/repositories/platform-user.repository';
+import { PlatformEmailTokenService } from '../services/platform-email-token.service';
+import { PlatformSessionService } from '../services/platform-session.service';
+import { PlatformTokenService } from '../services/platform-token.service';
+import { PlatformPasswordResetService } from '../services/platform-password-reset.service';
+import { IPlatformUserRepository } from '../../domain/repositories/platform-user.repository.interface';
 
 import {
   TokenService,
@@ -63,6 +80,19 @@ export class DIContainer {
     // Email services
     this.services.set('EmailService', new EmailService());
     this.services.set('EmailTokenService', new EmailTokenService());
+
+    // Platform (SOA-002) — services + repositories
+    this.services.set('PlatformUserRepository', new PlatformUserRepository());
+    this.services.set('PlatformEmailTokenService', new PlatformEmailTokenService());
+    this.services.set('PlatformSessionService', new PlatformSessionService());
+    this.services.set('PlatformTokenService', new PlatformTokenService());
+    this.services.set(
+      'PlatformPasswordResetService',
+      new PlatformPasswordResetService(
+        this.get<PlatformEmailTokenService>('PlatformEmailTokenService'),
+        this.get<PlatformSessionService>('PlatformSessionService')
+      )
+    );
 
     // Tier 3 — Tenant-scoped services
     const tenantCrypto = new TenantCryptoService();
@@ -166,6 +196,52 @@ export class DIContainer {
         this.get<EmailTokenService>('EmailTokenService')
       )
     );
+
+    // Platform Use Cases (SOA-002)
+    this.services.set(
+      'RegisterPlatformUserUseCase',
+      new RegisterPlatformUserUseCase(
+        this.get<IPlatformUserRepository>('PlatformUserRepository'),
+        this.get<PlatformEmailTokenService>('PlatformEmailTokenService')
+      )
+    );
+    this.services.set(
+      'VerifyPlatformEmailUseCase',
+      new VerifyPlatformEmailUseCase(
+        this.get<IPlatformUserRepository>('PlatformUserRepository'),
+        this.get<PlatformEmailTokenService>('PlatformEmailTokenService')
+      )
+    );
+    this.services.set(
+      'LoginPlatformUserUseCase',
+      new LoginPlatformUserUseCase(
+        this.get<IPlatformUserRepository>('PlatformUserRepository'),
+        this.get<PlatformTokenService>('PlatformTokenService'),
+        this.get<PlatformSessionService>('PlatformSessionService')
+      )
+    );
+    this.services.set(
+      'RefreshPlatformSessionUseCase',
+      new RefreshPlatformSessionUseCase(
+        this.get<IPlatformUserRepository>('PlatformUserRepository'),
+        this.get<PlatformTokenService>('PlatformTokenService'),
+        this.get<PlatformSessionService>('PlatformSessionService')
+      )
+    );
+    this.services.set(
+      'LogoutPlatformUserUseCase',
+      new LogoutPlatformUserUseCase(this.get<PlatformSessionService>('PlatformSessionService'))
+    );
+    this.services.set(
+      'CreateTenantUseCase',
+      new CreateTenantUseCase(
+        this.get<IPlatformUserRepository>('PlatformUserRepository'),
+        this.get<TenantCryptoService>('TenantCryptoService')
+      )
+    );
+    this.services.set('ListOwnedTenantsUseCase', new ListOwnedTenantsUseCase());
+    this.services.set('UpdateTenantUseCase', new UpdateTenantUseCase());
+    this.services.set('DeleteTenantUseCase', new DeleteTenantUseCase());
   }
 
   get<T>(serviceName: string): T {
@@ -211,5 +287,42 @@ export class DIContainer {
 
   getConfirmMergeUseCase(): ConfirmMergeUseCase {
     return this.get<ConfirmMergeUseCase>('ConfirmMergeUseCase');
+  }
+
+  // Platform (SOA-002)
+  getRegisterPlatformUserUseCase(): RegisterPlatformUserUseCase {
+    return this.get<RegisterPlatformUserUseCase>('RegisterPlatformUserUseCase');
+  }
+
+  getVerifyPlatformEmailUseCase(): VerifyPlatformEmailUseCase {
+    return this.get<VerifyPlatformEmailUseCase>('VerifyPlatformEmailUseCase');
+  }
+
+  getLoginPlatformUserUseCase(): LoginPlatformUserUseCase {
+    return this.get<LoginPlatformUserUseCase>('LoginPlatformUserUseCase');
+  }
+
+  getRefreshPlatformSessionUseCase(): RefreshPlatformSessionUseCase {
+    return this.get<RefreshPlatformSessionUseCase>('RefreshPlatformSessionUseCase');
+  }
+
+  getLogoutPlatformUserUseCase(): LogoutPlatformUserUseCase {
+    return this.get<LogoutPlatformUserUseCase>('LogoutPlatformUserUseCase');
+  }
+
+  getCreateTenantUseCase(): CreateTenantUseCase {
+    return this.get<CreateTenantUseCase>('CreateTenantUseCase');
+  }
+
+  getListOwnedTenantsUseCase(): ListOwnedTenantsUseCase {
+    return this.get<ListOwnedTenantsUseCase>('ListOwnedTenantsUseCase');
+  }
+
+  getUpdateTenantUseCase(): UpdateTenantUseCase {
+    return this.get<UpdateTenantUseCase>('UpdateTenantUseCase');
+  }
+
+  getDeleteTenantUseCase(): DeleteTenantUseCase {
+    return this.get<DeleteTenantUseCase>('DeleteTenantUseCase');
   }
 }

@@ -12,6 +12,7 @@ import { EmailTokenEntity } from '../entities/email-token.entity';
 import { PlatformEmailTokenEntity } from '../entities/platform-email-token.entity';
 import { PlatformSessionEntity } from '../entities/platform-session.entity';
 import { PlatformUserEntity } from '../entities/platform-user.entity';
+import { TenantAdminEntity } from '../entities/tenant-admin.entity';
 import { getDatabaseConfig } from '@shared/config/database.config';
 import { logger } from '@shared/utils/logger.util';
 
@@ -29,7 +30,7 @@ export class DatabaseConnection {
         username: config.username,
         password: config.password,
         database: config.database,
-        entities: [UserEntity, LinkedAccountEntity, SessionEntity, WebhookDeliveryEntity, TenantEntity, TenantProviderEntity, AuditLogEntity, AuthorizationCodeEntity, EmailTokenEntity, PlatformEmailTokenEntity, PlatformSessionEntity, PlatformUserEntity],
+        entities: [UserEntity, LinkedAccountEntity, SessionEntity, WebhookDeliveryEntity, TenantEntity, TenantProviderEntity, AuditLogEntity, AuthorizationCodeEntity, EmailTokenEntity, PlatformEmailTokenEntity, PlatformSessionEntity, PlatformUserEntity, TenantAdminEntity],
         migrations: ['dist/infrastructure/database/migrations/*.js'],
         migrationsRun: process.env.NODE_ENV !== 'production',
         synchronize: process.env.NODE_ENV === 'development',

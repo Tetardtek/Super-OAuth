@@ -34,7 +34,7 @@ import path from 'path';
 import { DatabaseConnection } from './infrastructure/database/config/database.config';
 import { getAppConfig, EnvironmentValidator } from './shared/config';
 import { logger } from './shared/utils/logger.util';
-import { authRoutes, oauthRoutes, pkceRoutes, adminRoutes, userRoutes } from './presentation/routes';
+import { authRoutes, oauthRoutes, pkceRoutes, adminRoutes, userRoutes, platformAuthRoutes, platformTenantsRoutes } from './presentation/routes';
 import {
   errorHandler,
   notFoundHandler,
@@ -184,6 +184,12 @@ class SuperOAuthServer {
 
     // User Profile routes — Consumer-facing API for tenant frontends
     this.app.use('/api/v1/user', userRoutes);
+
+    // Platform auth routes (SOA-002) — SaaS client signup/login (platform_users)
+    this.app.use('/api/v1/platform/auth', platformAuthRoutes);
+
+    // Platform tenant CRUD routes (SOA-002) — owner-only tenant management
+    this.app.use('/api/v1/platform/tenants', platformTenantsRoutes);
 
     // API status endpoint
     this.app.get('/api/v1', (_req, res) => {
