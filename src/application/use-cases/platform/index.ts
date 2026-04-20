@@ -33,3 +33,8 @@ export type {
   InviteTenantAdminInput,
   InviteTenantAdminOutcome,
 } from './invite-tenant-admin.use-case';
+export { CancelTenantInvitationUseCase } from './cancel-tenant-invitation.use-case';
+export type {
+  CancelTenantInvitationInput,
+  CancelTenantInvitationOutcome,
+} from './cancel-tenant-invitation.use-case';
