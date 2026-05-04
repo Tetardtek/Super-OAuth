@@ -1,74 +1,143 @@
 <script lang="ts">
 	const features = [
 		{
-			title: 'Multi-tenant natif',
-			desc: 'Chaque app est un tenant isolé. Users, providers, JWT secrets — tout est scopé par tenant. Zéro contamination.',
-			icon: '{'
+			title: "Connecte n'importe quel site",
+			desc: 'Une seule installation auth qui sert tous tes projets clients. Chacun reste isolé — leurs users, leurs settings, leur branding.',
+			icon: '+'
 		},
 		{
-			title: 'PKCE Authorization Server',
-			desc: 'Flow OAuth 2.0 + PKCE standard. Authorization codes SHA-256, use-once, TTL 5 min. Conforme RFC 7636.',
-			icon: '#'
+			title: 'Login social en 5 minutes',
+			desc: 'Discord, GitHub, Google, Twitch déjà configurés. Tes users cliquent, ils sont logués. Tu ne codes pas le SSO.',
+			icon: '~'
 		},
 		{
-			title: 'Pricing prévisible',
-			desc: "Abonnement fixe. Pas de commission par user, pas de surcoût caché. Vous savez ce que vous payez.",
+			title: 'Prix prévisible',
+			desc: 'Tu paies par admin de ton équipe, pas par utilisateur. Tes apps peuvent grossir à l\'infini sans surcoût caché.',
 			icon: '$'
 		}
 	];
 
 	const steps = [
-		{ num: '01', title: 'Créez un tenant', desc: 'Un nom, une redirect URI. Vous recevez vos clés en 30 secondes.' },
-		{ num: '02', title: 'Redirigez vos users', desc: 'GET /oauth/authorize avec votre client_id. On gère Discord, GitHub, Google, Twitch.' },
-		{ num: '03', title: 'Échangez le code', desc: 'POST /oauth/token avec le code + PKCE verifier. Vous recevez un JWT signé par tenant.' }
+		{ num: '01', title: 'Crée ton tenant', desc: 'Un nom, ton domaine de redirection. Tu as tes clés en 30 secondes.' },
+		{ num: '02', title: 'Branche tes utilisateurs', desc: 'Une URL d\'autorisation à appeler depuis ton site. Snippets prêts pour React, Vue, Express, vanilla.' },
+		{ num: '03', title: 'Récupère le JWT', desc: 'Token signé par tenant, prêt à valider côté serveur. Compatible avec ton backend existant.' }
 	];
 
-	const plans = [
+	type Plan = {
+		name: string;
+		price: string;
+		priceSuffix?: string;
+		tagline: string;
+		features: { label: string; soon?: boolean }[];
+		ctaLabel: string;
+		ctaHref: string;
+		highlighted?: boolean;
+	};
+
+	const plans: Plan[] = [
 		{
-			name: 'Starter',
-			price: '29',
-			features: ['1 tenant', '4 providers OAuth', '1 000 users', 'JWT par tenant', 'Support email'],
+			name: 'Free',
+			price: '0',
+			priceSuffix: '€',
+			tagline: 'Pour démarrer un projet solo.',
+			features: [
+				{ label: '3 tenants' },
+				{ label: '1 admin' },
+				{ label: 'Tous les utilisateurs que tu veux' },
+				{ label: '4 providers OAuth' },
+				{ label: 'Audit logs 30 jours' },
+				{ label: 'Logo SuperOAuth sur le login' }
+			],
+			ctaLabel: 'Commencer gratuitement',
+			ctaHref: '/platform/signup',
 			highlighted: false
 		},
 		{
-			name: 'Studio',
+			name: 'Solo',
+			price: '29',
+			priceSuffix: '€/mois',
+			tagline: 'Pour un freelance avec quelques clients.',
+			features: [
+				{ label: '10 tenants' },
+				{ label: '1 admin' },
+				{ label: 'Utilisateurs illimités' },
+				{ label: 'Audit logs 90 jours' },
+				{ label: 'White-label partiel (logo)' },
+				{ label: 'Support email' }
+			],
+			ctaLabel: 'Choisir Solo',
+			ctaHref: '/platform/signup',
+			highlighted: false
+		},
+		{
+			name: 'Team',
 			price: '99',
-			features: ['5 tenants', '4 providers + custom', '10 000 users', 'Webhooks + audit logs', 'Support prioritaire', 'Dashboard analytics'],
+			priceSuffix: '€/mois',
+			tagline: 'Pour un studio ou une équipe produit.',
+			features: [
+				{ label: 'Tenants illimités' },
+				{ label: '5 admins' },
+				{ label: 'Utilisateurs illimités' },
+				{ label: 'SAML 2.0 SSO', soon: true },
+				{ label: 'Audit logs 1 an' },
+				{ label: 'White-label complet' }
+			],
+			ctaLabel: 'Choisir Team',
+			ctaHref: '/platform/signup',
 			highlighted: true
 		},
 		{
-			name: 'Pro',
-			price: '249',
-			features: ['Tenants illimités', 'Providers illimités', 'Users illimités', 'API complète', 'SLA 99.9%', 'Onboarding dédié'],
+			name: 'Business',
+			price: '299',
+			priceSuffix: '€/mois',
+			tagline: 'Pour les structures avec des process.',
+			features: [
+				{ label: 'Tenants illimités' },
+				{ label: '15 admins' },
+				{ label: 'Utilisateurs illimités' },
+				{ label: 'SCIM provisioning', soon: true },
+				{ label: 'MFA avancé', soon: true },
+				{ label: 'Multi-region', soon: true },
+				{ label: 'Support prioritaire' }
+			],
+			ctaLabel: 'Choisir Business',
+			ctaHref: '/platform/signup',
 			highlighted: false
 		}
 	];
 </script>
 
 <svelte:head>
-	<title>SuperOAuth — L'auth de vos projets, en quelques minutes</title>
+	<title>SuperOAuth — Branche l'auth sur tes apps en 5 minutes</title>
+	<meta
+		name="description"
+		content="Authorization server multi-tenant. Connecte Discord, GitHub, Google, Twitch sur tous tes projets clients sans coder le SSO. Hébergé ou self-host."
+	/>
 </svelte:head>
 
 <!-- Hero -->
 <section class="hero">
 	<div class="container">
 		<span class="badge badge-accent">Authorization Server · PKCE · Multi-tenant</span>
-		<h1>L'auth de vos projets.<br /><span class="text-accent">En quelques minutes.</span></h1>
+		<h1>L'auth de tes apps clients.<br /><span class="text-accent">Branchée en 5 minutes.</span></h1>
 		<p class="hero-sub">
-			SuperOAuth est un authorization server multi-tenant. Branchez l'auth sur votre app,
-			on gère les providers, les tokens et la sécurité.
+			Connecte Discord, GitHub, Google ou Twitch sur n'importe quel site sans coder le SSO.
+			Tes utilisateurs cliquent, ils sont logués. Tes données restent isolées par projet.
 		</p>
 		<div class="hero-actions">
-			<a href="/register" class="btn btn-primary btn-lg">Commencer gratuitement</a>
-			<a href="/docs" class="btn btn-ghost btn-lg">Lire la doc</a>
+			<a href="/platform/signup" class="btn btn-primary btn-lg">Essayer gratuitement</a>
+			<a href="/docs" class="btn btn-ghost btn-lg">Voir la doc</a>
 		</div>
+		<p class="hero-trust text-muted">
+			Free tier réel · Pas de carte demandée · Self-host disponible
+		</p>
 	</div>
 </section>
 
 <!-- Features -->
 <section class="section" id="features">
 	<div class="container">
-		<h2 class="section-title text-center">Construit pour les développeurs</h2>
+		<h2 class="section-title text-center">Pensé pour les freelances et les studios</h2>
 		<div class="features-grid">
 			{#each features as f}
 				<div class="card feature-card">
@@ -101,36 +170,53 @@
 <section class="section" id="pricing">
 	<div class="container">
 		<h2 class="section-title text-center">Pricing simple et transparent</h2>
-		<p class="section-sub text-center text-secondary">Pas de surprise. Pas de commission par utilisateur.</p>
+		<p class="section-sub text-center text-secondary">
+			Tu paies par admin, pas par utilisateur. Tes apps peuvent grossir à l'infini.
+		</p>
 		<div class="pricing-grid">
 			{#each plans as plan}
 				<div class="card pricing-card" class:highlighted={plan.highlighted}>
 					{#if plan.highlighted}
-						<span class="badge badge-accent popular-badge">Populaire</span>
+						<span class="badge badge-accent popular-badge">Recommandé</span>
 					{/if}
 					<h3>{plan.name}</h3>
+					<p class="pricing-tagline text-secondary">{plan.tagline}</p>
 					<div class="price">
-						<span class="price-value">{plan.price}€</span>
-						<span class="price-period text-muted">/mois</span>
+						<span class="price-value">{plan.price}{plan.priceSuffix?.startsWith('€') ? '€' : ''}</span>
+						{#if plan.priceSuffix?.includes('/')}
+							<span class="price-period text-muted">/{plan.priceSuffix.split('/')[1]}</span>
+						{/if}
 					</div>
 					<div class="pricing-divider"></div>
 					<ul class="pricing-features">
 						{#each plan.features as feat}
-							<li>{feat}</li>
+							<li>
+								{feat.label}
+								{#if feat.soon}
+									<span class="soon-badge">Bientôt</span>
+								{/if}
+							</li>
 						{/each}
 					</ul>
-					<a href="/register" class="btn {plan.highlighted ? 'btn-primary' : 'btn-ghost'} btn-lg pricing-cta">
-						Commencer
+					<a
+						href={plan.ctaHref}
+						class="btn {plan.highlighted ? 'btn-primary' : 'btn-ghost'} btn-lg pricing-cta"
+					>
+						{plan.ctaLabel}
 					</a>
 				</div>
 			{/each}
 		</div>
-		<div class="enterprise-bar card">
-			<div>
-				<h3>Enterprise</h3>
-				<p class="text-secondary">SLA custom, déploiement dédié, onboarding sur mesure.</p>
+
+		<div class="pro-install-bar card">
+			<div class="pro-install-text">
+				<h3>Tu veux qu'on l'installe pour toi ?</h3>
+				<p class="text-secondary">
+					Installation sur ton infra ou cloud privé, migration depuis Auth0/Clerk, support direct.
+					À partir de 1 500€ de setup + 200-500€/mois.
+				</p>
 			</div>
-			<a href="mailto:contact@tetardtek.com" class="btn btn-ghost">Nous contacter</a>
+			<a href="/pricing/pro-install" class="btn btn-ghost btn-lg">Voir Pro Install</a>
 		</div>
 	</div>
 </section>
@@ -138,8 +224,16 @@
 <!-- Footer -->
 <footer class="footer">
 	<div class="container footer-inner">
-		<span class="text-muted">&copy; 2026 SuperOAuth — Tetardtek</span>
-		<a href="/docs" class="text-muted">Documentation</a>
+		<div class="footer-left">
+			<span class="text-muted">&copy; 2026 SuperOAuth — Tetardtek</span>
+			<span class="text-muted footer-license">
+				Open core sous BSL · conversion automatique Apache 2.0 en 2030
+			</span>
+		</div>
+		<div class="footer-links">
+			<a href="/docs" class="text-muted">Documentation</a>
+			<a href="/pricing/pro-install" class="text-muted">Pro Install</a>
+		</div>
 	</div>
 </footer>
 
@@ -157,7 +251,7 @@
 	}
 
 	.hero-sub {
-		max-width: 580px;
+		max-width: 620px;
 		margin: 0 auto var(--space-xl);
 		color: var(--text-secondary);
 		font-size: var(--text-lg);
@@ -169,6 +263,11 @@
 		gap: var(--space-md);
 		justify-content: center;
 		flex-wrap: wrap;
+	}
+
+	.hero-trust {
+		margin-top: var(--space-lg);
+		font-size: var(--text-sm);
 	}
 
 	.features-grid {
@@ -213,7 +312,9 @@
 		font-size: var(--text-lg);
 	}
 
-	.bg-secondary { background: var(--bg-secondary); }
+	.bg-secondary {
+		background: var(--bg-secondary);
+	}
 
 	.steps-grid {
 		display: grid;
@@ -222,22 +323,32 @@
 		margin-top: var(--space-xl);
 	}
 
-	.step { display: flex; flex-direction: column; gap: var(--space-sm); }
-	.step-num { font-size: var(--text-2xl); font-weight: 700; }
-	.step h3 { font-size: var(--text-lg); font-weight: 600; }
+	.step {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-sm);
+	}
+	.step-num {
+		font-size: var(--text-2xl);
+		font-weight: 700;
+	}
+	.step h3 {
+		font-size: var(--text-lg);
+		font-weight: 600;
+	}
 
 	.pricing-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 		gap: var(--space-lg);
 		margin-top: var(--space-xl);
-		align-items: start;
+		align-items: stretch;
 	}
 
 	.pricing-card {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-md);
+		gap: var(--space-sm);
 		position: relative;
 	}
 
@@ -252,11 +363,30 @@
 		right: var(--space-md);
 	}
 
-	.price { display: flex; align-items: baseline; gap: var(--space-xs); }
-	.price-value { font-size: var(--text-4xl); font-weight: 700; }
-	.price-period { font-size: var(--text-base); }
+	.pricing-tagline {
+		font-size: var(--text-sm);
+		min-height: 2.4em;
+	}
 
-	.pricing-divider { height: 1px; background: var(--border); }
+	.price {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-xs);
+		margin-top: var(--space-sm);
+	}
+	.price-value {
+		font-size: var(--text-4xl);
+		font-weight: 700;
+	}
+	.price-period {
+		font-size: var(--text-base);
+	}
+
+	.pricing-divider {
+		height: 1px;
+		background: var(--border);
+		margin: var(--space-sm) 0;
+	}
 
 	.pricing-features {
 		list-style: none;
@@ -271,6 +401,10 @@
 		color: var(--text-secondary);
 		padding-left: var(--space-lg);
 		position: relative;
+		display: flex;
+		align-items: center;
+		gap: var(--space-xs);
+		flex-wrap: wrap;
 	}
 
 	.pricing-features li::before {
@@ -281,17 +415,41 @@
 		font-family: var(--font-mono);
 	}
 
-	.pricing-cta { width: 100%; justify-content: center; }
+	.soon-badge {
+		font-size: var(--text-xs);
+		padding: 2px 6px;
+		border-radius: var(--radius-sm);
+		background: var(--accent-muted);
+		color: var(--accent);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
 
-	.enterprise-bar {
+	.pricing-cta {
+		width: 100%;
+		justify-content: center;
+		margin-top: var(--space-md);
+	}
+
+	.pro-install-bar {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		margin-top: var(--space-lg);
+		margin-top: var(--space-xl);
 		gap: var(--space-lg);
+		padding: var(--space-xl);
 	}
 
-	.enterprise-bar h3 { font-size: var(--text-lg); font-weight: 600; }
+	.pro-install-text h3 {
+		font-size: var(--text-xl);
+		font-weight: 600;
+		margin-bottom: var(--space-xs);
+	}
+
+	.pro-install-text p {
+		max-width: 640px;
+	}
 
 	.footer {
 		border-top: 1px solid var(--border);
@@ -301,11 +459,35 @@
 	.footer-inner {
 		display: flex;
 		justify-content: space-between;
-		align-items: center;
+		align-items: flex-start;
+		gap: var(--space-lg);
+	}
+
+	.footer-left {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-xs);
+	}
+
+	.footer-license {
+		font-size: var(--text-xs);
+	}
+
+	.footer-links {
+		display: flex;
+		gap: var(--space-md);
 	}
 
 	@media (max-width: 768px) {
-		.enterprise-bar { flex-direction: column; text-align: center; }
-		.footer-inner { flex-direction: column; gap: var(--space-sm); }
+		.pro-install-bar {
+			flex-direction: column;
+			text-align: center;
+		}
+		.footer-inner {
+			flex-direction: column;
+			align-items: center;
+			text-align: center;
+			gap: var(--space-md);
+		}
 	}
 </style>
