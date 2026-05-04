@@ -1,8 +1,10 @@
 /**
- * Seed default tenants — run once after Tier 3 migration.
+ * Seed default tenants — example template.
  *
- * Creates the 'origins' tenant (and optionally others) in the tenants table
- * with proper encrypted JWT secrets and hashed client secrets.
+ * Copy this file to `seed-tenants.ts` and customize the TENANTS_TO_SEED array
+ * with your own tenant names, origins and redirect URIs.
+ *
+ * `seed-tenants.ts` is gitignored so your local list stays out of version control.
  *
  * Usage:
  *   NODE_ENV=production node --env-file=.env -r ts-node/register scripts/seed-tenants.ts
@@ -19,19 +21,14 @@ import { TenantRepository } from '../src/infrastructure/services/tenant.reposito
 
 const TENANTS_TO_SEED = [
   {
-    name: 'origins',
-    allowedOrigins: ['https://origins.tetardtek.com'],
-    redirectUris: ['https://origins.tetardtek.com/callback'],
+    name: 'demo-app',
+    allowedOrigins: ['https://demo-app.example.com'],
+    redirectUris: ['https://demo-app.example.com/callback'],
   },
   {
-    name: 'tetardpg',
-    allowedOrigins: ['https://tetardpg.tetardtek.com', 'http://localhost:5173'],
-    redirectUris: ['https://tetardpg.tetardtek.com/auth/callback', 'http://localhost:5173/auth/callback'],
-  },
-  {
-    name: 'clickerz',
-    allowedOrigins: ['https://clickerz.tetardtek.com', 'http://localhost:3000'],
-    redirectUris: ['https://clickerz.tetardtek.com/callback', 'http://localhost:3000/callback'],
+    name: 'local-dev',
+    allowedOrigins: ['http://localhost:5173'],
+    redirectUris: ['http://localhost:5173/callback'],
   },
 ];
 
@@ -44,7 +41,6 @@ async function main() {
   const tenantRepo = new TenantRepository(crypto);
 
   for (const tenant of TENANTS_TO_SEED) {
-    // Check if tenant already exists by querying with the name as clientId
     const existing = await tenantRepo.findByClientId(tenant.name);
 
     if (existing) {
@@ -52,20 +48,12 @@ async function main() {
       continue;
     }
 
-    // TenantRepository.create() generates a random UUID as clientId.
-    // But our system uses tenant NAME as the tenantId everywhere (e.g. 'origins').
-    // We need to insert directly with clientId = tenant.name.
     const { default: nodeCrypto } = await import('crypto');
     const clientSecretPlain = nodeCrypto.randomBytes(32).toString('hex');
     const salt = crypto.generateSalt();
     const hash = crypto.hashClientSecret(clientSecretPlain, salt);
 
-    // For the first tenant ('origins'), use the existing global JWT secret
-    // to avoid invalidating all existing tokens signed with the fallback.
-    // New tenants get a fresh random secret.
-    const jwtSecretPlain = tenant.name === 'origins' && process.env.JWT_ACCESS_SECRET
-      ? process.env.JWT_ACCESS_SECRET
-      : nodeCrypto.randomBytes(32).toString('hex');
+    const jwtSecretPlain = nodeCrypto.randomBytes(32).toString('hex');
     const { encrypted: jwtSecretEncrypted, iv: jwtSecretIv } = crypto.encryptValue(jwtSecretPlain);
 
     const ds = DatabaseConnection.getDataSource();

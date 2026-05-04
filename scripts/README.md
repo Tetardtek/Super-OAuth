@@ -58,12 +58,14 @@ Le script **vide complètement** les tables suivantes :
 Le script utilise les variables d'environnement du fichier `.env` :
 
 ```env
-MYSQL_HOST=localhost          # Host MySQL
-MYSQL_PORT=3306              # Port MySQL  
-MYSQL_USERNAME=superoauth    # Utilisateur MySQL
-MYSQL_PASSWORD=SuperOAuth64! # Mot de passe MySQL
-MYSQL_DATABASE=auth_hybrid_dbts # Nom de la base
+MYSQL_HOST=localhost                    # Host MySQL
+MYSQL_PORT=3306                         # Port MySQL
+MYSQL_USERNAME=<your-mysql-user>        # Utilisateur MySQL
+MYSQL_PASSWORD=<your-mysql-password>    # Mot de passe MySQL
+MYSQL_DATABASE=<your-database-name>     # Nom de la base
 ```
+
+> Voir `.env.example` à la racine pour la liste complète des variables requises.
 
 ### 📊 Exemple de Sortie
 

@@ -1,7 +1,8 @@
-# Fichiers de configuration & personnels
-# Note: CLAUDE/ contient la documentation technique et doit être versionné
-# Seul .claude/ (config locale de Claude Code) est ignoré
+# Fichiers de configuration locale (Claude Code, IDE, etc.)
 .claude/
+
+# Scripts de seed avec données locales spécifiques (utiliser seed-tenants.example.ts)
+scripts/seed-tenants.ts
 
 # Fichiers d'environnement (ne jamais versionner !)
 .env
@@ -65,5 +66,6 @@ Desktop.ini
 
 # Divers
 *.bak
+*.backup
 *.orig
 *.rej

@@ -96,4 +96,4 @@ Tier 1-3 implementes : `tenantId` sur users/sessions/linked_accounts, per-tenant
 
 ## Licence
 
-MIT
+BSL 1.1 — voir `LICENSE`. Conversion automatique en Apache 2.0 prévue à la Change Date (cf. landing).
