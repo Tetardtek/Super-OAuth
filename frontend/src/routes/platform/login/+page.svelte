@@ -74,7 +74,7 @@
 					autocomplete="current-password"
 				/>
 				<p class="hint text-right">
-					<a href="/platform/reset-password">Mot de passe oublié ?</a>
+					<a href="/platform/reset-password/request">Mot de passe oublié ?</a>
 				</p>
 			</div>
 
